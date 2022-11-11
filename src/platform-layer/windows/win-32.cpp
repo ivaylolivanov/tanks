@@ -6,7 +6,7 @@
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, PSTR cmdLine, int cmdCharactersCount)
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdCharactersCount)
 {
     // Register the window class.
     const wchar_t CLASS_NAME[]  = L"Sample Window Class";
