@@ -1,5 +1,8 @@
 @echo off
 
-set WORKING_DIR_ROOT=D:\Projects\tanks
+rem This file houses the environmental variables, specific to
+rem the developer's user. Replace the placeholder with relevant value.
+rem
+rem * Will be "sourced" by the prepare.bat script.
 
-set COMPILER_PATH="C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"
+set WORKING_DIR_ROOT=<PATH_TO_PROJECT_ROOT_DIR>
