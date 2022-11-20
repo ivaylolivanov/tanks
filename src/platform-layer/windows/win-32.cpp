@@ -3,11 +3,16 @@
 #endif
 
 #include <windows.h>
+#include <wchar.h>
+
+static bool IS_RUNNING = false;
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdCharactersCount)
 {
+    IS_RUNNING = false;
+
     // Register the window class.
     const wchar_t CLASS_NAME[]  = L"Sample Window Class";
 
@@ -45,11 +50,24 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
 
     // Run the message loop.
 
-    MSG msg = { };
-    while (GetMessage(&msg, NULL, 0, 0) > 0)
+    IS_RUNNING = true;
+    wchar_t msg[32];
+    while (IS_RUNNING)
     {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+
+	if (GetKeyState(0x41) & 0x8000)
+	{
+	    swprintf_s(msg, L"We have pressed 'A'");
+	    OutputDebugString(msg);
+	}
+
+
+	MSG msg = { };
+	while (GetMessage(&msg, NULL, 0, 0) > 0)
+	{
+	    TranslateMessage(&msg);
+	    DispatchMessage(&msg);
+	}
     }
 
     return 0;
@@ -60,6 +78,7 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     switch (uMsg)
     {
     case WM_DESTROY:
+	IS_RUNNING = false;
         PostQuitMessage(0);
         return 0;
 
