@@ -5,4 +5,5 @@ rem the developer's user. Replace the placeholder with relevant value.
 rem
 rem * Will be "sourced" by the prepare.bat script.
 
+rem Set to the root of the project
 set WORKING_DIR_ROOT=<PATH_TO_PROJECT_ROOT_DIR>
