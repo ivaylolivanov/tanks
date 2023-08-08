@@ -12,9 +12,14 @@ static bool IS_RUNNING = false;
 #define LocalPersist   static
 #define GlobalVariable static
 
-// typedef bool32 uint32_t;
+#define Pi32 3.14159265359f
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+typedef int8_t int8;
+typedef int16_t int16;
+typedef int32_t int32;
+typedef int64_t int64;
+typedef int32 bool32;
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, int cmdCharactersCount)
 {
@@ -28,8 +33,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdLine, in
     wc.lpfnWndProc = WindowProc;
     wc.hInstance = instance;
     wc.lpszClassName = CLASS_NAME;
+typedef uint8_t uint8;
+typedef uint16_t uint16;
+typedef uint32_t uint32;
+typedef uint64_t uint64;
 
     RegisterClass(&wc);
+typedef float real32;
+typedef double real64;
 
     // Create the window.
 
