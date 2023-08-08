@@ -6,7 +6,6 @@
 #include <wchar.h>
 #include <cinttypes>
 
-static bool IS_RUNNING = false;
 // Better send the intetion of the static keyword to the other developers
 #define Internal       static
 #define LocalPersist   static
@@ -49,6 +48,7 @@ typedef double real64;
         CLASS_NAME,                     // Window class
         L"Learn to Program Windows",    // Window text
         WS_OVERLAPPEDWINDOW,            // Window style
+GlobalVariable bool IS_RUNNING = false;
 
         // Size and position
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
