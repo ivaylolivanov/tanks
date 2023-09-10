@@ -15,7 +15,7 @@ GlobalVariable bool IS_RUNNING = false;
 
 
 
-Internal void ProcessPendingMessages()
+Internal void ProcessPendingKeyPresses()
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -167,7 +167,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
 
     while (IS_RUNNING)
     {
-        ProcessPendingMessages();
+        ProcessPendingKeyPresses();
     }
 
     return 0;
