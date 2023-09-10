@@ -6,14 +6,47 @@
 #include <wchar.h>
 #include <cinttypes>
 #include <winuser.h>
+#include <xinput.h>
 
 #include "win-32.h"
 
 GlobalVariable bool IS_RUNNING = false;
 
+// XInputGetState
+DWORD WINAPI XInputGetStateStub(DWORD dwUserIndex, XINPUT_STATE *pState)
+{
+    return 0;
+}
 
+typedef DWORD WINAPI FPtrXInputGetState
+(DWORD dwUserIndex, XINPUT_STATE *pState);
+GlobalVariable FPtrXInputGetState *X_INPUT_GET_STATE = XInputGetStateStub;
+// Replaces the XInput library's function of 'XInputGetState'
+#define XInputGetState X_INPUT_GET_STATE
 
+// XInputSetState
+DWORD WINAPI XInputSetStateStub(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
+{
+    return 0;
+}
 
+typedef DWORD WINAPI FPtrXInputSetState
+(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
+GlobalVariable FPtrXInputSetState *X_INPUT_SET_STATE = XInputSetStateStub;
+// Replaces the XInput library's function of 'XInputSetState'
+#define XInputSetState X_INPUT_SET_STATE
+
+Internal void LoadXInput()
+{
+    HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
+    if (!XInputLibrary) return;
+
+    XInputGetState = (FPtrXInputGetState *)GetProcAddress(XInputLibrary, "XInputGetState");
+    if (!XInputGetState) { XInputGetState = XInputGetStateStub; }
+
+    XInputSetState = (FPtrXInputSetState *)GetProcAddress(XInputLibrary, "XInputSetState");
+    if (!XInputSetState) { XInputSetState = XInputSetStateStub; }
+}
 
 Internal void ProcessPendingKeyPresses()
 {
@@ -128,6 +161,7 @@ LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wparam, LPARAM lpa
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int command_line_characters_count)
 {
     IS_RUNNING = false;
+    LoadXInput();
 
     // Register the window class.
     const wchar_t CLASS_NAME[] = L"Sample Window Class";
@@ -167,6 +201,36 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     while (IS_RUNNING)
     {
         ProcessPendingKeyPresses();
+        for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
+        {
+            XINPUT_STATE controllerState;
+            bool isUnplugged = XInputGetState(controllerIndex, &controllerState)
+                != ERROR_SUCCESS;
+            if (isUnplugged) continue;
+
+            XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
+
+            bool up      = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+            bool down    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+            bool left    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+            bool right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+            bool start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
+            bool back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
+            bool l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+            bool r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+            bool buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
+            bool buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
+            bool buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
+            bool buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
+
+            int16 lStickX = gamepad->sThumbLX;
+            int16 lStickY = gamepad->sThumbLY;
+
+            if (up)    OutputDebugStringA("Gamepad up");
+            if (down)  OutputDebugStringA("Gamepad down");
+            if (left)  OutputDebugStringA("Gamepad left");
+            if (right) OutputDebugStringA("Gamepad right");
+        }
     }
 
     return 0;
