@@ -141,20 +141,19 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     RegisterClass(&window_class);
 
     // Create the window.
-
     HWND window = CreateWindowEx(
-        0,                              // Optional window styles.
-        CLASS_NAME,                     // Window class
-        WS_OVERLAPPEDWINDOW,            // Window style
+        0,                   // Optional window styles.
+        CLASS_NAME,          // Window class
         L"TanksWindows",     // Window text
+        WS_OVERLAPPEDWINDOW, // Window style
 
         // Size and position
         CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 
-        NULL,       // Parent window
-        NULL,       // Menu
+        NULL,      // Parent window
+        NULL,      // Menu
         instance,  // Instance handle
-        NULL        // Additional application data
+        NULL       // Additional application data
     );
 
     if (window == NULL) return 0;
