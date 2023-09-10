@@ -9,11 +9,11 @@
 
 #include "win-32.h"
 
-
-
-
-
 GlobalVariable bool IS_RUNNING = false;
+
+
+
+
 
 Internal void ProcessPendingMessages()
 {
