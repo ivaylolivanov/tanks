@@ -19,6 +19,6 @@ del %BUILD_DIR%\*.pdb > NUL 2> NUL
 
 clang %COMMON_COMPILER_FLAGS% %COMMON_LINKER_FLAGS%^
       %SOURCE_DIR%\platform-layer\windows\win-32.cpp^
-      -o win-32.exe -v
+      -o tanks.exe -v
 
 popd
