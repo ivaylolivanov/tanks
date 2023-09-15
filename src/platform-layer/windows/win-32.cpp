@@ -233,11 +233,8 @@ Internal void ProcessPendingKeyPresses(int& x, int& y)
     }
 }
 
-Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
-    LPARAM l_param)
 Internal void ProcessControllersStates()
 {
-    LRESULT result = 0;
     for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
     {
         XINPUT_STATE controllerState;
@@ -270,6 +267,10 @@ Internal void ProcessControllersStates()
     }
 }
 
+Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
+    LPARAM l_param)
+{
+    LRESULT result = 0;
     switch (message)
     {
         case WM_CLOSE:
