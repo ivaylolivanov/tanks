@@ -80,7 +80,6 @@ Internal void Render(BackBuffer *buffer, int offset_blue, int offset_green)
 
 }
 
-Internal void ProcessPendingKeyPresses()
 Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
     int window_width, int window_height)
 {
@@ -92,6 +91,8 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
         &buffer->Info,
         DIB_RGB_COLORS, SRCCOPY);
 }
+
+Internal void ProcessPendingKeyPresses(int& x, int& y)
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -119,21 +120,25 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
                 {
                     case 'W':
                     {
+                        --y;
                         OutputDebugStringA("You have pressed W/w.\n");
                     } break;
 
                     case 'A':
                     {
+                        --x;
                         OutputDebugStringA("You have pressed A/a.\n");
                     } break;
 
                     case 'S':
                     {
+                        ++y;
                         OutputDebugStringA("You have pressed S/s.\n");
                     } break;
 
                     case 'D':
                     {
+                        ++x;
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
@@ -259,11 +264,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
 
     HDC device_context = GetDC(window);
 
+    int offset_x = 0;
+    int offset_y = 0;
 
     while (IS_RUNNING)
     {
-        ProcessPendingKeyPresses();
         for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
+        ProcessPendingKeyPresses(offset_x, offset_y);
         Render(&BACK_BUFFER, offset_x, offset_y);
         {
             XINPUT_STATE controllerState;
