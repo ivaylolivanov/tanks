@@ -1,3 +1,5 @@
+#include <cinttypes>
+
 // Better send the intetion of the static keyword to the other developers
 #define Internal       static
 #define LocalPersist   static
