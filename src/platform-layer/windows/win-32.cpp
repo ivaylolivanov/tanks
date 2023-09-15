@@ -5,12 +5,75 @@
 
 GlobalVariable bool IS_RUNNING = false;
 
+struct BackBuffer
 {
+    // Pixel is 32-bit
+    // Memory order BB GG RR XX
+    BITMAPINFO Info;
+    void *Memory;
+    int Width;
+    int Height;
+    int Pitch;
+};
 
+GlobalVariable BackBuffer BACK_BUFFER;
 
+struct WindowDimension
 {
+    int Width;
+    int Height;
+};
+
+Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
+{
+    if (buffer->Memory) VirtualFree(buffer->Memory, 0, MEM_RELEASE);
+
+    buffer->Width = width;
+    buffer->Height = height;
+
+    int bytes_per_pixel = 4;
+
+    buffer->Info.bmiHeader.biSize = sizeof(buffer->Info.bmiHeader);
+    buffer->Info.bmiHeader.biWidth = buffer->Width;
+    buffer->Info.bmiHeader.biHeight = -buffer->Height;
+    buffer->Info.bmiHeader.biPlanes = 1;
+    buffer->Info.bmiHeader.biBitCount = 32;
+    buffer->Info.bmiHeader.biCompression = BI_RGB;
+
+    int memory_size = (buffer->Width * buffer->Height) * bytes_per_pixel;
+    buffer->Memory = VirtualAlloc(0, memory_size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
+    buffer->Pitch = width * bytes_per_pixel;
 }
 
+Internal WindowDimension GetWindowDimension(HWND window)
+{
+    WindowDimension dimension;
+
+    RECT client_rect;
+    GetClientRect(window, &client_rect);
+    dimension.Width  = client_rect.right - client_rect.left;
+    dimension.Height = client_rect.bottom - client_rect.top;
+
+    return dimension;
+}
+
+Internal void Render(BackBuffer *buffer, int offset_blue, int offset_green)
+{
+    uint8* row = (uint8 *) buffer->Memory;
+    for (int y = 0; y < buffer->Height; ++y)
+    {
+        uint32 *pixel = (uint32 *)row;
+        for (int x = 0; x < buffer->Width; ++x)
+        {
+            uint8 blue  = x + offset_blue;
+            uint8 green = y + offset_green;
+
+            *pixel++ = (green << 8) | blue;
+        }
+
+        row += buffer->Pitch;
+    }
+}
 
 {
 
@@ -18,6 +81,17 @@ GlobalVariable bool IS_RUNNING = false;
 }
 
 Internal void ProcessPendingKeyPresses()
+Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
+    int window_width, int window_height)
+{
+    StretchDIBits(
+        device_context,
+        0, 0, window_width, window_height,
+        0, 0, buffer->Width, buffer->Height,
+        buffer->Memory,
+        &buffer->Info,
+        DIB_RGB_COLORS, SRCCOPY);
+}
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -99,32 +173,52 @@ Internal void ProcessPendingKeyPresses()
     }
 }
 
-LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
+Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
+    LPARAM l_param)
 {
+    LRESULT result = 0;
+
     switch (message)
     {
+        case WM_CLOSE:
+        {
+            IS_RUNNING = false;
+        } break;
+
+        case WM_QUIT:
+        {
+            IS_RUNNING = false;
+        } break;
+
         case WM_DESTROY:
         {
             IS_RUNNING = false;
-            PostQuitMessage(0);
-            return 0;
-        }
+        } break;
+
+        case WM_ACTIVATEAPP:
+        {
+            OutputDebugStringA("WM_ACTIVATEAPP\n");
+        } break;
 
         case WM_PAINT:
         {
-            PAINTSTRUCT paint_struct;
-            HDC device_context = BeginPaint(window, &paint_struct);
+            PAINTSTRUCT paint;
+            HDC device_context = BeginPaint(window, &paint);
 
-            // All painting occurs here, between BeginPaint and EndPaint.
+            WindowDimension dimension = GetWindowDimension(window);
+            DisplayBufferInWindow(&BACK_BUFFER, device_context, dimension.Width,
+                dimension.Height);
 
-            FillRect(device_context, &paint_struct.rcPaint, (HBRUSH)(COLOR_WINDOW + 1));
+            EndPaint(window, &paint);
+        } break;
 
-            EndPaint( window, &paint_struct);
-        }
-        return 0;
-
+        default:
+        {
+            result = DefWindowProc(window, message, w_param, l_param);
+        } break;
     }
-    return DefWindowProc(window, message, wparam, lparam);
+
+    return result;
 }
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int command_line_characters_count)
@@ -133,43 +227,44 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     LoadXInput();
 
     // Register the window class.
-    const wchar_t CLASS_NAME[] = L"Sample Window Class";
+    const char CLASS_NAME[]   = "Tanks";
+    const char WINDOW_TITLE[] = "Tanks";
 
     WNDCLASS window_class = { };
 
-    window_class.lpfnWndProc = WindowProc;
-    window_class.hInstance = instance;
+    ResizeBuffer(&BACK_BUFFER, 1280, 720);
+
+    window_class.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    window_class.lpfnWndProc   = WindowProc;
+    window_class.hInstance     = instance;
     window_class.lpszClassName = CLASS_NAME;
 
     RegisterClass(&window_class);
 
     // Create the window.
-    HWND window = CreateWindowEx(
-        0,                   // Optional window styles.
-        CLASS_NAME,          // Window class
-        L"TanksWindows",     // Window text
-        WS_OVERLAPPEDWINDOW, // Window style
-
-        // Size and position
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
-
-        NULL,      // Parent window
-        NULL,      // Menu
-        instance,  // Instance handle
-        NULL       // Additional application data
+    HWND window = CreateWindowExA(
+        NULL,
+        CLASS_NAME,
+        WINDOW_TITLE,
+        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        CW_USEDEFAULT, CW_USEDEFAULT,
+        NULL,
+        NULL,
+        instance,
+        NULL
     );
 
     if (window == NULL) return 0;
 
-    ShowWindow(window, command_line_characters_count);
+    HDC device_context = GetDC(window);
 
-
-    IS_RUNNING = true;
 
     while (IS_RUNNING)
     {
         ProcessPendingKeyPresses();
         for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
+        Render(&BACK_BUFFER, offset_x, offset_y);
         {
             XINPUT_STATE controllerState;
             bool isUnplugged = XInputGetState(controllerIndex, &controllerState)
@@ -199,6 +294,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
             if (left)  OutputDebugStringA("Gamepad left");
             if (right) OutputDebugStringA("Gamepad right");
         }
+        WindowDimension dimension = GetWindowDimension(window);
+        DisplayBufferInWindow(
+            &BACK_BUFFER,
+            device_context,
+            dimension.Width,
+            dimension.Height);
     }
 
     return 0;
