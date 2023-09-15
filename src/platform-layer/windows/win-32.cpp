@@ -1,52 +1,20 @@
-#ifndef UNICODE
-#define UNICODE
-#endif
-
 #include <windows.h>
-#include <wchar.h>
-#include <cinttypes>
-#include <winuser.h>
-#include <xinput.h>
 
 #include "win-32.h"
 #include "xinput.h"
 
 GlobalVariable bool IS_RUNNING = false;
 
-// XInputGetState
-DWORD WINAPI XInputGetStateStub(DWORD dwUserIndex, XINPUT_STATE *pState)
 {
-    return 0;
+
+
+{
 }
 
-typedef DWORD WINAPI FPtrXInputGetState
-(DWORD dwUserIndex, XINPUT_STATE *pState);
-GlobalVariable FPtrXInputGetState *X_INPUT_GET_STATE = XInputGetStateStub;
-// Replaces the XInput library's function of 'XInputGetState'
-#define XInputGetState X_INPUT_GET_STATE
 
-// XInputSetState
-DWORD WINAPI XInputSetStateStub(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration)
 {
-    return 0;
-}
 
-typedef DWORD WINAPI FPtrXInputSetState
-(DWORD dwUserIndex, XINPUT_VIBRATION *pVibration);
-GlobalVariable FPtrXInputSetState *X_INPUT_SET_STATE = XInputSetStateStub;
-// Replaces the XInput library's function of 'XInputSetState'
-#define XInputSetState X_INPUT_SET_STATE
 
-Internal void LoadXInput()
-{
-    HMODULE XInputLibrary = LoadLibraryA("xinput1_3.dll");
-    if (!XInputLibrary) return;
-
-    XInputGetState = (FPtrXInputGetState *)GetProcAddress(XInputLibrary, "XInputGetState");
-    if (!XInputGetState) { XInputGetState = XInputGetStateStub; }
-
-    XInputSetState = (FPtrXInputSetState *)GetProcAddress(XInputLibrary, "XInputSetState");
-    if (!XInputSetState) { XInputSetState = XInputSetStateStub; }
 }
 
 Internal void ProcessPendingKeyPresses()
@@ -195,7 +163,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
 
     ShowWindow(window, command_line_characters_count);
 
-    // Run the message loop.
 
     IS_RUNNING = true;
 
