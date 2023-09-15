@@ -181,8 +181,40 @@ Internal void ProcessPendingKeyPresses(int& x, int& y)
 
 Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
     LPARAM l_param)
+Internal void ProcessControllersStates()
 {
     LRESULT result = 0;
+    for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
+    {
+        XINPUT_STATE controllerState;
+        bool isUnplugged = XInputGetState(controllerIndex, &controllerState)
+            != ERROR_SUCCESS;
+        if (isUnplugged) continue;
+
+        XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
+
+        bool up      = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+        bool down    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+        bool left    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+        bool right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+        bool start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
+        bool back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
+        bool l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+        bool r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+        bool buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
+        bool buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
+        bool buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
+        bool buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
+
+        int16 lStickX = gamepad->sThumbLX;
+        int16 lStickY = gamepad->sThumbLY;
+
+        if (up)    OutputDebugStringA("Gamepad up");
+        if (down)  OutputDebugStringA("Gamepad down");
+        if (left)  OutputDebugStringA("Gamepad left");
+        if (right) OutputDebugStringA("Gamepad right");
+    }
+}
 
     switch (message)
     {
@@ -270,37 +302,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
 
     while (IS_RUNNING)
     {
-        for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
         ProcessPendingKeyPresses(offset_x, offset_y);
+        ProcessControllersStates();
+
         Render(&BACK_BUFFER, offset_x, offset_y);
         {
-            XINPUT_STATE controllerState;
-            bool isUnplugged = XInputGetState(controllerIndex, &controllerState)
-                != ERROR_SUCCESS;
-            if (isUnplugged) continue;
-
-            XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
-
-            bool up      = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-            bool down    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-            bool left    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-            bool right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-            bool start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
-            bool back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
-            bool l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-            bool r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-            bool buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
-            bool buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
-            bool buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
-            bool buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
-
-            int16 lStickX = gamepad->sThumbLX;
-            int16 lStickY = gamepad->sThumbLY;
-
-            if (up)    OutputDebugStringA("Gamepad up");
-            if (down)  OutputDebugStringA("Gamepad down");
-            if (left)  OutputDebugStringA("Gamepad left");
-            if (right) OutputDebugStringA("Gamepad right");
         }
         WindowDimension dimension = GetWindowDimension(window);
         DisplayBufferInWindow(
