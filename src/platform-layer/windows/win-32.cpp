@@ -9,6 +9,7 @@
 #include <xinput.h>
 
 #include "win-32.h"
+#include "xinput.h"
 
 GlobalVariable bool IS_RUNNING = false;
 
