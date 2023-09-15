@@ -110,10 +110,11 @@ Internal void ProcessPendingKeyPresses(int& x, int& y)
             case WM_KEYDOWN:
             {
                 uint32_t vk_code = (uint32_t)message.wParam;
-                bool was_down = ((message.lParam & (1 << 30)) != 0);
-                bool is_down = ((message.lParam & (1 << 31)) == 0);
 
                 bool alt_was_down = (message.lParam & (1 << 29));
+                bool was_down     = ((message.lParam & (1 << 30)) != 0);
+                bool is_down      = ((message.lParam & (1 << 31)) == 0);
+
                 if (was_down == is_down) continue;
 
                 switch (vk_code)
