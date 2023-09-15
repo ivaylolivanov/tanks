@@ -2,6 +2,7 @@
 
 #include "win-32.h"
 #include "xinput.h"
+#include "dsound.h"
 
 GlobalVariable bool IS_RUNNING = false;
 
@@ -75,9 +76,62 @@ Internal void Render(BackBuffer *buffer, int offset_blue, int offset_green)
     }
 }
 
+Internal void PlaySound(uint32 running_sample_index, int bytes_per_sample, int buffer_size, int16 tone_volume, int half_square_wave_period)
 {
+    DWORD play_cursor;
+    DWORD write_cursor;
 
+    if (FAILED(SOUND_BUFFER->GetCurrentPosition(&play_cursor, &write_cursor)))
+        return;
 
+    DWORD byte_to_lock = running_sample_index & bytes_per_sample % buffer_size;
+    DWORD bytes_to_write;
+
+    if (byte_to_lock == play_cursor)
+    {
+        bytes_to_write = buffer_size;
+    }
+    else if (byte_to_lock > play_cursor)
+    {
+        bytes_to_write = (buffer_size - byte_to_lock);
+        bytes_to_write += play_cursor;
+    }
+    else
+    {
+        bytes_to_write = play_cursor - byte_to_lock;
+    }
+
+    VOID *region1;
+    DWORD region1_size;
+    VOID *region2;
+    DWORD region2_size;
+
+    if (FAILED(
+            SOUND_BUFFER->Lock(byte_to_lock, bytes_to_write, &region1,
+                               &region1_size, &region2, &region2_size, 0)))
+        return;
+
+    DWORD region1_sample_count = region1_size / bytes_per_sample;
+    int16 *sample_out = (int16 *)region1;
+    for (DWORD sample_index = 0; sample_index < region1_sample_count; ++sample_index)
+    {
+        int16 sample_value = ((running_sample_index++ / half_square_wave_period)
+                              % 2) ? tone_volume : -tone_volume;
+        *sample_out++ = sample_value;
+        *sample_out++ = sample_value;
+    }
+
+    DWORD region2_sample_count = region2_size / bytes_per_sample;
+    sample_out = (int16 *)region2;
+    for (DWORD sample_index = 0; sample_index < region2_sample_count; ++sample_index)
+    {
+        int16 sample_value = ((running_sample_index++ / half_square_wave_period)
+                              % 2) ? tone_volume : -tone_volume;
+        *sample_out++ = sample_value;
+        *sample_out++ = sample_value;
+    }
+
+    SOUND_BUFFER->Unlock(region1, region1_size, region2, region2_size);
 }
 
 Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
@@ -300,14 +354,37 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     int offset_x = 0;
     int offset_y = 0;
 
+    int samples_per_second = 48000;
+    int tone_hz = 256;
+    int16 tone_volume = 3000;
+    uint32 running_sample_index = 0;
+    int square_wave_period = samples_per_second / tone_hz;
+    int half_square_wave_period = square_wave_period / 2;
+    int bytes_per_sample = sizeof(int16) * 2;
+    int sound_buffer_size = samples_per_second * bytes_per_sample;
+    InitDirectSound(window, samples_per_second, sound_buffer_size);
+    bool is_sound_playing = false;
+
+    IS_RUNNING = true;
     while (IS_RUNNING)
     {
         ProcessPendingKeyPresses(offset_x, offset_y);
         ProcessControllersStates();
 
         Render(&BACK_BUFFER, offset_x, offset_y);
+        PlaySound(
+            running_sample_index,
+            bytes_per_sample,
+            sound_buffer_size,
+            tone_volume,
+            half_square_wave_period);
+
+        if (!is_sound_playing)
         {
+            SOUND_BUFFER->Play(0, 0, DSBPLAY_LOOPING);
+            is_sound_playing = true;
         }
+
         WindowDimension dimension = GetWindowDimension(window);
         DisplayBufferInWindow(
             &BACK_BUFFER,
