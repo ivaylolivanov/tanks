@@ -28,7 +28,7 @@ Internal void LoadXInput()
 {
     HMODULE XInputLibrary = LoadLibraryA("xinput1_4.dll");
     if (!XInputLibrary)
-        XInputLibrary = LoadLibraryA("xinput1_3.dll");
+        XInputLibrary = LoadLibraryA("xinput9_1_0.dll");
 
     if (!XInputLibrary)
         return;
