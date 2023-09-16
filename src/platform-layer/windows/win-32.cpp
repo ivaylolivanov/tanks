@@ -4,7 +4,7 @@
 #include "xinput.h"
 #include "dsound.h"
 
-GlobalVariable bool IS_RUNNING = false;
+GlobalVariable bool32 IS_RUNNING = false;
 
 struct BackBuffer
 {
@@ -165,9 +165,9 @@ Internal void ProcessPendingKeyPresses(int& x, int& y)
             {
                 uint32_t vk_code = (uint32_t)message.wParam;
 
-                bool alt_was_down = (message.lParam & (1 << 29));
-                bool was_down     = ((message.lParam & (1 << 30)) != 0);
-                bool is_down      = ((message.lParam & (1 << 31)) == 0);
+                bool32 alt_was_down = (message.lParam & (1 << 29));
+                bool32 was_down     = ((message.lParam & (1 << 30)) != 0);
+                bool32 is_down      = ((message.lParam & (1 << 31)) == 0);
 
                 if (was_down == is_down) continue;
 
@@ -238,24 +238,24 @@ Internal void ProcessControllersStates()
     for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
     {
         XINPUT_STATE controllerState;
-        bool isUnplugged = XInputGetState(controllerIndex, &controllerState)
+        bool32 isUnplugged = XInputGetState(controllerIndex, &controllerState)
             != ERROR_SUCCESS;
         if (isUnplugged) continue;
 
         XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
 
-        bool up      = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
-        bool down    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
-        bool left    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
-        bool right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
-        bool start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
-        bool back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
-        bool l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-        bool r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-        bool buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
-        bool buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
-        bool buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
-        bool buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
+        bool32 up      = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP);
+        bool32 down    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN);
+        bool32 left    = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT);
+        bool32 right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
+        bool32 start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
+        bool32 back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
+        bool32 l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
+        bool32 r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
+        bool32 buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
+        bool32 buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
+        bool32 buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
+        bool32 buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
 
         int16 lStickX = gamepad->sThumbLX;
         int16 lStickY = gamepad->sThumbLY;
@@ -364,7 +364,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     int bytes_per_sample = sizeof(int16) * 2;
     int sound_buffer_size = samples_per_second * bytes_per_sample;
     InitDirectSound(window, samples_per_second, sound_buffer_size);
-    bool is_sound_playing = false;
+    bool32 is_sound_playing = false;
 
     IS_RUNNING = true;
     while (IS_RUNNING)
