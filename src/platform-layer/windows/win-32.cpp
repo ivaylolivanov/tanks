@@ -17,6 +17,8 @@ struct BackBuffer
     int Pitch;
 };
 
+GlobalVariable BackBuffer BACK_BUFFER;
+
 struct SoundOutput
 {
     int32  SamplesPerSecond;
@@ -30,7 +32,6 @@ struct SoundOutput
     int32  LatencySampleCount;
 };
 
-GlobalVariable BackBuffer BACK_BUFFER;
 GlobalVariable LPDIRECTSOUNDBUFFER SOUND_BUFFER;
 
 struct WindowDimension
