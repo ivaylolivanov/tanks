@@ -17,7 +17,21 @@ struct BackBuffer
     int Pitch;
 };
 
+struct SoundOutput
+{
+    int32  SamplesPerSecond;
+    int32  ToneHz;
+    int16  ToneVolume;
+    uint32 RunningSampleIndex;
+    int32  WavePeriod;
+    int32  BytesPerSample;
+    int32  SecondaryBufferSize;
+    real32 TimeSine;
+    int32  LatencySampleCount;
+};
+
 GlobalVariable BackBuffer BACK_BUFFER;
+GlobalVariable LPDIRECTSOUNDBUFFER SOUND_BUFFER;
 
 struct WindowDimension
 {
