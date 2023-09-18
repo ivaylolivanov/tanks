@@ -1,5 +1,7 @@
 #include <dsound.h>
 
+GlobalVariable LPDIRECTSOUNDBUFFER SOUND_BUFFER;
+
 HRESULT WINAPI DirectSoundCreateStub(LPCGUID pcGuidDevice, LPDIRECTSOUND *ppDS, LPUNKNOWN pUnkOuter)
 {
     return 0;

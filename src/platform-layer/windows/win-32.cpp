@@ -32,8 +32,6 @@ struct SoundOutput
     int32  LatencySampleCount;
 };
 
-GlobalVariable LPDIRECTSOUNDBUFFER SOUND_BUFFER;
-
 struct WindowDimension
 {
     int Width;
