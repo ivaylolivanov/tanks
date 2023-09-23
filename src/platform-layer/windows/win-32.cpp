@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <math.h>
 
 #include "win-32.h"
 #include "xinput.h"
@@ -133,6 +134,32 @@ Internal void FillSoundBuffer(SoundOutput *sound_output, DWORD byte_to_lock, DWO
     }
 
     SOUND_BUFFER->Unlock(region1, region1_size, region2, region2_size);
+}
+
+Internal void UpdateSoundBuffer(SoundOutput *sound_output)
+{
+    DWORD play_cursor;
+    DWORD write_cursor;
+    if (FAILED(SOUND_BUFFER->GetCurrentPosition(&play_cursor, &write_cursor)))
+        return;
+
+    DWORD past_bytes = sound_output->RunningSampleIndex
+        * sound_output->BytesPerSample;
+    DWORD byte_to_lock = past_bytes % sound_output->BufferSize;
+
+    DWORD target_bytes = sound_output->LatencySampleCount
+        * sound_output->BytesPerSample;
+    DWORD target_cursor = (( play_cursor + target_bytes)
+        % sound_output->BufferSize);
+
+    DWORD bytes_to_write = bytes_to_write = target_cursor - byte_to_lock;
+    if (byte_to_lock > target_cursor)
+    {
+        bytes_to_write = (sound_output->BufferSize - byte_to_lock);
+        bytes_to_write += target_cursor;
+    }
+
+    FillSoundBuffer(sound_output, byte_to_lock, bytes_to_write);
 }
 
 Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
@@ -356,16 +383,16 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     int offset_x = 0;
     int offset_y = 0;
 
-    int samples_per_second = 48000;
-    int tone_hz = 256;
-    int16 tone_volume = 3000;
-    uint32 running_sample_index = 0;
-    int square_wave_period = samples_per_second / tone_hz;
-    int half_square_wave_period = square_wave_period / 2;
-    int bytes_per_sample = sizeof(int16) * 2;
-    int sound_buffer_size = samples_per_second * bytes_per_sample;
-    InitDirectSound(window, samples_per_second, sound_buffer_size);
-    bool32 is_sound_playing = false;
+    SoundOutput sound_output = {};
+    sound_output.SamplesPerSecond = 48000;
+    sound_output.ToneHz = 256;
+    sound_output.ToneVolume = 3000;
+    sound_output.WavePeriod = sound_output.SamplesPerSecond
+        * sound_output.ToneHz;
+    sound_output.BytesPerSample = sizeof(int16) * 2;
+    sound_output.BufferSize = sound_output.SamplesPerSecond
+        * sound_output.BytesPerSample;
+    sound_output.LatencySampleCount = sound_output.SamplesPerSecond / 15;
 
     IS_RUNNING = true;
     while (IS_RUNNING)
