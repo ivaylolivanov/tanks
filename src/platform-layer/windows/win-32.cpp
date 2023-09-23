@@ -335,7 +335,7 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
 
         default:
         {
-            result = DefWindowProc(window, message, w_param, l_param);
+            result = DefWindowProcA(window, message, w_param, l_param);
         } break;
     }
 
