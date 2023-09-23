@@ -393,6 +393,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     sound_output.BufferSize = sound_output.SamplesPerSecond
         * sound_output.BytesPerSample;
     sound_output.LatencySampleCount = sound_output.SamplesPerSecond / 15;
+    InitDirectSound(window, sound_output.SamplesPerSecond,
+        sound_output.BufferSize);
+    FillSoundBuffer(&sound_output, 0,
+        sound_output.LatencySampleCount * sound_output.BytesPerSample);
+    SOUND_BUFFER->Play(0, 0, DSBPLAY_LOOPING);
 
     IS_RUNNING = true;
     while (IS_RUNNING)
@@ -401,18 +406,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
         ProcessControllersStates();
 
         Render(&BACK_BUFFER, offset_x, offset_y);
-        PlaySound(
-            running_sample_index,
-            bytes_per_sample,
-            sound_buffer_size,
-            tone_volume,
-            half_square_wave_period);
-
-        if (!is_sound_playing)
-        {
-            SOUND_BUFFER->Play(0, 0, DSBPLAY_LOOPING);
-            is_sound_playing = true;
-        }
+        UpdateSoundBuffer(&sound_output);
 
         WindowDimension dimension = GetWindowDimension(window);
         DisplayBufferInWindow(
