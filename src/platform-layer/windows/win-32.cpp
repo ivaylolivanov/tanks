@@ -174,7 +174,7 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
         DIB_RGB_COLORS, SRCCOPY);
 }
 
-Internal void ProcessPendingKeyPresses(int& x, int& y)
+Internal void ProcessPendingKeyPresses(int& x, int& y, SoundOutput *sound_output)
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -258,6 +258,9 @@ Internal void ProcessPendingKeyPresses(int& x, int& y)
                 DispatchMessageA(&message);
             } break;
         }
+
+        sound_output->ToneHz = 512 + (int)(256.0f * ((real32)y / 30000.0f));
+        sound_output->WavePeriod = sound_output->SamplesPerSecond / sound_output->ToneHz;
     }
 }
 
@@ -402,7 +405,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     IS_RUNNING = true;
     while (IS_RUNNING)
     {
-        ProcessPendingKeyPresses(offset_x, offset_y);
+        ProcessPendingKeyPresses(offset_x, offset_y, &sound_output);
         ProcessControllersStates();
 
         Render(&BACK_BUFFER, offset_x, offset_y);
