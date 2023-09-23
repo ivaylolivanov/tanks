@@ -27,7 +27,7 @@ struct SoundOutput
     uint32 RunningSampleIndex;
     int32  WavePeriod;
     int32  BytesPerSample;
-    int32  SecondaryBufferSize;
+    int32  BufferSize;
     real32 TimeSine;
     int32  LatencySampleCount;
 };
