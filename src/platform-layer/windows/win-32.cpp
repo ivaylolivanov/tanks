@@ -89,59 +89,47 @@ Internal void Render(BackBuffer *buffer, int offset_blue, int offset_green)
     }
 }
 
-Internal void PlaySound(uint32 running_sample_index, int bytes_per_sample, int buffer_size, int16 tone_volume, int half_square_wave_period)
+Internal void FillSoundBuffer(SoundOutput *sound_output, DWORD byte_to_lock, DWORD bytes_to_write)
 {
-    DWORD play_cursor;
-    DWORD write_cursor;
-
-    if (FAILED(SOUND_BUFFER->GetCurrentPosition(&play_cursor, &write_cursor)))
-        return;
-
-    DWORD byte_to_lock = running_sample_index & bytes_per_sample % buffer_size;
-    DWORD bytes_to_write;
-
-    if (byte_to_lock == play_cursor)
-    {
-        bytes_to_write = buffer_size;
-    }
-    else if (byte_to_lock > play_cursor)
-    {
-        bytes_to_write = (buffer_size - byte_to_lock);
-        bytes_to_write += play_cursor;
-    }
-    else
-    {
-        bytes_to_write = play_cursor - byte_to_lock;
-    }
-
     VOID *region1;
     DWORD region1_size;
     VOID *region2;
     DWORD region2_size;
 
-    if (FAILED(
-            SOUND_BUFFER->Lock(byte_to_lock, bytes_to_write, &region1,
-                               &region1_size, &region2, &region2_size, 0)))
+    HRESULT buffer_lock_result = SOUND_BUFFER->Lock(
+        byte_to_lock, bytes_to_write,
+        &region1, &region1_size,
+        &region2, &region2_size,
+        0);
+    if (FAILED(buffer_lock_result))
         return;
 
-    DWORD region1_sample_count = region1_size / bytes_per_sample;
+    DWORD region1_samples = region1_size / sound_output->BytesPerSample;
     int16 *sample_out = (int16 *)region1;
-    for (DWORD sample_index = 0; sample_index < region1_sample_count; ++sample_index)
+    for (DWORD sample_index = 0; sample_index < region1_samples; ++sample_index)
     {
-        int16 sample_value = ((running_sample_index++ / half_square_wave_period)
-                              % 2) ? tone_volume : -tone_volume;
+        real32 sine_value = sinf(sound_output->TimeSine);
+        int16 sample_value = (int16)(sine_value * sound_output->ToneVolume);
         *sample_out++ = sample_value;
         *sample_out++ = sample_value;
+
+        sound_output->TimeSine += 2.0f * Pi32 * 1.0f
+            / (real32) sound_output->WavePeriod;
+        ++sound_output->RunningSampleIndex;
     }
 
-    DWORD region2_sample_count = region2_size / bytes_per_sample;
+    DWORD region2_samples = region2_size / sound_output->BytesPerSample;
     sample_out = (int16 *)region2;
-    for (DWORD sample_index = 0; sample_index < region2_sample_count; ++sample_index)
+    for (DWORD sample_index = 0; sample_index < region2_samples; ++sample_index)
     {
-        int16 sample_value = ((running_sample_index++ / half_square_wave_period)
-                              % 2) ? tone_volume : -tone_volume;
+        real32 sine_value = sinf(sound_output->TimeSine);
+        int16 sample_value = (int16)(sine_value * sound_output->ToneVolume);
         *sample_out++ = sample_value;
         *sample_out++ = sample_value;
+
+        sound_output->TimeSine += 2.0f * Pi32 * 1.0f
+            / (real32) sound_output->WavePeriod;
+        ++sound_output->RunningSampleIndex;
     }
 
     SOUND_BUFFER->Unlock(region1, region1_size, region2, region2_size);
