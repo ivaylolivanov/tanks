@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <stdio.h>
 #include <math.h>
 
 #include "win-32.h"
@@ -347,6 +348,10 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int command_line_characters_count)
 {
+    LARGE_INTEGER performance_counter_frequency;
+    QueryPerformanceFrequency(&performance_counter_frequency);
+    int64 frequency = performance_counter_frequency.QuadPart;
+
     IS_RUNNING = false;
     LoadXInput();
 
@@ -403,6 +408,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     SOUND_BUFFER->Play(0, 0, DSBPLAY_LOOPING);
 
     IS_RUNNING = true;
+
+    LARGE_INTEGER counter_previous;
+    QueryPerformanceCounter(&counter_previous);
+    uint64 cycles_previous = __rdtsc();
+
     while (IS_RUNNING)
     {
         ProcessPendingKeyPresses(offset_x, offset_y, &sound_output);
@@ -417,6 +427,25 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
             device_context,
             dimension.Width,
             dimension.Height);
+
+        uint64 cycles_current = __rdtsc();
+
+        LARGE_INTEGER counter_current;
+        QueryPerformanceCounter(&counter_current);
+
+        uint64 cycles_elapsed = cycles_current - cycles_previous;
+        int64 counter_elapsed = counter_current.QuadPart - counter_previous.QuadPart;
+
+        real64 ms_per_frame = ((1000.0f * (real64)counter_elapsed) / (real64)frequency);
+        real64 fps = (real64)frequency / (real64)counter_elapsed;
+        real64 mc_per_frame = (real64)cycles_elapsed / (1000.0f * 1000.0f);
+
+        char dbg_msg_buffer[256];
+        sprintf(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
+        OutputDebugStringA(dbg_msg_buffer);
+
+        counter_previous = counter_current;
+        cycles_previous  = cycles_current;
     }
 
     return 0;
