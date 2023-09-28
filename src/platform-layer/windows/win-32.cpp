@@ -40,6 +40,11 @@ struct WindowDimension
     int Height;
 };
 
+void* LoadFile(char *filename)
+{
+    return 0;
+}
+
 Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
 {
     if (buffer->Memory) VirtualFree(buffer->Memory, 0, MEM_RELEASE);
