@@ -30,7 +30,7 @@ struct SoundOutput
     int32  WavePeriod;
     int32  BytesPerSample;
     int32  BufferSize;
-    real32 TimeSine;
+    real32 SineCurrent;
     int32  LatencySampleCount;
 };
 
