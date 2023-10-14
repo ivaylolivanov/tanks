@@ -10,38 +10,7 @@
 #include "..\..\tanks.cpp"
 
 GlobalVariable bool32 IS_RUNNING = false;
-
-struct BackBuffer
-{
-    // Pixel is 32-bit
-    // Memory order BB GG RR XX
-    BITMAPINFO Info;
-    void *Memory;
-    int Width;
-    int Height;
-    int Pitch;
-};
-
 GlobalVariable BackBuffer BACK_BUFFER;
-
-struct SoundOutput
-{
-    int32  SamplesPerSecond;
-    int32  ToneHz;
-    int16  ToneVolume;
-    uint32 RunningSampleIndex;
-    int32  WavePeriod;
-    int32  BytesPerSample;
-    int32  BufferSize;
-    real32 SineCurrent;
-    int32  LatencySampleCount;
-};
-
-struct WindowDimension
-{
-    int Width;
-    int Height;
-};
 
 void* LoadFile(char *filename)
 {
@@ -190,7 +159,7 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
         DIB_RGB_COLORS, SRCCOPY);
 }
 
-Internal void ProcessPendingKeyPresses(int& x, int& y, SoundOutput *sound_output)
+Internal void ProcessPendingKeyPresses()
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -219,25 +188,21 @@ Internal void ProcessPendingKeyPresses(int& x, int& y, SoundOutput *sound_output
                 {
                     case 'W':
                     {
-                        --y;
                         OutputDebugStringA("You have pressed W/w.\n");
                     } break;
 
                     case 'A':
                     {
-                        --x;
                         OutputDebugStringA("You have pressed A/a.\n");
                     } break;
 
                     case 'S':
                     {
-                        ++y;
                         OutputDebugStringA("You have pressed S/s.\n");
                     } break;
 
                     case 'D':
                     {
-                        ++x;
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
@@ -274,18 +239,30 @@ Internal void ProcessPendingKeyPresses(int& x, int& y, SoundOutput *sound_output
                 DispatchMessageA(&message);
             } break;
         }
-
-        sound_output->ToneHz = 512 + (int)(256.0f * ((real32)y / 30000.0f));
-        sound_output->WavePeriod = sound_output->SamplesPerSecond / sound_output->ToneHz;
     }
 }
 
-Internal void ProcessControllersStates()
+Internal void ProcessXInputButton(DWORD button_bit, DWORD raw_state,
+                                  ButtonState *old_state, ButtonState *new_state)
 {
-    for (DWORD controllerIndex = 0; controllerIndex < XUSER_MAX_COUNT; ++controllerIndex)
+    new_state->EndedDown = ((raw_state & button_bit) == button_bit);
+    new_state->HalfTransitions = (old_state->EndedDown != new_state->EndedDown) ? 1 : 0;
+}
+
+Internal void ProcessControllersStates(GameInput *input_old, GameInput *input_new)
+{
+    int max_controllers = XUSER_MAX_COUNT;
+    if (max_controllers > ArrayCount(input_new->Controllers))
+        max_controllers = ArrayCount(input_new->Controllers);
+
+    for (DWORD controller_index = 0; controller_index < max_controllers;
+         ++controller_index)
     {
+        ControllerState *state_old = &input_old->Controllers[controller_index];
+        ControllerState *state_new = &input_new->Controllers[controller_index];
+
         XINPUT_STATE controllerState;
-        bool32 isUnplugged = XInputGetState(controllerIndex, &controllerState)
+        bool32 isUnplugged = XInputGetState(controller_index, &controllerState)
             != ERROR_SUCCESS;
         if (isUnplugged) continue;
 
@@ -297,20 +274,45 @@ Internal void ProcessControllersStates()
         bool32 right   = (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT);
         bool32 start   = (gamepad->wButtons & XINPUT_GAMEPAD_START);
         bool32 back    = (gamepad->wButtons & XINPUT_GAMEPAD_BACK);
-        bool32 l1      = (gamepad->wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER);
-        bool32 r1      = (gamepad->wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER);
-        bool32 buttonA = (gamepad->wButtons & XINPUT_GAMEPAD_A);
-        bool32 buttonB = (gamepad->wButtons & XINPUT_GAMEPAD_B);
-        bool32 buttonX = (gamepad->wButtons & XINPUT_GAMEPAD_X);
-        bool32 buttonY = (gamepad->wButtons & XINPUT_GAMEPAD_Y);
 
         int16 lStickX = gamepad->sThumbLX;
         int16 lStickY = gamepad->sThumbLY;
 
-        if (up)    OutputDebugStringA("Gamepad up");
-        if (down)  OutputDebugStringA("Gamepad down");
-        if (left)  OutputDebugStringA("Gamepad left");
-        if (right) OutputDebugStringA("Gamepad right");
+        state_new->IsAnalog = true;
+        state_new->StartX = state_old->EndX;
+        state_new->StartY = state_old->EndY;
+
+        real32 x;
+        if (gamepad->sThumbLX < 0)
+            x = (real32)gamepad->sThumbLX / 32768.0f;
+        else
+            x = (real32)gamepad->sThumbLX / 32767.0f;
+
+        real32 y;
+        if (gamepad->sThumbLY < 0)
+            y = (real32)gamepad->sThumbLY / 32768.0f;
+        else
+            y = (real32)gamepad->sThumbLY / 32767.0f;
+
+        state_new->MinX = state_new->MaxX = state_new->EndX = x;
+        state_new->MinY = state_new->MaxY = state_new->EndY = y;
+
+        ProcessXInputButton(XINPUT_GAMEPAD_A,
+            gamepad->wButtons, &state_old->ActionUp, &state_new->ActionUp);
+        ProcessXInputButton(XINPUT_GAMEPAD_B,
+            gamepad->wButtons, &state_old->ActionDown, &state_new->ActionDown);
+        ProcessXInputButton(XINPUT_GAMEPAD_X,
+            gamepad->wButtons, &state_old->ActionLeft, &state_new->ActionLeft);
+        ProcessXInputButton(XINPUT_GAMEPAD_Y,
+            gamepad->wButtons, &state_old->ActionRight, &state_new->ActionRight);
+        ProcessXInputButton(XINPUT_GAMEPAD_LEFT_SHOULDER,
+            gamepad->wButtons, &state_old->ShoulderLeft, &state_new->ShoulderLeft);
+        ProcessXInputButton(XINPUT_GAMEPAD_RIGHT_SHOULDER,
+            gamepad->wButtons, &state_old->Buttons[5], &state_new->Buttons[5]);
+        ProcessXInputButton(XINPUT_GAMEPAD_START, gamepad->wButtons,
+            &state_old->Start, &state_new->Start);
+        ProcessXInputButton(XINPUT_GAMEPAD_BACK, gamepad->wButtons,
+            &state_old->Back, &state_new->Back);
     }
 }
 
@@ -361,7 +363,7 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
     return result;
 }
 
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_line, int command_line_characters_count)
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int cmd_size)
 {
     LARGE_INTEGER performance_counter_frequency;
     QueryPerformanceFrequency(&performance_counter_frequency);
@@ -403,15 +405,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
 
     HDC device_context = GetDC(window);
 
-    int offset_x = 0;
-    int offset_y = 0;
-
     SoundOutput sound_output = {};
     sound_output.SamplesPerSecond = 48000;
-    sound_output.ToneHz = 256;
-    sound_output.ToneVolume = 3000;
-    sound_output.WavePeriod = sound_output.SamplesPerSecond
-        * sound_output.ToneHz;
     sound_output.BytesPerSample = sizeof(int16) * 2;
     sound_output.BufferSize = sound_output.SamplesPerSecond
         * sound_output.BytesPerSample;
@@ -430,10 +425,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
     QueryPerformanceCounter(&counter_previous);
     uint64 cycles_previous = __rdtsc();
 
+    GameInput inputs[2] = {};
+    GameInput* new_input = &inputs[0];
+    GameInput* old_input = &inputs[1];
+
     while (IS_RUNNING)
     {
-        ProcessPendingKeyPresses(offset_x, offset_y, &sound_output);
-        ProcessControllersStates();
+        // TODO: WiP
+        ProcessPendingKeyPresses();
+        ProcessControllersStates(old_input, new_input);
 
         DWORD byte_to_lock;
         DWORD bytes_to_write;
@@ -449,8 +449,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR command_li
         game_buffer.Height = BACK_BUFFER.Height;
         game_buffer.Width  = BACK_BUFFER.Width;
         game_buffer.Pitch = BACK_BUFFER.Pitch;
-        UpdateAndRender(&game_buffer, offset_x, offset_y, &sound_buffer,
-                        sound_output.ToneHz);
+        UpdateAndRender(new_input, &game_buffer, &sound_buffer);
 
         if (is_sound_valid)
             FillSoundBuffer(&sound_output, byte_to_lock, bytes_to_write, &sound_buffer);

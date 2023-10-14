@@ -20,3 +20,30 @@ typedef uint64_t uint64;
 
 typedef float  real32;
 typedef double real64;
+
+struct BackBuffer
+{
+    // Pixel is 32-bit
+    // Memory order BB GG RR XX
+    BITMAPINFO Info;
+    void *Memory;
+    int Width;
+    int Height;
+    int Pitch;
+};
+
+struct WindowDimension
+{
+    int Width;
+    int Height;
+};
+
+struct SoundOutput
+{
+    int32  SamplesPerSecond;
+    uint32 RunningSampleIndex;
+    int32  BytesPerSample;
+    int32  BufferSize;
+    real32 SineCurrent;
+    int32  LatencySampleCount;
+};

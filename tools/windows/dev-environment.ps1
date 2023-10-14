@@ -4,4 +4,4 @@
 # * Will be "sourced" by the prepare.bat script.
 
 # Set to the root of the project
-$global:WorkingDirRoot="D:\Projects\tanks";
+$global:WorkingDirRoot="$HOME\Projects\tanks";
