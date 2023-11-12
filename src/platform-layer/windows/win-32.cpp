@@ -210,7 +210,13 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
         DIB_RGB_COLORS, SRCCOPY);
 }
 
-Internal void ProcessPendingKeyPresses()
+Internal void ProcessKeyboardButton(ButtonState* state, bool32 is_down)
+{
+    state->EndedDown = is_down;
+    ++state->HalfTransitions;
+}
+
+Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))
@@ -239,21 +245,25 @@ Internal void ProcessPendingKeyPresses()
                 {
                     case 'W':
                     {
+                        ProcessKeyboardButton(&keyboard->Up, is_down);
                         OutputDebugStringA("You have pressed W/w.\n");
                     } break;
 
                     case 'A':
                     {
+                        ProcessKeyboardButton(&keyboard->Left, is_down);
                         OutputDebugStringA("You have pressed A/a.\n");
                     } break;
 
                     case 'S':
                     {
+                        ProcessKeyboardButton(&keyboard->Down, is_down);
                         OutputDebugStringA("You have pressed S/s.\n");
                     } break;
 
                     case 'D':
                     {
+                        ProcessKeyboardButton(&keyboard->Right, is_down);
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
@@ -302,7 +312,7 @@ Internal void ProcessXInputButton(DWORD button_bit, DWORD raw_state,
 
 Internal void ProcessControllersStates(GameInput *input_old, GameInput *input_new)
 {
-    int max_controllers = XUSER_MAX_COUNT;
+    DWORD max_controllers = XUSER_MAX_COUNT;
     if (max_controllers > ArrayCount(input_new->Controllers))
         max_controllers = ArrayCount(input_new->Controllers);
 
@@ -496,10 +506,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     GameInput* new_input = &inputs[0];
     GameInput* old_input = &inputs[1];
 
+    LARGE_INTEGER counter_previous;
+    QueryPerformanceCounter(&counter_previous);
+    uint64 cycles_previous = __rdtsc();
+
     while (IS_RUNNING)
     {
-        // TODO: WiP
-        ProcessPendingKeyPresses();
+        ControllerState* keyboard = &new_input->Controllers[0];
+        ControllerState controller_default_state = {};
+        *keyboard = controller_default_state;
+
+        ProcessPendingKeyPresses(keyboard);
         ProcessControllersStates(old_input, new_input);
 
         DWORD byte_to_lock;
