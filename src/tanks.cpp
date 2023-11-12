@@ -44,6 +44,15 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input,
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
+        char* filepath = __FILE__;
+
+        FileData file = ReadFile(filepath);
+        if (file.Content)
+        {
+            WriteFile("testing.out", file.Content, file.Size);
+            FreeFileMemory(file.Content);
+        }
+
 	game_state->ToneHz = 256;
 	memory->IsInitialized = true;
     }
