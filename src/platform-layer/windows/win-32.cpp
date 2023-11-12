@@ -473,9 +473,24 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         0, sound_output.BufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
     if (!samples) return 0;
 
-    LARGE_INTEGER counter_previous;
-    QueryPerformanceCounter(&counter_previous);
-    uint64 cycles_previous = __rdtsc();
+    LPVOID base_address = 0;
+
+    GameMemory game_memory = {};
+    game_memory.PermanentStorageSize = MEGABYTES(64);
+    game_memory.TransientStorageSize = GIGABYTES(1);
+
+    uint64 total_size = game_memory.PermanentStorageSize
+        + game_memory.TransientStorageSize;
+    game_memory.PermanentStorage = VirtualAlloc(
+        base_address,
+        (size_t)total_size,
+        MEM_RESERVE | MEM_COMMIT,
+        PAGE_READWRITE);
+
+    game_memory.TransientStorage = ((uint8 *)game_memory.PermanentStorage
+        + game_memory.PermanentStorageSize);
+
+    if (!game_memory.PermanentStorage || !game_memory.TransientStorage) return 0;
 
     GameInput inputs[2] = {};
     GameInput* new_input = &inputs[0];
@@ -501,7 +516,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         game_buffer.Height = BACK_BUFFER.Height;
         game_buffer.Width  = BACK_BUFFER.Width;
         game_buffer.Pitch = BACK_BUFFER.Pitch;
-        UpdateAndRender(new_input, &game_buffer, &sound_buffer);
+        UpdateAndRender(&game_memory, new_input, &game_buffer, &sound_buffer);
 
         if (is_sound_valid)
             FillSoundBuffer(&sound_output, byte_to_lock, bytes_to_write, &sound_buffer);

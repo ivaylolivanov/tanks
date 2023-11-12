@@ -36,12 +36,17 @@ Internal void RenderGradient(GameBackBuffer *buffer, int offset_blue, int offset
     }
 }
 
-Internal void UpdateAndRender(GameInput *input, GameBackBuffer *display_buffer,
-                              GameSoundBuffer *sound_buffer)
+Internal void UpdateAndRender(GameMemory *memory, GameInput *input,
+    GameBackBuffer *display_buffer, GameSoundBuffer *sound_buffer)
 {
-    LocalPersist int offset_blue  = 0;
-    LocalPersist int offset_green = 0;
-    LocalPersist int tone_hz      = 256;
+    Assert(sizeof(GameState) <= memory->PermanentStorageSize);
+
+    GameState* game_state = (GameState *)memory->PermanentStorage;
+    if (!memory->IsInitialized)
+    {
+	game_state->ToneHz = 256;
+	memory->IsInitialized = true;
+    }
 
     ControllerState *input_main = &input->Controllers[0];
     if (input_main->IsAnalog)
@@ -59,6 +64,6 @@ Internal void UpdateAndRender(GameInput *input, GameBackBuffer *display_buffer,
     if (input_main->ActionUp.EndedDown)
         tone_hz = 256 + (int)(128.0f * (input_main->EndY));
 
-    OutputSound(sound_buffer, tone_hz);
-    RenderGradient(display_buffer, offset_blue, offset_green);
+    OutputSound(sound_buffer, game_state->ToneHz);
+    RenderGradient(display_buffer, game_state->OffsetBlue, game_state->OffsetGreen);
 }
