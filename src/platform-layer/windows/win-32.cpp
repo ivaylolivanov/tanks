@@ -471,6 +471,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     int16 *samples = (int16 *)VirtualAlloc(
         0, sound_output.BufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    if (!samples) return 0;
 
     LARGE_INTEGER counter_previous;
     QueryPerformanceCounter(&counter_previous);
