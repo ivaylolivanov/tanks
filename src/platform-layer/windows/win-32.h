@@ -47,3 +47,13 @@ struct SoundOutput
     real32 SineCurrent;
     int32  LatencySampleCount;
 };
+
+struct FileData
+{
+    uint32 Size;
+    void *Content;
+};
+
+Internal void FreeFileMemory(void* memory);
+Internal FileData ReadFile(char* filename);
+Internal bool32 WriteFile(char* filename, void *memory, uint32 size);

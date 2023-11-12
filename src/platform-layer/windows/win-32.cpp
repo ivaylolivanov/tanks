@@ -12,9 +12,60 @@
 GlobalVariable bool32 IS_RUNNING = false;
 GlobalVariable BackBuffer BACK_BUFFER;
 
-void* LoadFile(char *filename)
+Internal void FreeFileMemory(void* memory)
 {
-    return 0;
+    if (!memory) return;
+
+    VirtualFree(memory, 0, MEM_RELEASE);
+}
+
+Internal FileData ReadFile(char* filename)
+{
+    FileData file = {};
+
+    HANDLE handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0,
+        OPEN_EXISTING, 0, 0);
+    if (handle == INVALID_HANDLE_VALUE) return file;
+
+    LARGE_INTEGER size;
+    if (!GetFileSizeEx(handle, &size)) return file;
+
+    uint32 size32 = TruncateUInt64(size.QuadPart);
+    file.Content = VirtualAlloc(0, size32, MEM_RESERVE | MEM_COMMIT,
+        PAGE_READWRITE);
+    if (!file.Content) return file;
+
+    DWORD bytes_read;
+    if (ReadFile(handle, file.Content, size32, &bytes_read, 0)
+        && (bytes_read == size32))
+    {
+        file.Size = size32;
+    }
+    else
+    {
+        FreeFileMemory(file.Content);
+        file.Content = 0;
+    }
+
+    CloseHandle(handle);
+
+    return file;
+}
+
+Internal bool32 WriteFile(char* filename, void *memory, uint32 size)
+{
+    bool32 result = false;
+
+    HANDLE handle = CreateFileA(filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
+    if (handle == INVALID_HANDLE_VALUE) return result;
+
+    DWORD bytes_written;
+    if(WriteFile(handle, memory, size, &bytes_written, 0))
+        result = (bytes_written == size);
+
+    CloseHandle(handle);
+
+    return result;
 }
 
 Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
