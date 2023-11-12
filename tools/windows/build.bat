@@ -9,7 +9,7 @@ rem what will in the future be necessary.
 rem
 rem set COMMON_COMPILER_FLAGS=-nologo -Od -Oi -WX -W4 -wd4201 -wd4100 -wd4189 -wd4505 -FC -Z7
 rem set COMMON_LINKER_FLAGS= -incremental:no -opt:ref user32.lib gdi32.lib winmm.lib
-set COMMON_COMPILER_FLAGS=-g -gcodeview
+set COMMON_COMPILER_FLAGS=-g -gcodeview -fno-rtti -O0 -Werror -Wall -Wno-unused-variable -Wno-microsoft-anon-tag
 set COMMON_LINKER_FLAGS=-l user32.lib -l gdi32.lib -l winmm.lib
 
 mkdir %BUILD_DIR%
