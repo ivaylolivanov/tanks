@@ -12,6 +12,24 @@
 GlobalVariable bool32 IS_RUNNING = false;
 GlobalVariable bool32 IS_PAUSED  = false;
 GlobalVariable BackBuffer BACK_BUFFER;
+GlobalVariable int64 PERFORMANCE_COUNTER_FREQUENCY;
+
+inline LARGE_INTEGER GetCounterStamp()
+{
+    LARGE_INTEGER result;
+
+    QueryPerformanceCounter(&result);
+
+    return result;
+}
+
+inline real32 GetSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end)
+{
+    real32 diff = (real32)(end.QuadPart - start.QuadPart);
+    real32 result = diff / (real32)PERFORMANCE_COUNTER_FREQUENCY;
+
+    return result;
+}
 
 Internal void FreeFileMemory(void* memory)
 {
@@ -490,7 +508,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 {
     LARGE_INTEGER performance_counter_frequency;
     QueryPerformanceFrequency(&performance_counter_frequency);
-    int64 frequency = performance_counter_frequency.QuadPart;
+    PERFORMANCE_COUNTER_FREQUENCY = performance_counter_frequency.QuadPart;
+
+    UINT desired_scheduler_ms = 1;
+    bool32 sleep_is_granular = (timeBeginPeriod(desired_scheduler_ms)
+        == TIMERR_NOERROR);
 
     IS_RUNNING = false;
     LoadXInput();
@@ -507,6 +529,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     window_class.lpfnWndProc   = WindowProc;
     window_class.hInstance     = instance;
     window_class.lpszClassName = CLASS_NAME;
+
+    int monitor_refresh_rate = 60;
+
+    // TODO: Chech if this is reliabled enough
+    DEVMODE devmode;
+    devmode.dmSize = sizeof(devmode);
+    if (EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &devmode) != 0)
+        monitor_refresh_rate = devmode.dmDisplayFrequency;
+
+    int game_update_hz = monitor_refresh_rate / 2;
+    real32 target_seconds_per_frame = 1.0f / (real32)game_update_hz;
 
     RegisterClass(&window_class);
 
@@ -568,9 +601,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     GameInput* new_input = &inputs[0];
     GameInput* old_input = &inputs[1];
 
-    LARGE_INTEGER counter_previous;
-    QueryPerformanceCounter(&counter_previous);
-    uint64 cycles_previous = __rdtsc();
+    LARGE_INTEGER counter_stamp_frame_start = GetCounterStamp();
+    uint64 cpu_clock_cycles_frame_start = __rdtsc();
 
     while (IS_RUNNING)
     {
@@ -612,6 +644,36 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         if (is_sound_valid)
             FillSoundBuffer(&sound_output, byte_to_lock, bytes_to_write, &sound_buffer);
 
+        LARGE_INTEGER counter_stamp_work_end = GetCounterStamp();
+        real32 work_seconds_elapsed = GetSecondsElapsed(
+            counter_stamp_frame_start,
+            counter_stamp_work_end);
+
+        real32 seconds_elapsed_for_frame = work_seconds_elapsed;
+        if (seconds_elapsed_for_frame < target_seconds_per_frame)
+        {
+            if (sleep_is_granular)
+            {
+                real32 remaining_seconds_for_frame = target_seconds_per_frame
+                    - seconds_elapsed_for_frame;
+                DWORD sleep_ms = (DWORD)(1000.0f * remaining_seconds_for_frame);
+
+                if (sleep_ms > 0) Sleep(sleep_ms);
+            }
+
+            real32 test_seconds_elapsed_for_frame = GetSecondsElapsed(
+                counter_stamp_frame_start, GetCounterStamp());
+            Assert(test_seconds_elapsed_for_frame < target_seconds_per_frame);
+
+            while (seconds_elapsed_for_frame < target_seconds_per_frame)
+                seconds_elapsed_for_frame = GetSecondsElapsed(
+                    counter_stamp_frame_start, GetCounterStamp());
+        }
+        else
+        {
+            // TODO: Log error; Missed frame rate;
+        }
+
         WindowDimension dimension = GetWindowDimension(window);
         DisplayBufferInWindow(
             &BACK_BUFFER,
@@ -623,22 +685,20 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         new_input = old_input;
         old_input = temp;
 
-        LARGE_INTEGER counter_current;
-        QueryPerformanceCounter(&counter_current);
+        LARGE_INTEGER counter_stamp_frame_end = GetCounterStamp();
+        real32 ms_per_frame = 1000.0f * GetSecondsElapsed(counter_stamp_frame_start, counter_stamp_frame_end);
+        counter_stamp_frame_start = counter_stamp_frame_end;
 
-        uint64 cycles_elapsed = cycles_current - cycles_previous;
-        int64 counter_elapsed = counter_current.QuadPart - counter_previous.QuadPart;
+        uint64 cpu_cycles_frame_end = __rdtsc();
+        uint64 cycles_elapsed = cpu_cycles_frame_end - cpu_clock_cycles_frame_start;
+        cpu_clock_cycles_frame_start = cpu_cycles_frame_end;
 
-        real64 ms_per_frame = ((1000.0f * (real64)counter_elapsed) / (real64)frequency);
-        real64 fps = (real64)frequency / (real64)counter_elapsed;
+        real64 fps = 0.0f;
         real64 mc_per_frame = (real64)cycles_elapsed / (1000.0f * 1000.0f);
 
         char dbg_msg_buffer[256];
         sprintf(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
         OutputDebugStringA(dbg_msg_buffer);
-
-        counter_previous = counter_current;
-        cycles_previous  = cycles_current;
     }
 
     return 0;
