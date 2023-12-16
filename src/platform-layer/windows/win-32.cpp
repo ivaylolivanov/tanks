@@ -10,6 +10,7 @@
 #include "..\..\tanks.cpp"
 
 GlobalVariable bool32 IS_RUNNING = false;
+GlobalVariable bool32 IS_PAUSED  = false;
 GlobalVariable BackBuffer BACK_BUFFER;
 
 Internal void FreeFileMemory(void* memory)
@@ -267,6 +268,12 @@ Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
                     {
                         ProcessKeyboardButton(&keyboard->MoveRight, is_down);
                         OutputDebugStringA("You have pressed D/d.\n");
+                    } break;
+
+                    case 'P':
+                    {
+                        if (is_down) IS_PAUSED = !IS_PAUSED;
+                        OutputDebugStringA("You have pressed P/p.\n");
                     } break;
 
                     case VK_SPACE:
@@ -581,6 +588,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         }
 
         ProcessPendingKeyPresses(keyboard_new);
+
+        if (IS_PAUSED) continue;
 
         ProcessControllersStates(old_input, new_input);
 
