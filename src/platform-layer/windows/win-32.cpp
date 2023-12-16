@@ -147,8 +147,7 @@ Internal void ClearSoundBuffer(SoundOutput *sound_output)
 }
 
 Internal void FillSoundBuffer(SoundOutput *sound_output, DWORD byte_to_lock,
-                              DWORD bytes_to_write,
-                              GameSoundBuffer *game_sound_buffer)
+    DWORD bytes_to_write, GameSoundBuffer *game_sound_buffer)
 {
     VOID *region1;
     DWORD region1_size;
@@ -188,7 +187,8 @@ Internal void FillSoundBuffer(SoundOutput *sound_output, DWORD byte_to_lock,
     SOUND_BUFFER->Unlock(region1, region1_size, region2, region2_size);
 }
 
-Internal bool32 ValidateSoundBuffer(SoundOutput *sound_output, DWORD &byte_to_lock, DWORD &bytes_to_write)
+Internal bool32 ValidateSoundBuffer(SoundOutput *sound_output,
+    DWORD &byte_to_lock, DWORD &bytes_to_write)
 {
     bool32 result = false;
 
@@ -350,12 +350,12 @@ Internal real32 ProcessXInputStick(SHORT value, SHORT deadzone_threshold)
     if (value < -deadzone_threshold)
     {
         result = (real32)((value + deadzone_threshold)
-                          / (32768.0f - deadzone_threshold));
+            / (32768.0f - deadzone_threshold));
     }
     else if (value > deadzone_threshold)
     {
         result = (real32)((value - deadzone_threshold)
-                          / (32768.0f - deadzone_threshold));
+            / (32768.0f - deadzone_threshold));
     }
 
     return result;
@@ -638,7 +638,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         game_buffer.Memory = BACK_BUFFER.Memory;
         game_buffer.Height = BACK_BUFFER.Height;
         game_buffer.Width  = BACK_BUFFER.Width;
-        game_buffer.Pitch = BACK_BUFFER.Pitch;
+        game_buffer.Pitch  = BACK_BUFFER.Pitch;
         UpdateAndRender(&game_memory, new_input, &game_buffer, &sound_buffer);
 
         if (is_sound_valid)
