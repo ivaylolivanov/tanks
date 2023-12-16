@@ -212,6 +212,8 @@ Internal void DisplayBufferInWindow(BackBuffer *buffer, HDC device_context,
 
 Internal void ProcessKeyboardButton(ButtonState* state, bool32 is_down)
 {
+    Assert(state->EndedDown != is_down);
+
     state->EndedDown = is_down;
     ++state->HalfTransitions;
 }
@@ -233,7 +235,7 @@ Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
             case WM_KEYUP:
             case WM_KEYDOWN:
             {
-                uint32_t vk_code = (uint32_t)message.wParam;
+                uint32 vk_code = (uint32)message.wParam;
 
                 bool32 alt_was_down = (message.lParam & (1 << 29));
                 bool32 was_down     = ((message.lParam & (1 << 30)) != 0);
@@ -245,25 +247,25 @@ Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
                 {
                     case 'W':
                     {
-                        ProcessKeyboardButton(&keyboard->Up, is_down);
+                        ProcessKeyboardButton(&keyboard->MoveUp, is_down);
                         OutputDebugStringA("You have pressed W/w.\n");
                     } break;
 
                     case 'A':
                     {
-                        ProcessKeyboardButton(&keyboard->Left, is_down);
+                        ProcessKeyboardButton(&keyboard->MoveLeft, is_down);
                         OutputDebugStringA("You have pressed A/a.\n");
                     } break;
 
                     case 'S':
                     {
-                        ProcessKeyboardButton(&keyboard->Down, is_down);
+                        ProcessKeyboardButton(&keyboard->MoveDown, is_down);
                         OutputDebugStringA("You have pressed S/s.\n");
                     } break;
 
                     case 'D':
                     {
-                        ProcessKeyboardButton(&keyboard->Right, is_down);
+                        ProcessKeyboardButton(&keyboard->MoveRight, is_down);
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
@@ -274,8 +276,14 @@ Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
 
                     case VK_ESCAPE:
                     {
+                        ProcessKeyboardButton(&keyboard->Start, is_down);
                         OutputDebugStringA("You have pressed ESC key.\n");
-                        IS_RUNNING = false;
+                    } break;
+
+                    case VK_BACK:
+                    {
+                        ProcessKeyboardButton(&keyboard->Back, is_down);
+                        OutputDebugStringA("You have pressed backspace.\n");
                     } break;
 
                     case VK_RETURN:
@@ -304,27 +312,47 @@ Internal void ProcessPendingKeyPresses(ControllerState *keyboard)
 }
 
 Internal void ProcessXInputButton(DWORD button_bit, DWORD raw_state,
-                                  ButtonState *old_state, ButtonState *new_state)
+    ButtonState *old_state, ButtonState *new_state)
 {
     new_state->EndedDown = ((raw_state & button_bit) == button_bit);
     new_state->HalfTransitions = (old_state->EndedDown != new_state->EndedDown) ? 1 : 0;
 }
 
+Internal real32 ProcessXInputStick(SHORT value, SHORT deadzone_threshold)
+{
+    real32 result = 0;
+
+    if (value < -deadzone_threshold)
+    {
+        result = (real32)((value + deadzone_threshold)
+                          / (32768.0f - deadzone_threshold));
+    }
+    else if (value > deadzone_threshold)
+    {
+        result = (real32)((value - deadzone_threshold)
+                          / (32768.0f - deadzone_threshold));
+    }
+
+    return result;
+}
+
 Internal void ProcessControllersStates(GameInput *input_old, GameInput *input_new)
 {
     DWORD max_controllers = XUSER_MAX_COUNT;
-    if (max_controllers > ArrayCount(input_new->Controllers))
-        max_controllers = ArrayCount(input_new->Controllers);
+    if (max_controllers > (ArrayCount(input_new->Controllers) - 1))
+        max_controllers = ArrayCount(input_new->Controllers) - 1;
 
     for (DWORD controller_index = 0; controller_index < max_controllers;
          ++controller_index)
     {
-        ControllerState *state_old = &input_old->Controllers[controller_index];
-        ControllerState *state_new = &input_new->Controllers[controller_index];
+        DWORD gamepad_index = controller_index + 1;
+        ControllerState *state_old = GetController(input_old, gamepad_index);
+        ControllerState *state_new = GetController(input_new, gamepad_index);
 
         XINPUT_STATE controllerState;
         bool32 isUnplugged = XInputGetState(controller_index, &controllerState)
             != ERROR_SUCCESS;
+        state_new->IsConnected = !isUnplugged;
         if (isUnplugged) continue;
 
         XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
@@ -339,24 +367,51 @@ Internal void ProcessControllersStates(GameInput *input_old, GameInput *input_ne
         int16 lStickX = gamepad->sThumbLX;
         int16 lStickY = gamepad->sThumbLY;
 
-        state_new->IsAnalog = true;
-        state_new->StartX = state_old->EndX;
-        state_new->StartY = state_old->EndY;
+        state_new->LeftStickAverageX = ProcessXInputStick(gamepad->sThumbLX,
+            XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+        state_new->LeftStickAverageY = ProcessXInputStick(gamepad->sThumbLY,
+            XINPUT_GAMEPAD_LEFT_THUMB_DEADZONE);
+        if ((state_new->LeftStickAverageX != 0)
+            || (state_new->LeftStickAverageY != 0))
+            state_new->IsAnalog = true;
 
-        real32 x;
-        if (gamepad->sThumbLX < 0)
-            x = (real32)gamepad->sThumbLX / 32768.0f;
-        else
-            x = (real32)gamepad->sThumbLX / 32767.0f;
+        if (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_UP)
+        {
+            state_new->LeftStickAverageY = 1.0f;
+            state_new->IsAnalog = false;
+        }
 
-        real32 y;
-        if (gamepad->sThumbLY < 0)
-            y = (real32)gamepad->sThumbLY / 32768.0f;
-        else
-            y = (real32)gamepad->sThumbLY / 32767.0f;
+        if (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_DOWN)
+        {
+            state_new->LeftStickAverageY = -1.0f;
+            state_new->IsAnalog = false;
+        }
 
-        state_new->MinX = state_new->MaxX = state_new->EndX = x;
-        state_new->MinY = state_new->MaxY = state_new->EndY = y;
+        if (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_LEFT)
+        {
+            state_new->LeftStickAverageX = -1.0f;
+            state_new->IsAnalog = false;
+        }
+
+        if (gamepad->wButtons & XINPUT_GAMEPAD_DPAD_RIGHT)
+        {
+            state_new->LeftStickAverageY = 1.0f;
+            state_new->IsAnalog = false;
+        }
+
+        real32 threshold = 0.5f;
+        ProcessXInputButton(1, (state_new->LeftStickAverageX > -threshold) ? 1 : 0,
+            &state_old->MoveLeft,
+            &state_new->MoveLeft);
+        ProcessXInputButton(1, (state_new->LeftStickAverageX > threshold) ? 1 : 0,
+            &state_old->MoveRight,
+            &state_new->MoveRight);
+        ProcessXInputButton(1, (state_new->LeftStickAverageY > -threshold) ? 1 : 0,
+            &state_old->MoveDown,
+            &state_new->MoveDown);
+        ProcessXInputButton(1, (state_new->LeftStickAverageY > threshold) ? 1 : 0,
+            &state_old->MoveUp,
+            &state_new->MoveUp);
 
         ProcessXInputButton(XINPUT_GAMEPAD_A,
             gamepad->wButtons, &state_old->ActionUp, &state_new->ActionUp);
@@ -512,11 +567,21 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     while (IS_RUNNING)
     {
-        ControllerState* keyboard = &new_input->Controllers[0];
-        ControllerState controller_default_state = {};
-        *keyboard = controller_default_state;
+        ControllerState* keyboard_old = GetController(old_input, 0);
+        ControllerState* keyboard_new = GetController(new_input, 0);
+        *keyboard_new = {};
+        keyboard_new->IsConnected = true;
 
-        ProcessPendingKeyPresses(keyboard);
+        // TODO: Find a better way ?
+        int32 all_buttons = ArrayCount(keyboard_new->Buttons);
+        for (int button_index = 0; button_index < all_buttons; ++button_index)
+        {
+            keyboard_new->Buttons[button_index].EndedDown =
+                keyboard_old->Buttons[button_index].EndedDown;
+        }
+
+        ProcessPendingKeyPresses(keyboard_new);
+
         ProcessControllersStates(old_input, new_input);
 
         DWORD byte_to_lock;
@@ -545,7 +610,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
             dimension.Width,
             dimension.Height);
 
-        uint64 cycles_current = __rdtsc();
+        GameInput* temp = new_input;
+        new_input = old_input;
+        old_input = temp;
 
         LARGE_INTEGER counter_current;
         QueryPerformanceCounter(&counter_current);

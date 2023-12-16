@@ -1,5 +1,14 @@
 #include "tanks.h"
 
+Internal ControllerState* GetController(GameInput* input, int unsigned controller_index)
+{
+    Assert(controller_index < ArrayCount(input->Controllers));
+
+    ControllerState* result = &input->Controllers[controller_index];
+
+    return result;
+}
+
 Internal void OutputSound(GameSoundBuffer *sound_buffer, int tone_hz)
 {
     LocalPersist real32 sine_step;
@@ -39,6 +48,8 @@ Internal void RenderGradient(GameBackBuffer *buffer, int offset_blue, int offset
 Internal void UpdateAndRender(GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer, GameSoundBuffer *sound_buffer)
 {
+    Assert((&input->Controller[0].MAX - &input->Controller[0].Buttons[0])
+        == ArrayCount(input->Controller[0].Buttons));
     Assert(sizeof(GameState) <= memory->PermanentStorageSize);
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
@@ -57,21 +68,28 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input,
 	memory->IsInitialized = true;
     }
 
-    ControllerState *input_main = &input->Controllers[0];
-    if (input_main->IsAnalog)
+    for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
     {
-        game_state->OffsetBlue += (int)(4.0f * input_main->EndX);
-        game_state->OffsetGreen -= (int)(4.0f * input_main->EndY);
-    }
+        ControllerState *controller = GetController(input, controller_index);
+        if (controller->IsAnalog)
+        {
+            game_state->OffsetBlue  += (int)(4.0f * controller->LeftStickAverageX);
+            game_state->OffsetGreen -= (int)(4.0f * controller->LeftStickAverageY);
+        }
+        else
+        {
+            if (controller->MoveLeft.EndedDown)  game_state->OffsetBlue  -= 4;
+            if (controller->MoveRight.EndedDown) game_state->OffsetBlue  += 4;
+            if (controller->MoveUp.EndedDown)    game_state->OffsetGreen -= 4;
+            if (controller->MoveDown.EndedDown)  game_state->OffsetGreen += 4;
 
-    if (input_main->ShoulderLeft.EndedDown)
-    {
-        game_state->OffsetBlue  = 0 ;
-        game_state->OffsetGreen = 0 ;
+            if (controller->ShoulderLeft.EndedDown)
+            {
+                game_state->OffsetBlue  = 0 ;
+                game_state->OffsetGreen = 0 ;
+            }
+        }
     }
-
-    if (input_main->ActionUp.EndedDown)
-        game_state->ToneHz = 256 + (int)(128.0f * (input_main->EndY));
 
     OutputSound(sound_buffer, game_state->ToneHz);
     RenderGradient(display_buffer, game_state->OffsetBlue, game_state->OffsetGreen);

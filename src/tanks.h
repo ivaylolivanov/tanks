@@ -28,19 +28,11 @@ struct ButtonState
 
 struct ControllerState
 {
+    bool32 IsConnected;
     bool32 IsAnalog;
 
-    real32 StartX;
-    real32 StartY;
-
-    real32 MinX;
-    real32 MinY;
-
-    real32 MaxX;
-    real32 MaxY;
-
-    real32 EndX;
-    real32 EndY;
+    real32 LeftStickAverageX;
+    real32 LeftStickAverageY;
 
     union
     {
@@ -52,16 +44,18 @@ struct ControllerState
             ButtonState ActionLeft;
             ButtonState ActionRight;
 
-            ButtonState Up;
-            ButtonState Down;
-            ButtonState Left;
-            ButtonState Right;
+            ButtonState MoveUp;
+            ButtonState MoveDown;
+            ButtonState MoveLeft;
+            ButtonState MoveRight;
 
             ButtonState ShoulderLeft;
             ButtonState ShoulderRight;
 
             ButtonState Back;
             ButtonState Start;
+
+            ButtonState MAX;
         };
     };
 };
