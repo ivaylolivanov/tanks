@@ -59,11 +59,13 @@ Internal void ProcessKeyboard(ControllerState *keyboard)
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
+#if WIN32_DEBUG
                     case 'P':
                     {
                         if (is_down) IS_PAUSED = !IS_PAUSED;
                         OutputDebugStringA("You have pressed P/p.\n");
                     } break;
+#endif
 
                     case VK_SPACE:
                     {
@@ -227,7 +229,11 @@ Internal void ProcessGamepadStates(GameInput *input_old, GameInput *input_new)
             &state_old->Back, &state_new->Back);
     }
 
+#if WIN32_DEBUG
+
     if (state_new->Start.EndedDown) IS_PAUSED = !IS_PAUSED;
+
+#endif
 }
 
 #define INPUT_PROCESSING
