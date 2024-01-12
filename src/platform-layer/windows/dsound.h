@@ -52,7 +52,7 @@ Internal void InitDirectSound(HWND window, int32 samples_per_second, int32 buffe
 
     DSBUFFERDESC secondary_buffer_description = {};
     secondary_buffer_description.dwSize = sizeof(secondary_buffer_description);
-    secondary_buffer_description.dwFlags = 0;
+    secondary_buffer_description.dwFlags = DSBCAPS_GETCURRENTPOSITION2;
     secondary_buffer_description.dwBufferBytes = buffer_size;
     secondary_buffer_description.lpwfxFormat = &wave_format;
 

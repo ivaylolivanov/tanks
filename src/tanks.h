@@ -98,8 +98,8 @@ struct GameState
     int OffsetBlue;
 };
 
-Internal void UpdateAndRender(GameMemory *memory, GameInput *input,
-    GameBackBuffer *display_buffer, GameSoundBuffer *sound_buffer);
+Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuffer *display_buffer);
+Internal void GetSoundSamples(GameMemory *memory, GameSoundBuffer *sound_buffer);
 
 #define TANKS
 #endif

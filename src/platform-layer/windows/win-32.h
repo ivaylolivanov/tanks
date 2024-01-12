@@ -1,4 +1,5 @@
 #include <cinttypes>
+#include <minwindef.h>
 
 // Better send the intetion of the static keyword to the other developers
 #define Internal       static
@@ -30,6 +31,7 @@ struct BackBuffer
     int Width;
     int Height;
     int Pitch;
+    int BytesPerPixel;
 };
 
 struct WindowDimension
@@ -43,9 +45,22 @@ struct SoundOutput
     int32  SamplesPerSecond;
     uint32 RunningSampleIndex;
     int32  BytesPerSample;
-    int32  BufferSize;
+    DWORD  BufferSize;
+    DWORD  SafetyBytes;
     real32 SineCurrent;
     int32  LatencySampleCount;
+};
+
+struct TimeMarker
+{
+    DWORD OutputPlayCursor;
+    DWORD OutputWriteCursor;
+    DWORD OutputLocation;
+    DWORD OutputByteCount;
+    DWORD ExpectedFlipPlayCursor;
+
+    DWORD FlipPlayCursor;
+    DWORD FlipWriteCursor;
 };
 
 struct FileData
