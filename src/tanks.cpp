@@ -100,5 +100,8 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuff
 Internal void GetSoundSamples(GameMemory* memory, GameSoundBuffer *sound_buffer)
 {
     GameState* game_state = (GameState*)memory->PermanentStorage;
-    OutputSound(sound_buffer, game_state->ToneHz);
+
+    bool32 is_sound_unmuted = false;
+    if (is_sound_unmuted)
+        OutputSound(sound_buffer, game_state->ToneHz);
 }
