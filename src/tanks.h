@@ -82,6 +82,7 @@ struct GameBackBuffer
     int Width;
     int Height;
     int Pitch;
+    int BytesPerPixel;
 };
 
 struct GameSoundBuffer

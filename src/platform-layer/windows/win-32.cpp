@@ -469,10 +469,11 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         if (IS_PAUSED) continue;
 
         GameBackBuffer game_buffer = {};
-        game_buffer.Memory = BACK_BUFFER.Memory;
-        game_buffer.Height = BACK_BUFFER.Height;
-        game_buffer.Width  = BACK_BUFFER.Width;
-        game_buffer.Pitch  = BACK_BUFFER.Pitch;
+        game_buffer.Memory        = BACK_BUFFER.Memory;
+        game_buffer.Height        = BACK_BUFFER.Height;
+        game_buffer.Width         = BACK_BUFFER.Width;
+        game_buffer.Pitch         = BACK_BUFFER.Pitch;
+        game_buffer.BytesPerPixel = BACK_BUFFER.BytesPerPixel;
         UpdateAndRender(&game_memory, new_input, &game_buffer);
 
         LARGE_INTEGER counter_stamp_audio_start = GetCounterStamp();
