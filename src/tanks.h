@@ -95,8 +95,9 @@ struct GameSoundBuffer
 struct GameState
 {
     int ToneHz;
-    int OffsetGreen;
-    int OffsetBlue;
+
+    int PlayerX;
+    int PlayerY;
 };
 
 Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuffer *display_buffer);

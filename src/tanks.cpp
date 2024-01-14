@@ -29,21 +29,30 @@ Internal void OutputSound(GameSoundBuffer *sound_buffer, int tone_hz)
     }
 }
 
-Internal void RenderGradient(GameBackBuffer *buffer, int offset_blue, int offset_green)
+Internal void RenderRectangle(GameBackBuffer *buffer, int min_x, int min_y, int width, int height, uint8 r, uint8 g, uint8 b)
 {
-    uint8* row = (uint8 *) buffer->Memory;
-    for (int y = 0; y < buffer->Height; ++y)
-    {
-        uint32 *pixel = (uint32 *)row;
-        for (int x = 0; x < buffer->Width; ++x)
-        {
-            uint8 blue  = (uint8)(x + offset_blue);
-            uint8 green = (uint8)(y + offset_green);
+    if (min_x < 0)             min_x = 0;
+    if (min_x > buffer->Width) min_x = buffer->Width;
 
-            *pixel++ = (green << 8) | blue;
+    if (min_y < 0)              min_y = 0;
+    if (min_y > buffer->Height) min_y = buffer->Height;
+
+    uint8* rectangle_begin = (uint8 *) buffer->Memory
+        + player_x * buffer->BytesPerPixel
+        + player_y * buffer->Pitch;
+    for (int y = min_y; y < (min_y + height); ++y)
+    {
+        uint32 *pixel = (uint32 *)pixel_player_begin;
+        for (int x = min_x; x < (min_x + width); ++x)
+        {
+            uint8 blue  = (uint8)b;
+            uint8 green = (uint8)g;
+            uint8 red   = (uint8)r;
+
+            *pixel++ = (red << 16) | (green << 8) | blue;
         }
 
-        row += buffer->Pitch;
+        rectangle_begin += buffer->Pitch;
     }
 }
 
@@ -65,6 +74,9 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuff
             FreeFileMemory(file.Content);
         }
 
+        game_state->PlayerX = 250;
+        game_state->PlayerY = 250;
+
 	game_state->ToneHz = 512;
 	memory->IsInitialized = true;
     }
@@ -74,27 +86,27 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuff
         ControllerState *controller = GetController(input, controller_index);
         if (controller->IsAnalog)
         {
-            game_state->OffsetBlue  += (int)(4.0f * controller->LeftStickAverageX);
-            game_state->OffsetGreen -= (int)(4.0f * controller->LeftStickAverageY);
+            game_state->PlayerX += (int)(4.0f * controller->LeftStickAverageX);
+            game_state->PlayerY -= (int)(4.0f * controller->LeftStickAverageY);
 
             game_state->ToneHz = 512 + (int)(128.0f * controller->LeftStickAverageY);
         }
         else
         {
-            if (controller->MoveLeft.EndedDown)  game_state->OffsetBlue  -= 4;
-            if (controller->MoveRight.EndedDown) game_state->OffsetBlue  += 4;
-            if (controller->MoveUp.EndedDown)    game_state->OffsetGreen -= 4;
-            if (controller->MoveDown.EndedDown)  game_state->OffsetGreen += 4;
+            int32 x = 0;
+            int32 y = 0;
+            if (controller->MoveLeft.EndedDown)  x -= 5;
+            if (controller->MoveRight.EndedDown) x += 5;
+            if (controller->MoveUp.EndedDown)    y -= 5;
+            if (controller->MoveDown.EndedDown)  y += 5;
 
-            if (controller->ShoulderLeft.EndedDown)
-            {
-                game_state->OffsetBlue  = 0 ;
-                game_state->OffsetGreen = 0 ;
-            }
+            game_state->PlayerX += x;
+            game_state->PlayerY += y;
         }
     }
 
-    RenderGradient(display_buffer, game_state->OffsetBlue, game_state->OffsetGreen);
+    RenderRectangle(display_buffer, 0, 0, display_buffer->Width, display_buffer->Height, 0, 0, 0);
+    RenderRectangle(display_buffer, game_state->PlayerX, game_state->PlayerY, 30, 30, 214, 13, 200);
 }
 
 Internal void GetSoundSamples(GameMemory* memory, GameSoundBuffer *sound_buffer)
