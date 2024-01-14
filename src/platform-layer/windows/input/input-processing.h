@@ -227,13 +227,13 @@ Internal void ProcessGamepadStates(GameInput *input_old, GameInput *input_new)
             &state_old->Start, &state_new->Start);
         ProcessGamepadButton(XINPUT_GAMEPAD_BACK, gamepad->wButtons,
             &state_old->Back, &state_new->Back);
-    }
 
 #if WIN32_DEBUG
 
-    if (state_new->Start.EndedDown) IS_PAUSED = !IS_PAUSED;
+        if (state_new->Start.EndedDown) IS_PAUSED = !IS_PAUSED;
 
 #endif
+    }
 }
 
 #define INPUT_PROCESSING
