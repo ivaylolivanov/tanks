@@ -124,7 +124,7 @@ Internal WindowDimension GetWindowDimension(HWND window)
     return dimension;
 }
 
-#if WIN32_DEBUG
+#if WIN32_DEBUG_SOUND
 
 Internal void DrawVertical(BackBuffer* buffer, int x, int top, int bottom, uint32 color)
 {
@@ -615,7 +615,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
         WindowDimension dimension = GetWindowDimension(window);
 
-#if WIN32_DEBUG
+#if WIN32_DEBUG_SOUND
 
         DebugSyncDisplay(&BACK_BUFFER, ArrayCount(time_markers),
             time_marker_index - 1, time_markers, &sound_output,
@@ -630,7 +630,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
             dimension.Height);
         counter_stamp_frame_flip = GetCounterStamp();
 
-#if WIN32_DEBUG
+#if WIN32_DEBUG_SOUND
 
         // DWORD play_cursor;
         // DWORD write_cursor;

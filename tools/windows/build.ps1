@@ -1,6 +1,6 @@
 # TODO: remove later - "-Wno-writable-strings"
 # TODO: Investigate "-nodefaultlibs"; Without it, on Windows 11, the Windows defender detects it as Wacatac.B!ml trojan
-$CommonCompilerFlags = "-g", "-gcodeview", "-fno-rtti", "-O0", "-Werror", "-Wall", "-Wno-unused-variable", "-Wno-microsoft-anon-tag", "-Wno-writable-strings", "-nodefaultlibs", "-DWIN32_DEBUG";
+$CommonCompilerFlags = "-g", "-gcodeview", "-fno-rtti", "-O0", "-Werror", "-Wall", "-Wno-unused-variable", "-Wno-microsoft-anon-tag", "-Wno-writable-strings", "-nodefaultlibs", "-DWIN32_DEBUG", "-DWIN32_DEBUG_SOUND=0";
 $CommonLinkerFlags   = "-l", "user32.lib", "-l", "gdi32.lib", "-l", "winmm.lib";
 
 $BuildDir  = "$WorkingDirRoot\build";
