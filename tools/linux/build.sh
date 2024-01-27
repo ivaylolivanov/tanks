@@ -70,7 +70,7 @@ function main()
     git_root="$(git rev-parse --show-toplevel)";
     working_dir="${git_root}/build";
     source_dir="${git_root}/src";
-    build_target_filepath="${source_dir}/platform-layer/linux/main.cpp";
+    build_target_filepath="${source_dir}/platform-layer/linux/linux.cpp";
 
     rm -rvf "$working_dir";
     mkdir -pv "$working_dir";
