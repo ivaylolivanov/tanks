@@ -1,28 +1,64 @@
-# TODO: remove later - "-Wno-writable-strings"
-# TODO: Investigate "-nodefaultlibs"; Without it, on Windows 11, the Windows defender detects it as Wacatac.B!ml trojan
-$CommonCompilerFlags = @(
-    "-g",
-    "-gcodeview",
-    "-fno-rtti",
-    "-O0",
-    "-Werror",
-    "-Wall",
-    "-Wno-unused-variable",
-    "-Wno-microsoft-anon-tag",
-    "-Wno-writable-strings",
-    "-nodefaultlibs",
-    "-DWIN32_DEBUG",
-    "-DWIN32_DEBUG_SOUND");
+$CommonCompilerFlags = "-MT", "-nologo", "-Gm-", "-GR-", "-EHa-", "-Od", "-Oi", "-WX", "-W4", "-wd4201", "-wd4100", "-wd4189", "-DWIN32_DEBUG=1", "-DWIN32_DEBUG_SOUND=0", "-FC", "-Z7";
+$CommonLinkerFlags = "-incremental:no", "-opt:ref", "user32.lib", "gdi32.lib", "winmm.lib";
 
-$CommonLinkerFlags = @(
-    "-l", "user32.lib",
-    "-l", "gdi32.lib",
-    "-l", "winmm.lib");
+$VcvarsallFilename = "vcvarsall.bat";
+$ProgramFiles = 'C:\Program Files';
+$GameName = 'tanks';
 
-$GameName = 'tanks.exe';
+function GetVcvarsallLocation
+{
+    $location = (Get-ChildItem -Path "$ProgramFiles" -Filter `
+        "$VcvarsallFilename" -Recurse).FullName;
 
-$BuildDir  = "$WorkingDirRoot\build";
-$SourceDir = "$WorkingDirRoot\src";
+    if ($location -ne $null)
+    {
+        return $location;
+    }
+
+    Write-Host "Please install Visual Studio!";
+    return $null;
+}
+
+function LoadVcVarsAll
+{
+    param([string]$vcVarsAll)
+
+    $vcVarsAllEnvironment = & cmd /c "`"$vcVarsAll`" x64 && set";
+    $vcVarsAllExpanded = $vcVarsAllEnvironment | ForEach-Object {
+        $row = $_;
+        if ($row -match '^([^=]+)=(.*)$')
+        {
+            $key = $matches[1].Trim();
+            $value = $matches[2].Trim();
+            [System.Collections.DictionaryEntry]::new($key, $value);
+        }
+    }
+
+    foreach ($var in $vcVarsAllExpanded)
+    {
+        [System.Environment]::SetEnvironmentVariable(
+            $var.Key,
+            $var.Value,
+            [System.EnvironmentVariableTarget]::Process);
+    }
+
+    return 0;
+}
+
+function GetCl64Location
+{
+   $location = (Get-ChildItem -Path "$ProgramFiles" -Filter "cl.exe" -Recurse `
+       | Where-Object { $_.FullName -like "*x64*" } | Select-Object -First    `
+       1).FullName;
+
+    if ($location -ne $null)
+    {
+        return $location;
+    }
+
+    Write-Host "Failed to find the cl x64 compiler";
+    return $null;
+}
 
 function IsInGitRepo
 {
@@ -44,59 +80,88 @@ function IsInGitRepo
     }
 }
 
-function Build
+function BuildProject
 {
     param(
         [Parameter(Mandatory=$true)]
         [string]$workingDirectory,
-        [string]$entryPoint
+        [string]$gameEntryPoint,
+        [string]$windowsEntryPoint
     )
 
-    $clangExecutable = (Get-Command -Name clang -CommandType Application).Source `
-        | Select-Object -First 1;
-
-    $clangArguments = @(
+    $argumentsGame = @(
         $CommonCompilerFlags
-        $CommonLinkerFlags
-        "$entryPoint"
-        "-o${GameName}"
+        "$gameEntryPoint"
+        "-Fm${GameName}.map"
+        "/LD"
+        "/link"
+        "/EXPORT:GetSoundSamples"
+        "/EXPORT:UpdateAndRender"
     );
+
+    $argumentsWindows = @(
+        $CommonCompilerFlags
+        "$windowsEntryPoint"
+        "-Fmwindows_${GameName}.map"
+        "/link"
+        $CommonLinkerFlags
+    );
+
+    $compiler = GetCl64Location;
+    if (-not $compiler)
+    {
+        Write-Host "Compiler not found, exitting...";
+        return 1;
+    }
 
     $setLocationStatus = Set-Location -Path "$workingDirectory";
     if ($setLocationStatus -ne $null)
     {
         Write-Host "Failed to change location to $workingDirectory";
+        Set-Location -Path "$initialLocation";
         return 1;
     }
 
-    $buildStatus = & "$clangExecutable" @clangArguments;
+    & "$compiler" $argumentsGame | ForEach-Object { Write-Host $_ };
+    & "$compiler" $argumentsWindows | ForEach-Object { Write-Host $_ };
 
-    return $buildStatus;
+    return 0;#$buildStatus;
 }
 
 function main
 {
     $scriptDir = $PSScriptRoot;
 
+    $vcVarsAll = GetVcvarsallLocation;
+    if (-not $vcVarsAll)
+    {
+        Write-Host "Failed to export vc variables!";
+        return 1;
+    }
+
+    LoadVcVarsAll "$vcVarsAll";
+
     $isInGitRepo = IsInGitRepo -Directory "$scriptDir";
-    if (-not $isInGitRepo) { return 1; }
+    if (-not $isInGitRepo) { return 2; }
 
     $gitRoot = git rev-parse --show-toplevel;
     $workingDir = "${gitRoot}/build";
     $sourceDir = "${gitRoot}/src";
-    $buildTargetFilepath = "${sourceDir}/platform-layer/windows/win-32.cpp";
+    $gameEntryPointFilepath = "${sourceDir}/tanks.cpp";
+    $windowsEntryPointFilepath = "${sourceDir}/platform-layer/windows/win-32.cpp";
 
-    Remove-Item "$workingDir"    `
-        -Recurse -Force -Verbose `
+    Remove-Item "${workingDir}\*.pdb" -Force -Verbose `
         -ErrorAction SilentlyContinue;
     New-Item -Path "$workingDir" -ItemType Directory -Force;
 
-    $buildStatus = Build -workingDirectory "$workingDir" `
-        -entryPoint "$buildTargetFilepath";
-    if ($buildStatus -ne $null)
-    {
-        return 2;
-    }
+    $initialLocation = (Get-Location).Path;
+
+    $buildStatus = BuildProject -workingDirectory "$workingDir" `
+        -gameEntryPoint "$gameEntryPointFilepath"               `
+        -windowsEntryPoint "$windowsEntryPointFilepath";
+
+    Set-Location -Path "$initialLocation";
+    if ($buildStatus -ne $null) { return 3; }
 
     return 0;
 }
