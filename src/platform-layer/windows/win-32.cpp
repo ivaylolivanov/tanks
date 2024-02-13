@@ -1,12 +1,8 @@
 #include <windows.h>
 #include <stdio.h>
-#include <math.h>
-
-#include "win-32.h"
-#include "dsound.h"
 
 #include "..\..\tanks.h"
-#include "..\..\tanks.cpp"
+#include "win-32.h"
 
 GlobalVariable bool32 IS_RUNNING = false;
 GlobalVariable bool32 IS_PAUSED  = false;
@@ -33,50 +29,54 @@ inline real32 GetSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end)
     return result;
 }
 
-#include "input.h"
-#include "audio.h"
-
-Internal void FreeFileMemory(void* memory)
+void FreeFileMemory(void* memory)
 {
     if (!memory) return;
 
     VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-Internal FileData ReadFile(char* filename)
+ReadFileResult ReadFile(char* filename)
 {
+    ReadFileResult result = {};
+    result.Size = 0;
+    result.Content = 0;
+
     FileData file = {};
 
     HANDLE handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0,
         OPEN_EXISTING, 0, 0);
-    if (handle == INVALID_HANDLE_VALUE) return file;
+    if (handle == INVALID_HANDLE_VALUE) return result;
 
     LARGE_INTEGER size;
-    if (!GetFileSizeEx(handle, &size)) return file;
+    if (!GetFileSizeEx(handle, &size)) return result;
 
     uint32 size32 = TruncateUInt64(size.QuadPart);
     file.Content = VirtualAlloc(0, size32, MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE);
-    if (!file.Content) return file;
+    if (!file.Content) return result;
 
     DWORD bytes_read;
     if (ReadFile(handle, file.Content, size32, &bytes_read, 0)
         && (bytes_read == size32))
     {
         file.Size = size32;
+        result.Size = size32;
+        result.Content = file.Content;
     }
     else
     {
         FreeFileMemory(file.Content);
         file.Content = 0;
+        result.Content = 0;
     }
 
     CloseHandle(handle);
 
-    return file;
+    return result;
 }
 
-Internal bool32 WriteFile(char* filename, void *memory, uint32 size)
+bool32 WriteFile(char* filename, uint32 size, void *memory)
 {
     bool32 result = false;
 
@@ -90,6 +90,57 @@ Internal bool32 WriteFile(char* filename, void *memory, uint32 size)
     CloseHandle(handle);
 
     return result;
+}
+
+struct GameCode
+{
+    HMODULE Dll;
+    FPtrUpdateAndRender *UpdateAndRender;
+    FPtrGetSoundSamples *GetSoundSamples;
+
+    bool32 IsValid;
+};
+
+#include "input.h"
+#include "audio.h"
+
+Internal GameCode LoadGameCode()
+{
+    GameCode result = {};
+
+    CopyFile("tanks.dll", "tanks_tmp.dll", FALSE);
+    result.Dll = LoadLibrary("tanks_tmp.dll");
+
+    if (result.Dll)
+    {
+        result.UpdateAndRender = (FPtrUpdateAndRender*)GetProcAddress(
+            result.Dll, "UpdateAndRender");
+        result.GetSoundSamples = (FPtrGetSoundSamples*)GetProcAddress(
+            result.Dll, "GetSoundSamples");
+
+        result.IsValid = (result.UpdateAndRender && result.GetSoundSamples);
+    }
+
+    if (!result.IsValid)
+    {
+        result.UpdateAndRender = UpdateAndRenderStub;
+        result.GetSoundSamples = GetSoundSamplesStub;
+    }
+
+    return result;
+}
+
+Internal void UnloadGameCode(GameCode* game_code)
+{
+    if (game_code->Dll)
+    {
+        FreeLibrary(game_code->Dll);
+        game_code->Dll = 0;
+    }
+
+    game_code->IsValid = false;
+    game_code->UpdateAndRender = UpdateAndRenderStub;
+    game_code->GetSoundSamples = GetSoundSamplesStub;
 }
 
 Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
@@ -263,6 +314,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     GameMemory game_memory = {};
     game_memory.PermanentStorageSize = MEGABYTES(64);
     game_memory.TransientStorageSize = GIGABYTES(1);
+    game_memory.FreeFileMemory = FreeFileMemory;
+    game_memory.ReadFile = ReadFile;
+    game_memory.WriteFile = WriteFile;
 
     uint64 total_size = game_memory.PermanentStorageSize
         + game_memory.TransientStorageSize;
@@ -297,10 +351,21 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     int time_marker_index = 0;
     TimeMarker time_markers[30] =  {{}, {}};
 
+    uint32 game_code_load_time = 0;
+    GameCode game_code = LoadGameCode();
+
     SOUND_IS_VALID = false;
     IS_RUNNING = true;
     while (IS_RUNNING)
     {
+        if (game_code_load_time++ > 120)
+        {
+            UnloadGameCode(&game_code);
+            game_code = LoadGameCode();
+
+            game_code_load_time = 0;
+        }
+
         ControllerState* keyboard_old = GetController(old_input, 0);
         ControllerState* keyboard_new = GetController(new_input, 0);
         *keyboard_new = {};
@@ -325,7 +390,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         game_buffer.Width         = BACK_BUFFER.Width;
         game_buffer.Pitch         = BACK_BUFFER.Pitch;
         game_buffer.BytesPerPixel = BACK_BUFFER.BytesPerPixel;
-        UpdateAndRender(&game_memory, new_input, &game_buffer);
+        game_code.UpdateAndRender(&game_memory, new_input, &game_buffer);
 
         CorrectAndOutputSound(
             counter_frame_flip,
@@ -335,7 +400,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
             samples,
             &game_memory,
             time_markers,
-            time_marker_index);
+            time_marker_index,
+            &game_code);
 
         LARGE_INTEGER counter_work_end = GetCounterStamp();
         real32 seconds_elapsed_work = GetSecondsElapsed(
@@ -415,7 +481,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         real64 mc_per_frame = (real64)cycles_elapsed / (1000.0f * 1000.0f);
 
         char dbg_msg_buffer[256];
-        sprintf(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
+        sprintf_s(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
         OutputDebugStringA(dbg_msg_buffer);
 
         ++time_marker_index;

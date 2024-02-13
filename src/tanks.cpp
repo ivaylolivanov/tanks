@@ -1,31 +1,22 @@
 #include "tanks.h"
 
-Internal ControllerState* GetController(GameInput* input, int unsigned controller_index)
-{
-    Assert(controller_index < ArrayCount(input->Controllers));
-
-    ControllerState* result = &input->Controllers[controller_index];
-
-    return result;
-}
-
-Internal void OutputSound(GameSoundBuffer *sound_buffer, int tone_hz)
+Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
 {
     LocalPersist real32 sine_step;
     int16 tone_volume = 3000;
-    int wave_period = sound_buffer->SamplesPerSecond / tone_hz;
+    int wave_period = sound_buffer->SamplesPerSecond / game_state->ToneHz;
 
     int16 *sample_out = sound_buffer->Samples;
     for (int sample_index = 0; sample_index < sound_buffer->SamplesCount; ++sample_index)
     {
-        real32 sine_value = sinf(sine_step);
+        real32 sine_value = sinf(game_state->SineStep);
         int16 sample_value = (int16)(sine_value * tone_volume);
         *sample_out++ = sample_value;
         *sample_out++ = sample_value;
 
-        sine_step += 2.0f * Pi32 * 1.0f / (real32)wave_period;
-        if (sine_step > (2.0f * Pi32))
-            sine_step -= 2.0f * Pi32;
+        game_state->SineStep += 2.0f * Pi32 * 1.0f / (real32)wave_period;
+        if (game_state->SineStep > (2.0f * Pi32))
+            game_state->SineStep -= 2.0f * Pi32;
     }
 }
 
@@ -38,11 +29,11 @@ Internal void RenderRectangle(GameBackBuffer *buffer, int min_x, int min_y, int 
     if (min_y > buffer->Height) min_y = buffer->Height;
 
     uint8* rectangle_begin = (uint8 *) buffer->Memory
-        + player_x * buffer->BytesPerPixel
-        + player_y * buffer->Pitch;
+        + min_x * buffer->BytesPerPixel
+        + min_y * buffer->Pitch;
     for (int y = min_y; y < (min_y + height); ++y)
     {
-        uint32 *pixel = (uint32 *)pixel_player_begin;
+        uint32 *pixel = (uint32 *)rectangle_begin;
         for (int x = min_x; x < (min_x + width); ++x)
         {
             uint8 blue  = (uint8)b;
@@ -56,7 +47,8 @@ Internal void RenderRectangle(GameBackBuffer *buffer, int min_x, int min_y, int 
     }
 }
 
-Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuffer *display_buffer)
+extern "C" void UpdateAndRender(GameMemory *memory, GameInput *input,
+    GameBackBuffer *display_buffer)
 {
     Assert((&input->Controller[0].MAX - &input->Controller[0].Buttons[0])
         == ArrayCount(input->Controller[0].Buttons));
@@ -67,18 +59,18 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuff
     {
         char* filepath = __FILE__;
 
-        FileData file = ReadFile(filepath);
+        ReadFileResult file = memory->ReadFile(filepath);
         if (file.Content)
         {
-            WriteFile("testing.out", file.Content, file.Size);
-            FreeFileMemory(file.Content);
+            memory->WriteFile("testing.out", file.Size, file.Content);
+            memory->FreeFileMemory(file.Content);
         }
 
         game_state->PlayerX = 250;
         game_state->PlayerY = 250;
 
-	game_state->ToneHz = 512;
-	memory->IsInitialized = true;
+        game_state->ToneHz = 512;
+        memory->IsInitialized = true;
     }
 
     for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
@@ -106,14 +98,14 @@ Internal void UpdateAndRender(GameMemory *memory, GameInput *input, GameBackBuff
     }
 
     RenderRectangle(display_buffer, 0, 0, display_buffer->Width, display_buffer->Height, 0, 0, 0);
-    RenderRectangle(display_buffer, game_state->PlayerX, game_state->PlayerY, 30, 30, 214, 13, 200);
+    RenderRectangle(display_buffer, game_state->PlayerX, game_state->PlayerY, 30, 30, 128, 255, 128);
 }
 
-Internal void GetSoundSamples(GameMemory* memory, GameSoundBuffer *sound_buffer)
+extern "C" void GetSoundSamples(GameMemory *memory,
+    GameSoundBuffer *sound_buffer)
 {
     GameState* game_state = (GameState*)memory->PermanentStorage;
 
     bool32 is_sound_unmuted = false;
-    if (is_sound_unmuted)
-        OutputSound(sound_buffer, game_state->ToneHz);
+    if (is_sound_unmuted) OutputSound(game_state, sound_buffer);
 }

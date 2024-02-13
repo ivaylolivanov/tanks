@@ -181,7 +181,7 @@ Internal void PrintSoundDebugInfo(TimeMarker* marker, SoundOutput* sound_output,
 Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
     SoundOutput* sound_output, int game_update_hz,
     real32 target_seconds_per_frame, int16* samples, GameMemory* game_memory,
-    TimeMarker* time_markers, int time_marker_index)
+    TimeMarker* time_markers, int time_marker_index, GameCode* game_code)
 {
     LARGE_INTEGER counter_audio_start = GetCounterStamp();
     real32 seconds_elapsed_before_audio = GetSecondsElapsed(
@@ -262,7 +262,7 @@ Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
     sound_buffer.SamplesCount = bytes_to_write / sound_output->BytesPerSample;
     sound_buffer.Samples = samples;
 
-    GetSoundSamples(game_memory, &sound_buffer);
+    game_code->GetSoundSamples(game_memory, &sound_buffer);
 
 #if WIN32_DEBUG
 
