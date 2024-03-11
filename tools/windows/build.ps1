@@ -89,12 +89,20 @@ function BuildProject
         [string]$windowsEntryPoint
     )
 
+    $currentDate = Get-Date;
+    $datePart = $currentDate.ToString("yyyyMMdd");
+    $timePart = $currentDate.ToString("HHmmss");
+    $pdbName = "${GameName}_${datePart}_${timePart}.pdb";
+
     $argumentsGame = @(
         $CommonCompilerFlags
         "$gameEntryPoint"
         "-Fm${GameName}.map"
         "/LD"
         "/link"
+        "-incremental:no"
+        "-opt:ref"
+        "-PDB:${pdbName}"
         "/EXPORT:GetSoundSamples"
         "/EXPORT:UpdateAndRender"
     );
@@ -103,6 +111,7 @@ function BuildProject
         $CommonCompilerFlags
         "$windowsEntryPoint"
         "-Fmwindows_${GameName}.map"
+        "-Fetanks.exe"
         "/link"
         $CommonLinkerFlags
     );
