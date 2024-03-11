@@ -51,5 +51,16 @@ void FreeFileMemory(void* memory);
 ReadFileResult ReadFile(char* filename);
 bool32 WriteFile(char* filename, void *memory, uint32 size);
 
+struct GameCode
+{
+    HMODULE Dll;
+    FILETIME DllLastEditTime;
+
+    FPtrUpdateAndRender *UpdateAndRender;
+    FPtrGetSoundSamples *GetSoundSamples;
+
+    bool32 IsValid;
+};
+
 #define WIN_PLATFORM
 #endif

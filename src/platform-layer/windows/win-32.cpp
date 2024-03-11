@@ -92,24 +92,32 @@ bool32 WriteFile(char* filename, uint32 size, void *memory)
     return result;
 }
 
-struct GameCode
-{
-    HMODULE Dll;
-    FPtrUpdateAndRender *UpdateAndRender;
-    FPtrGetSoundSamples *GetSoundSamples;
-
-    bool32 IsValid;
-};
-
 #include "input.h"
 #include "audio.h"
 
-Internal GameCode LoadGameCode()
+Internal FILETIME GetLastEditTime(char* filepath)
+{
+    FILETIME write_time = {};
+
+    WIN32_FIND_DATA find_data;
+    HANDLE find_handle = FindFirstFileA(filepath, &find_data);
+    if (find_handle != INVALID_HANDLE_VALUE)
+    {
+        write_time = find_data.ftLastWriteTime;
+        FindClose(find_handle);
+    }
+
+    return write_time;
+}
+
+Internal GameCode LoadGameCode(char* dll_filename, char* dll_temp_filename)
 {
     GameCode result = {};
 
-    CopyFile("tanks.dll", "tanks_tmp.dll", FALSE);
-    result.Dll = LoadLibrary("tanks_tmp.dll");
+    CopyFile(dll_filename, dll_temp_filename, FALSE);
+
+    result.DllLastEditTime = GetLastEditTime(dll_filename);
+    result.Dll = LoadLibrary(dll_temp_filename);
 
     if (result.Dll)
     {
@@ -236,8 +244,41 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
     return result;
 }
 
+Internal void CatStrings(char* source_a, size_t source_a_count, char* source_b, size_t source_b_count, char* destination, size_t destination_count)
+{
+    for (int i = 0; i < source_a_count; ++i)
+        *destination++ = *source_a++;
+
+    for (int i = 0; i < source_b_count; ++i)
+        *destination++ = *source_b++;
+
+    *destination++ = 0;
+}
+
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int cmd_size)
 {
+    char exe_filepath[MAX_PATH];
+    DWORD exe_filepath_length = GetModuleFileName(0, exe_filepath,
+        sizeof(exe_filepath));
+    char* exe_basename = exe_filepath;
+    for (char* symbol = exe_filepath; *symbol; ++symbol)
+    {
+        if (*symbol == '\\')
+            exe_basename = symbol + 1;
+    }
+
+    char dll_basename[] = "tanks.dll";
+    char dll_filepath[MAX_PATH];
+    CatStrings(exe_filepath, exe_basename - exe_filepath,
+        dll_basename, sizeof(dll_basename) - 1,
+        dll_filepath, sizeof(dll_filepath));
+
+    char dll2load_basename[] = "tanks_tmp.dll";
+    char dll2load_filepath[MAX_PATH];
+    CatStrings(exe_filepath, exe_basename - exe_filepath,
+        dll2load_basename, sizeof(dll2load_basename) - 1,
+        dll2load_filepath, sizeof(dll2load_filepath));
+
     LARGE_INTEGER performance_counter_frequency;
     QueryPerformanceFrequency(&performance_counter_frequency);
     PERFORMANCE_COUNTER_FREQUENCY = performance_counter_frequency.QuadPart;
@@ -352,16 +393,17 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     TimeMarker time_markers[30] =  {{}, {}};
 
     uint32 game_code_load_time = 0;
-    GameCode game_code = LoadGameCode();
+    GameCode game_code = LoadGameCode(dll_filepath, dll2load_filepath);
 
     SOUND_IS_VALID = false;
     IS_RUNNING = true;
     while (IS_RUNNING)
     {
-        if (game_code_load_time++ > 120)
+        FILETIME dll_last_edit_time = GetLastEditTime(dll_filepath);
+        if (CompareFileTime(&dll_last_edit_time, &game_code.DllLastEditTime) != 0)
         {
             UnloadGameCode(&game_code);
-            game_code = LoadGameCode();
+            game_code = LoadGameCode(dll_filepath, dll2load_filepath);
 
             game_code_load_time = 0;
         }
