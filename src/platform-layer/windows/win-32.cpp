@@ -220,7 +220,10 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
 
         case WM_ACTIVATEAPP:
         {
-            OutputDebugStringA("WM_ACTIVATEAPP\n");
+            if (w_param == TRUE)
+                SetLayeredWindowAttributes(window, RGB(0,0,0), 255, LWA_ALPHA);
+            else
+                SetLayeredWindowAttributes(window, RGB(0,0,0), 64, LWA_ALPHA);
         } break;
 
         case WM_PAINT:
@@ -317,7 +320,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     // Create the window.
     HWND window = CreateWindowExA(
-        NULL,
+        WS_EX_TOPMOST | WS_EX_LAYERED,
         CLASS_NAME,
         WINDOW_TITLE,
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
