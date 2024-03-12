@@ -300,7 +300,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     const char WINDOW_TITLE[] = "Tanks";
 
     WNDCLASS window_class = { };
-    window_class.style         = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
+    window_class.style         = CS_HREDRAW | CS_VREDRAW;
     window_class.lpfnWndProc   = WindowProc;
     window_class.hInstance     = instance;
     window_class.lpszClassName = CLASS_NAME;
