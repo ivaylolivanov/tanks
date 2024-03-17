@@ -221,7 +221,7 @@ Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
     DWORD expected_bytes_until_flip = (DWORD)((seconds_left_until_flip
         / target_seconds_per_frame) * (expected_sound_bytes_per_frame));
     DWORD expected_frame_boundary_byte = play_cursor
-        + expected_sound_bytes_per_frame;
+        + expected_bytes_until_flip;
 
     DWORD safe_write_cursor = write_cursor;
     if (safe_write_cursor < play_cursor)
