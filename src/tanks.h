@@ -170,12 +170,9 @@ struct GameState
 
 typedef void FPtrUpdateAndRender(GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer);
-void UpdateAndRenderStub(GameMemory *memory, GameInput *input,
-    GameBackBuffer *display_buffer) { }
 
 typedef void FPtrGetSoundSamples(GameMemory *memory,
     GameSoundBuffer *sound_buffer);
-void GetSoundSamplesStub(GameMemory *memory, GameSoundBuffer *sound_buffer) {}
 
 #define TANKS
 #endif

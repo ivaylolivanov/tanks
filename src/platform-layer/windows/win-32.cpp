@@ -131,8 +131,8 @@ Internal GameCode LoadGameCode(char* dll_filename, char* dll_temp_filename)
 
     if (!result.IsValid)
     {
-        result.UpdateAndRender = UpdateAndRenderStub;
-        result.GetSoundSamples = GetSoundSamplesStub;
+        result.UpdateAndRender = 0;
+        result.GetSoundSamples = 0;
     }
 
     return result;
@@ -147,8 +147,8 @@ Internal void UnloadGameCode(GameCode* game_code)
     }
 
     game_code->IsValid = false;
-    game_code->UpdateAndRender = UpdateAndRenderStub;
-    game_code->GetSoundSamples = GetSoundSamplesStub;
+    game_code->UpdateAndRender = 0;
+    game_code->GetSoundSamples = 0;
 }
 
 Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
@@ -333,8 +333,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     );
 
     if (window == NULL) return 0;
-
-    HDC device_context = GetDC(window);
 
     SoundOutput sound_output = {};
     sound_output.SamplesPerSecond = 48000;
