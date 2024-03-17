@@ -362,14 +362,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     game_memory.ReadFile = ReadFile;
     game_memory.WriteFile = WriteFile;
 
-    uint64 total_size = game_memory.PermanentStorageSize
+    windows_state.TotalSize = game_memory.PermanentStorageSize
         + game_memory.TransientStorageSize;
-    game_memory.PermanentStorage = VirtualAlloc(
+    windows_state.GameMemory = VirtualAlloc(
         base_address,
-        (size_t)total_size,
+        (size_t)windows_state.TotalSize,
         MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE);
 
+    game_memory.PermanentStorage = windows_state.GameMemory;
     game_memory.TransientStorage = ((uint8 *)game_memory.PermanentStorage
         + game_memory.PermanentStorageSize);
 
@@ -424,7 +425,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
                 keyboard_old->Buttons[button_index].EndedDown;
         }
 
-        ProcessKeyboard(keyboard_new);
+        ProcessKeyboard(&windows_state, keyboard_new);
         ProcessGamepadStates(old_input, new_input);
 
         if (IS_PAUSED) continue;

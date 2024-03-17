@@ -8,7 +8,7 @@ Internal void ProcessKeyboardButton(ButtonState* state, bool32 is_down)
     ++state->HalfTransitions;
 }
 
-Internal void ProcessKeyboard(ControllerState *keyboard)
+Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
 {
     MSG message;
     while (PeekMessage(&message, 0, 0, 0, PM_REMOVE))

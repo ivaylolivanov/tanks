@@ -62,5 +62,20 @@ struct GameCode
     bool32 IsValid;
 };
 
+struct WindowsState
+{
+    uint64 TotalSize;
+    void* GameMemory;
+
+    char  ExeFilepath[MAX_PATH];
+    char* ExeBasename;
+
+    HANDLE RecordingHandle;
+    int InputRecordingIndex;
+
+    HANDLE PlaybackHandle;
+    int InputPlaybackIndex;
+};
+
 #define WIN_PLATFORM
 #endif
