@@ -244,6 +244,7 @@ Internal void ProcessGamepadStates(GameInput *input_old, GameInput *input_new)
         bool32 isUnplugged = XInputGetState(controller_index, &controllerState)
             != ERROR_SUCCESS;
         state_new->IsConnected = !isUnplugged;
+        state_new->IsAnalog = state_old->IsAnalog;
         if (isUnplugged) continue;
 
         XINPUT_GAMEPAD *gamepad = &controllerState.Gamepad;
