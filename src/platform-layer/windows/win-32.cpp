@@ -29,6 +29,27 @@ inline real32 GetSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end)
     return result;
 }
 
+Internal void CatStrings(char* source_a, size_t source_a_count,
+    char* source_b, size_t source_b_count,
+    char* destination, size_t destination_count)
+{
+    for (int i = 0; i < source_a_count; ++i)
+        *destination++ = *source_a++;
+
+    for (int i = 0; i < source_b_count; ++i)
+        *destination++ = *source_b++;
+
+    *destination++ = 0;
+}
+
+Internal int StringLength(char* string)
+{
+    int count = 0;
+    if (string) while(*string++) ++count;
+
+    return count;
+}
+
 Internal char* GetPathBasenameSubstring(char* path)
 {
     char* basename = path;
@@ -258,16 +279,13 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
     return result;
 }
 
-Internal void CatStrings(char* source_a, size_t source_a_count, char* source_b, size_t source_b_count, char* destination, size_t destination_count)
+int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int cmd_size)
 {
-    for (int i = 0; i < source_a_count; ++i)
-        *destination++ = *source_a++;
+    WindowsState windows_state = {};
 
-    for (int i = 0; i < source_b_count; ++i)
-        *destination++ = *source_b++;
-
-    *destination++ = 0;
-}
+    LARGE_INTEGER performance_counter_frequency;
+    QueryPerformanceFrequency(&performance_counter_frequency);
+    PERFORMANCE_COUNTER_FREQUENCY = performance_counter_frequency.QuadPart;
 
 int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int cmd_size)
 {
@@ -292,10 +310,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     CatStrings(exe_filepath, exe_basename - exe_filepath,
         dll2load_basename, sizeof(dll2load_basename) - 1,
         dll2load_filepath, sizeof(dll2load_filepath));
-
-    LARGE_INTEGER performance_counter_frequency;
-    QueryPerformanceFrequency(&performance_counter_frequency);
-    PERFORMANCE_COUNTER_FREQUENCY = performance_counter_frequency.QuadPart;
 
     UINT desired_scheduler_ms = 1;
     bool32 sleep_is_granular = (timeBeginPeriod(desired_scheduler_ms)
