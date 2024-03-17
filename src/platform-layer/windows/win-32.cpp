@@ -515,12 +515,14 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
 #endif
 
+        HDC device_context = GetDC(window);
         DisplayBufferInWindow(
             &BACK_BUFFER,
             device_context,
             dimension.Width,
             dimension.Height);
         counter_frame_flip = GetCounterStamp();
+        ReleaseDC(window, device_context);
 
 #if WIN32_DEBUG_SOUND
 
