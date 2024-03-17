@@ -262,7 +262,8 @@ Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
     sound_buffer.SamplesCount = bytes_to_write / sound_output->BytesPerSample;
     sound_buffer.Samples = samples;
 
-    game_code->GetSoundSamples(game_memory, &sound_buffer);
+    if (game_code)
+        game_code->GetSoundSamples(game_memory, &sound_buffer);
 
 #if WIN32_DEBUG
 

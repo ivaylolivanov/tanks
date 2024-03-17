@@ -434,7 +434,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         game_buffer.Width         = BACK_BUFFER.Width;
         game_buffer.Pitch         = BACK_BUFFER.Pitch;
         game_buffer.BytesPerPixel = BACK_BUFFER.BytesPerPixel;
-        game_code.UpdateAndRender(&game_memory, new_input, &game_buffer);
+
+        if (game_code.UpdateAndRender)
+            game_code.UpdateAndRender(&game_memory, new_input, &game_buffer);
 
         CorrectAndOutputSound(
             counter_frame_flip,
