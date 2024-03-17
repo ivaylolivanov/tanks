@@ -1,3 +1,4 @@
+#include <cstdint>
 #ifndef TANKS
 
 #include <math.h>
@@ -19,6 +20,9 @@ typedef uint8_t  uint8;
 typedef uint16_t uint16;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
+
+typedef uintptr_t umm;
+typedef intptr_t smm;
 
 typedef float  real32;
 typedef double real64;
