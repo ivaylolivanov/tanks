@@ -131,13 +131,9 @@ Internal FILETIME GetLastEditTime(char* filepath)
 {
     FILETIME write_time = {};
 
-    WIN32_FIND_DATA find_data;
-    HANDLE find_handle = FindFirstFileA(filepath, &find_data);
-    if (find_handle != INVALID_HANDLE_VALUE)
-    {
-        write_time = find_data.ftLastWriteTime;
-        FindClose(find_handle);
-    }
+    WIN32_FILE_ATTRIBUTE_DATA data;
+    if (GetFileAttributesEx(filepath, GetFileExInfoStandard, &data))
+        write_time = data.ftLastWriteTime;
 
     return write_time;
 }
@@ -287,27 +283,22 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     QueryPerformanceFrequency(&performance_counter_frequency);
     PERFORMANCE_COUNTER_FREQUENCY = performance_counter_frequency.QuadPart;
 
-int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, int cmd_size)
-{
-    char exe_filepath[MAX_PATH];
-    DWORD exe_filepath_length = GetModuleFileName(0, exe_filepath,
-        sizeof(exe_filepath));
-    char* exe_basename = exe_filepath;
-    for (char* symbol = exe_filepath; *symbol; ++symbol)
-    {
-        if (*symbol == '\\')
-            exe_basename = symbol + 1;
-    }
+    DWORD exe_filepath_length = GetModuleFileName(0, windows_state.ExeFilepath,
+        sizeof(windows_state.ExeFilepath));
+    windows_state.ExeBasename = GetPathBasenameSubstring(
+        windows_state.ExeFilepath);
 
     char dll_basename[] = "tanks.dll";
     char dll_filepath[MAX_PATH];
-    CatStrings(exe_filepath, exe_basename - exe_filepath,
+    CatStrings(windows_state.ExeFilepath,
+        windows_state.ExeBasename - windows_state.ExeFilepath,
         dll_basename, sizeof(dll_basename) - 1,
         dll_filepath, sizeof(dll_filepath));
 
     char dll2load_basename[] = "tanks_tmp.dll";
     char dll2load_filepath[MAX_PATH];
-    CatStrings(exe_filepath, exe_basename - exe_filepath,
+    CatStrings(windows_state.ExeFilepath,
+        windows_state.ExeBasename - windows_state.ExeFilepath,
         dll2load_basename, sizeof(dll2load_basename) - 1,
         dll2load_filepath, sizeof(dll2load_filepath));
 
