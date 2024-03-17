@@ -29,6 +29,17 @@ inline real32 GetSecondsElapsed(LARGE_INTEGER start, LARGE_INTEGER end)
     return result;
 }
 
+Internal char* GetPathBasenameSubstring(char* path)
+{
+    char* basename = path;
+    for (char* symbol = path; *symbol; ++symbol)
+    {
+        if (*symbol == '\\') basename = symbol + 1;
+    }
+
+    return basename;
+}
+
 void FreeFileMemory(void* memory)
 {
     if (!memory) return;
