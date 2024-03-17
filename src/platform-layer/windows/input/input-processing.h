@@ -1,5 +1,82 @@
 #ifndef INPUT_PROCESSING
 
+Internal void GetInputRecordsFilepath(WindowsState* state, int slot,
+    char* destination, int count)
+{
+    Assert(slot == 1);
+    char* input_record_basename = "input-record.ti";
+    CatStrings(state->ExeFilepath, state->ExeBasename - state->ExeFilepath,
+        input_record_basename, StringLength(input_record_basename),
+        destination, sizeof(destination));
+}
+
+Internal void InputRecord(WindowsState* state, int index)
+{
+    state->InputRecordingIndex = index;
+
+    char input_records_filepath[MAX_PATH];
+    GetInputRecordsFilepath(state, index, input_records_filepath,
+        sizeof(input_records_filepath));
+
+    state->RecordingHandle = CreateFileA(input_records_filepath, GENERIC_WRITE,
+        0, 0, CREATE_ALWAYS, 0, 0);
+    DWORD bytes_to_write = (DWORD)state->TotalSize;
+    Assert(bytes_to_write == state->TotalSize);
+    DWORD bytes_written;
+    WriteFile(state->RecordingHandle, state->GameMemory, bytes_to_write,
+        &bytes_written, 0);
+}
+
+Internal void InputRecordEnd(WindowsState* state)
+{
+    CloseHandle(state->RecordingHandle);
+    state->InputRecordingIndex = 0;
+}
+
+Internal void InputPlayback(WindowsState* state, int index)
+{
+    state->InputPlaybackIndex = index;
+
+    char input_records_filepath[MAX_PATH];
+    GetInputRecordsFilepath(state, index, input_records_filepath,
+        sizeof(input_records_filepath));
+
+    state->PlaybackHandle = CreateFileA(input_records_filepath, GENERIC_READ,
+        FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    DWORD bytes_to_read = (DWORD)(state->TotalSize);
+    Assert(bytes_to_read == state->TotalSize);
+    DWORD bytes_read;
+    ReadFile(state->PlaybackHandle, state->GameMemory, bytes_to_read,
+        &bytes_read, 0);
+}
+
+Internal void InputPlaybackEnd(WindowsState* state)
+{
+    CloseHandle(state->PlaybackHandle);
+    state->InputPlaybackIndex = 0;
+}
+
+Internal void InputRecordWrite(WindowsState* state, GameInput* input)
+{
+    DWORD bytes_written;
+    WriteFile(state->RecordingHandle, input, sizeof(*input), &bytes_written, 0);
+}
+
+Internal void InputRecordRead(WindowsState* state, GameInput* input)
+{
+    DWORD bytes_read;
+    if (!ReadFile(state->PlaybackHandle, input, sizeof(*input), &bytes_read, 0))
+        return;
+
+    if (bytes_read != 0)
+        return;
+
+    int index = state->InputPlaybackIndex;
+    InputPlaybackEnd(state);
+    InputPlayback(state, index);
+    ReadFile(state->PlaybackHandle, input, sizeof(*input), &bytes_read, 0);
+}
+
 Internal void ProcessKeyboardButton(ButtonState* state, bool32 is_down)
 {
     Assert(state->EndedDown != is_down);
@@ -66,6 +143,22 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
                         OutputDebugStringA("You have pressed P/p.\n");
                     } break;
 #endif
+
+                    case 'L':
+                    {
+                        if (is_down)
+                        {
+                            if (state->InputRecordingIndex == 0)
+                            {
+                                InputRecord(state, 1);
+                            }
+                            else
+                            {
+                                InputRecordEnd(state);
+                                InputPlayback(state, 1);
+                            }
+                        }
+                    } break;
 
                     case VK_SPACE:
                     {

@@ -460,6 +460,12 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         game_buffer.Pitch         = BACK_BUFFER.Pitch;
         game_buffer.BytesPerPixel = BACK_BUFFER.BytesPerPixel;
 
+        if (windows_state.InputRecordingIndex)
+            InputRecordWrite(&windows_state, new_input);
+
+        if (windows_state.InputPlaybackIndex)
+            InputRecordRead(&windows_state, new_input);
+
         if (game_code.UpdateAndRender)
             game_code.UpdateAndRender(&game_memory, new_input, &game_buffer);
 
