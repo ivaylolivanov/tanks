@@ -61,14 +61,14 @@ Internal char* GetPathBasenameSubstring(char* path)
     return basename;
 }
 
-void FreeFileMemory(void* memory)
+void FreeFileMemory(ThreadContext* thread, void* memory)
 {
     if (!memory) return;
 
     VirtualFree(memory, 0, MEM_RELEASE);
 }
 
-ReadFileResult ReadFile(char* filename)
+ReadFileResult ReadFile(ThreadContext* thread, char* filename)
 {
     ReadFileResult result = {};
     result.Size = 0;
@@ -98,7 +98,7 @@ ReadFileResult ReadFile(char* filename)
     }
     else
     {
-        FreeFileMemory(file.Content);
+        FreeFileMemory(thread, file.Content);
         file.Content = 0;
         result.Content = 0;
     }
@@ -108,7 +108,8 @@ ReadFileResult ReadFile(char* filename)
     return result;
 }
 
-bool32 WriteFile(char* filename, uint32 size, void *memory)
+bool32 WriteFile(ThreadContext* thread, char* filename, uint32 size,
+    void *memory)
 {
     bool32 result = false;
 
@@ -323,17 +324,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     RegisterClass(&window_class);
 
-    int monitor_refresh_rate = 60;
-    // TODO: Check if this is reliabled enough
-    /* Disabled until checked
-    DEVMODE devmode;
-    devmode.dmSize = sizeof(devmode);
-    if (EnumDisplaySettings(0, ENUM_CURRENT_SETTINGS, &devmode) != 0)
-        monitor_refresh_rate = devmode.dmDisplayFrequency;
-    */
-    int game_update_hz = monitor_refresh_rate / 2;
-    real32 target_seconds_per_frame = 1.0f / (real32)game_update_hz;
-
     // Create the window.
     HWND window = CreateWindowExA(
         0, // WS_EX_TOPMOST | WS_EX_LAYERED,
@@ -350,6 +340,15 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     if (window == NULL) return 0;
 
+    int monitor_refresh_rate = 60;
+    HDC refresh_dc = GetDC(window);
+    int refresh_rate = GetDeviceCaps(refresh_dc, VREFRESH);
+    ReleaseDC(window, refresh_dc);
+    if (refresh_rate > 1)
+        monitor_refresh_rate = refresh_rate;
+    int game_update_hz = monitor_refresh_rate / 2;
+    real32 target_seconds_per_frame = 1.0f / (real32)game_update_hz;
+
     SoundOutput sound_output = {};
     sound_output.SamplesPerSecond = 48000;
     sound_output.BytesPerSample = sizeof(int16) * 2;
@@ -357,8 +356,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         * sound_output.BytesPerSample;
     sound_output.LatencySampleCount = 3
         * (sound_output.SamplesPerSecond / game_update_hz);
-    sound_output.SafetyBytes = (sound_output.SamplesPerSecond
-        * sound_output.BytesPerSample / game_update_hz) / 3;
+    sound_output.SafetyBytes = (int)(((real32)sound_output.SamplesPerSecond
+        * (real32)sound_output.BytesPerSample / game_update_hz) / 3);
     InitDirectSound(window, sound_output.SamplesPerSecond,
         sound_output.BufferSize);
     ClearSoundBuffer(&sound_output);
@@ -391,6 +390,34 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     if (!game_memory.PermanentStorage
         || !game_memory.TransientStorage) return 0;
 
+    for (int i = 0; i < ArrayCount(windows_state.InputReplayBuffers); ++i)
+    {
+        InputReplayBuffer *buffer = &windows_state.InputReplayBuffers[i];
+        GetInputRecordsFilepath(&windows_state, false, i, buffer->Filepath,
+            sizeof(buffer->Filepath));
+
+        buffer->FileHandle = CreateFileA(buffer->Filepath,
+            GENERIC_WRITE|GENERIC_READ, 0, 0, CREATE_ALWAYS, 0, 0);
+
+        LARGE_INTEGER max_size;
+        max_size.QuadPart = windows_state.TotalSize;
+        buffer->MemoryMap = CreateFileMapping(
+            buffer->FileHandle, 0, PAGE_READWRITE,
+            max_size.HighPart, max_size.LowPart, 0);
+
+        buffer->Memory = MapViewOfFile(
+            buffer->MemoryMap, FILE_MAP_ALL_ACCESS, 0, 0,
+            windows_state.TotalSize);
+
+        if(buffer->Memory)
+        {
+        }
+        else
+        {
+        }
+    }
+
+
     GameInput inputs[2] = {};
     GameInput* new_input = &inputs[0];
     GameInput* old_input = &inputs[1];
@@ -399,14 +426,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     LARGE_INTEGER counter_frame_flip  = GetCounterStamp();
     uint64 cpu_frame_start = __rdtsc();
 
-    /* TODO: Find way to do it dynamically; Probably like this: ?
-    int time_markers_size = game_update_hz / 2;
-    TimeMarker* time_markers = (TimeMarker*)VirtualAlloc(0, time_markers_size,
-        MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
-    for (int i = 0; i < time_markers_size; ++i)
-        time_markers[i] = {0};
-     */
-    // TODO: With size 15, the game crashes
     int time_marker_index = 0;
     TimeMarker time_markers[30] =  {{}, {}};
 
@@ -431,7 +450,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         *keyboard_new = {};
         keyboard_new->IsConnected = true;
 
-        // TODO: Find a better way ?
         int32 all_buttons = ArrayCount(keyboard_new->Buttons);
         for (int button_index = 0; button_index < all_buttons; ++button_index)
         {
@@ -439,10 +457,13 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
                 keyboard_old->Buttons[button_index].EndedDown;
         }
 
+        ProcessMouse(window, new_input);
         ProcessKeyboard(&windows_state, keyboard_new);
         ProcessGamepadStates(old_input, new_input);
 
         if (IS_PAUSED) continue;
+
+        ThreadContext thread = {};
 
         GameBackBuffer game_buffer = {};
         game_buffer.Memory        = BACK_BUFFER.Memory;
@@ -458,9 +479,10 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
             InputRecordRead(&windows_state, new_input);
 
         if (game_code.UpdateAndRender)
-            game_code.UpdateAndRender(&game_memory, new_input, &game_buffer);
+            game_code.UpdateAndRender(&thread, &game_memory, new_input, &game_buffer);
 
         CorrectAndOutputSound(
+            &thread,
             counter_frame_flip,
             &sound_output,
             game_update_hz,
@@ -506,14 +528,6 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         counter_frame_start = counter_frame_end;
 
         WindowDimension dimension = GetWindowDimension(window);
-
-#if WIN32_DEBUG_SOUND
-
-        DebugSyncDisplay(&BACK_BUFFER, ArrayCount(time_markers),
-            time_marker_index - 1, time_markers, &sound_output,
-            target_seconds_per_frame);
-
-#endif
 
         HDC device_context = GetDC(window);
         DisplayBufferInWindow(

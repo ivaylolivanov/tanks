@@ -62,10 +62,19 @@ struct GameCode
     bool32 IsValid;
 };
 
+struct InputReplayBuffer
+{
+    HANDLE FileHandle;
+    HANDLE MemoryMap;
+    char Filepath[MAX_PATH];
+    void* Memory;
+};
+
 struct WindowsState
 {
     uint64 TotalSize;
     void* GameMemory;
+    InputReplayBuffer InputReplayBuffers[4];
 
     char  ExeFilepath[MAX_PATH];
     char* ExeBasename;

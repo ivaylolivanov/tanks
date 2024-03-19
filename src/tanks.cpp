@@ -47,7 +47,7 @@ Internal void RenderRectangle(GameBackBuffer *buffer, int min_x, int min_y, int 
     }
 }
 
-extern "C" void UpdateAndRender(GameMemory *memory, GameInput *input,
+extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer)
 {
     Assert((&input->Controller[0].MAX - &input->Controller[0].Buttons[0])
@@ -59,11 +59,11 @@ extern "C" void UpdateAndRender(GameMemory *memory, GameInput *input,
     {
         char* filepath = __FILE__;
 
-        ReadFileResult file = memory->ReadFile(filepath);
+        ReadFileResult file = memory->ReadFile(thread, filepath);
         if (file.Content)
         {
-            memory->WriteFile("testing.out", file.Size, file.Content);
-            memory->FreeFileMemory(file.Content);
+            memory->WriteFile(thread, "testing.out", file.Size, file.Content);
+            memory->FreeFileMemory(thread, file.Content);
         }
 
         game_state->PlayerX = 250;
@@ -97,11 +97,22 @@ extern "C" void UpdateAndRender(GameMemory *memory, GameInput *input,
         }
     }
 
-    RenderRectangle(display_buffer, 0, 0, display_buffer->Width, display_buffer->Height, 0, 0, 0);
-    RenderRectangle(display_buffer, game_state->PlayerX, game_state->PlayerY, 30, 30, 128, 255, 128);
+    RenderRectangle(display_buffer, 0, 0, display_buffer->Width,
+        display_buffer->Height, 0, 0, 0);
+    RenderRectangle(display_buffer, game_state->PlayerX, game_state->PlayerY,
+        30, 30, 128, 255, 128);
+    RenderRectangle(display_buffer, input->MouseX, input->MouseY, 10, 10, 255,
+        255, 255);
+
+    for (int i = 0; i < ArrayCount(input->MouseButtons); ++i)
+    {
+        if (input->MouseButtons[i].EndedDown)
+            RenderRectangle(display_buffer, input->MouseX, input->MouseY, 10,
+                            10, 255 - (uint8)(10 * i + 10), 255 - (uint8)(10 * i + 10), 255 - (uint8)(10 * i + 10));
+    }
 }
 
-extern "C" void GetSoundSamples(GameMemory *memory,
+extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,
     GameSoundBuffer *sound_buffer)
 {
     GameState* game_state = (GameState*)memory->PermanentStorage;

@@ -1,30 +1,35 @@
 #ifndef INPUT_PROCESSING
 
-Internal void GetInputRecordsFilepath(WindowsState* state, int slot,
-    char* destination, int count)
+Internal void GetInputRecordsFilepath(WindowsState* state, bool input_stream,
+    int slot, char* destination, int count)
 {
-    Assert(slot == 1);
-    char* input_record_basename = "input-record.ti";
+
+    char temp[64];
+    wsprintf(temp, "input-record-%d-%s.ti", slot, input_stream ? "input" : "state");
     CatStrings(state->ExeFilepath, state->ExeBasename - state->ExeFilepath,
-        input_record_basename, StringLength(input_record_basename),
+        temp, StringLength(temp),
         destination, sizeof(destination));
 }
 
-Internal void InputRecord(WindowsState* state, int index)
+Internal InputReplayBuffer* GetInputReplayBuffer(WindowsState* state, uint32 index)
 {
+    Assert(index < ArrayCount(state->ReplayBuffers));
+    InputReplayBuffer* result = &state->InputReplayBuffers[index];
+    return result;
+}
+
+Internal void InputRecordStart(WindowsState* state, int index)
+{
+    InputReplayBuffer* buffer = GetInputReplayBuffer(state, index);
+    if (!buffer->Memory) return;
+
     state->InputRecordingIndex = index;
+    char filepath[MAX_PATH];
+    GetInputRecordsFilepath(state, true, index, filepath, sizeof(filepath));
+    state->RecordingHandle = CreateFileA(filepath, GENERIC_WRITE, 0, 0,
+        CREATE_ALWAYS, 0, 0);
 
-    char input_records_filepath[MAX_PATH];
-    GetInputRecordsFilepath(state, index, input_records_filepath,
-        sizeof(input_records_filepath));
-
-    state->RecordingHandle = CreateFileA(input_records_filepath, GENERIC_WRITE,
-        0, 0, CREATE_ALWAYS, 0, 0);
-    DWORD bytes_to_write = (DWORD)state->TotalSize;
-    Assert(bytes_to_write == state->TotalSize);
-    DWORD bytes_written;
-    WriteFile(state->RecordingHandle, state->GameMemory, bytes_to_write,
-        &bytes_written, 0);
+    CopyMemory(buffer->Memory, state->GameMemory, state->TotalSize);
 }
 
 Internal void InputRecordEnd(WindowsState* state)
@@ -33,21 +38,20 @@ Internal void InputRecordEnd(WindowsState* state)
     state->InputRecordingIndex = 0;
 }
 
-Internal void InputPlayback(WindowsState* state, int index)
+Internal void InputPlaybackStart(WindowsState* state, int index)
 {
+    InputReplayBuffer* buffer = GetInputReplayBuffer(state, index);
+    if (!buffer->Memory) return;
+
     state->InputPlaybackIndex = index;
 
     char input_records_filepath[MAX_PATH];
-    GetInputRecordsFilepath(state, index, input_records_filepath,
+    GetInputRecordsFilepath(state, true, index, input_records_filepath,
         sizeof(input_records_filepath));
 
     state->PlaybackHandle = CreateFileA(input_records_filepath, GENERIC_READ,
         FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-    DWORD bytes_to_read = (DWORD)(state->TotalSize);
-    Assert(bytes_to_read == state->TotalSize);
-    DWORD bytes_read;
-    ReadFile(state->PlaybackHandle, state->GameMemory, bytes_to_read,
-        &bytes_read, 0);
+    CopyMemory(state->GameMemory, buffer->Memory, state->TotalSize);
 }
 
 Internal void InputPlaybackEnd(WindowsState* state)
@@ -73,16 +77,37 @@ Internal void InputRecordRead(WindowsState* state, GameInput* input)
 
     int index = state->InputPlaybackIndex;
     InputPlaybackEnd(state);
-    InputPlayback(state, index);
+    InputPlaybackStart(state, index);
     ReadFile(state->PlaybackHandle, input, sizeof(*input), &bytes_read, 0);
 }
 
-Internal void ProcessKeyboardButton(ButtonState* state, bool32 is_down)
+Internal void ProcessButtonState(ButtonState* state, bool32 is_down)
 {
-    Assert(state->EndedDown != is_down);
+    if (state->EndedDown == is_down) return;
 
     state->EndedDown = is_down;
     ++state->HalfTransitions;
+}
+
+Internal void ProcessMouse(HWND window, GameInput* input_new)
+{
+    POINT MouseP;
+    GetCursorPos(&MouseP);
+    ScreenToClient(window, &MouseP);
+    input_new->MouseX = MouseP.x;
+    input_new->MouseY = MouseP.y;
+    input_new->MouseZ = 0; // Scroll wheel
+
+    SHORT mouse_button_left   = GetKeyState(VK_LBUTTON) & (1 << 15);
+    SHORT mouse_button_middle = GetKeyState(VK_MBUTTON) & (1 << 15);
+    SHORT mouse_button_right  = GetKeyState(VK_RBUTTON) & (1 << 15);
+    SHORT mouse_button_x1     = GetKeyState(VK_XBUTTON1) & (1 << 15);
+    SHORT mouse_button_x2     = GetKeyState(VK_XBUTTON2) & (1 << 15);
+    ProcessButtonState(&input_new->MouseButtons[0], mouse_button_left);
+    ProcessButtonState(&input_new->MouseButtons[1], mouse_button_middle);
+    ProcessButtonState(&input_new->MouseButtons[2], mouse_button_right);
+    ProcessButtonState(&input_new->MouseButtons[3], mouse_button_x1);
+    ProcessButtonState(&input_new->MouseButtons[4], mouse_button_x2);
 }
 
 Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
@@ -114,25 +139,25 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
                 {
                     case 'W':
                     {
-                        ProcessKeyboardButton(&keyboard->MoveUp, is_down);
+                        ProcessButtonState(&keyboard->MoveUp, is_down);
                         OutputDebugStringA("You have pressed W/w.\n");
                     } break;
 
                     case 'A':
                     {
-                        ProcessKeyboardButton(&keyboard->MoveLeft, is_down);
+                        ProcessButtonState(&keyboard->MoveLeft, is_down);
                         OutputDebugStringA("You have pressed A/a.\n");
                     } break;
 
                     case 'S':
                     {
-                        ProcessKeyboardButton(&keyboard->MoveDown, is_down);
+                        ProcessButtonState(&keyboard->MoveDown, is_down);
                         OutputDebugStringA("You have pressed S/s.\n");
                     } break;
 
                     case 'D':
                     {
-                        ProcessKeyboardButton(&keyboard->MoveRight, is_down);
+                        ProcessButtonState(&keyboard->MoveRight, is_down);
                         OutputDebugStringA("You have pressed D/d.\n");
                     } break;
 
@@ -146,17 +171,24 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
 
                     case 'L':
                     {
-                        if (is_down)
+                        if (!is_down)
+                            continue;
+
+                        if (state->InputPlaybackIndex == 0)
                         {
                             if (state->InputRecordingIndex == 0)
                             {
-                                InputRecord(state, 1);
+                                InputRecordStart(state, 1);
                             }
                             else
                             {
                                 InputRecordEnd(state);
-                                InputPlayback(state, 1);
+                                InputPlaybackStart(state, 1);
                             }
+                        }
+                        else
+                        {
+                            InputPlaybackEnd(state);
                         }
                     } break;
 
@@ -167,13 +199,13 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
 
                     case VK_ESCAPE:
                     {
-                        ProcessKeyboardButton(&keyboard->Start, is_down);
+                        ProcessButtonState(&keyboard->Start, is_down);
                         OutputDebugStringA("You have pressed ESC key.\n");
                     } break;
 
                     case VK_BACK:
                     {
-                        ProcessKeyboardButton(&keyboard->Back, is_down);
+                        ProcessButtonState(&keyboard->Back, is_down);
                         OutputDebugStringA("You have pressed backspace.\n");
                     } break;
 

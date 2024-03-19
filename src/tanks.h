@@ -47,13 +47,18 @@ inline uint32 TruncateUInt64(uint64 Value)
     return(result);
 }
 
+struct ThreadContext
+{
+    int PlaceHolder;
+};
+
 struct ReadFileResult
 {
     uint32 Size;
     void* Content;
 };
 
-ReadFileResult ReadFileStub(char* filename)
+ReadFileResult ReadFileStub(ThreadContext *thread, char* filename)
 {
     ReadFileResult result = {};
 
@@ -62,16 +67,18 @@ ReadFileResult ReadFileStub(char* filename)
 
     return result;
 }
-typedef ReadFileResult FPtrReadFile(char* filename);
+typedef ReadFileResult FPtrReadFile(ThreadContext *thread, char* filename);
 
-bool32 WriteFileStub(char* filename, uint32  memory_size, void* memory)
+bool32 WriteFileStub(ThreadContext *thread, char* filename, uint32  memory_size,
+    void* memory)
 {
     return 0;
 }
-typedef bool32 FPtrWriteFile(char* filename, uint32 memory_size, void* memory);
+typedef bool32 FPtrWriteFile(ThreadContext *thread, char* filename,
+    uint32 memory_size, void* memory);
 
-void FreeFileMemoryStub(void *memory) {}
-typedef void FPtrFreeFileMemory(void* memory);
+void FreeFileMemoryStub(ThreadContext *thread, void *memory) {}
+typedef void FPtrFreeFileMemory(ThreadContext *thread, void* memory);
 
 struct ButtonState
 {
@@ -130,6 +137,9 @@ struct GameMemory
 
 struct GameInput
 {
+    ButtonState MouseButtons[5];
+    int32 MouseX, MouseY, MouseZ;
+
     ControllerState Controllers[4];
 };
 
@@ -168,10 +178,10 @@ struct GameState
     real32 SineStep;
 };
 
-typedef void FPtrUpdateAndRender(GameMemory *memory, GameInput *input,
+typedef void FPtrUpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer);
 
-typedef void FPtrGetSoundSamples(GameMemory *memory,
+typedef void FPtrGetSoundSamples(ThreadContext* thread, GameMemory *memory,
     GameSoundBuffer *sound_buffer);
 
 #define TANKS

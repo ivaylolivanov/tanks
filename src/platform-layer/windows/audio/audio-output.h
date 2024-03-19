@@ -178,10 +178,11 @@ Internal void PrintSoundDebugInfo(TimeMarker* marker, SoundOutput* sound_output,
 
 #endif
 
-Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
-    SoundOutput* sound_output, int game_update_hz,
-    real32 target_seconds_per_frame, int16* samples, GameMemory* game_memory,
-    TimeMarker* time_markers, int time_marker_index, GameCode* game_code)
+Internal void CorrectAndOutputSound(ThreadContext* thread,
+    LARGE_INTEGER counter_frame_flip, SoundOutput* sound_output,
+    int game_update_hz, real32 target_seconds_per_frame, int16* samples,
+    GameMemory* game_memory, TimeMarker* time_markers, int time_marker_index,
+    GameCode* game_code)
 {
     LARGE_INTEGER counter_audio_start = GetCounterStamp();
     real32 seconds_elapsed_before_audio = GetSecondsElapsed(
@@ -214,8 +215,9 @@ Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
 
     DWORD byte_to_lock = (sound_output->RunningSampleIndex
         * sound_output->BytesPerSample) % sound_output->BufferSize;
-    DWORD expected_sound_bytes_per_frame = (sound_output->SamplesPerSecond
-        * sound_output->BytesPerSample) / game_update_hz;
+    DWORD expected_sound_bytes_per_frame = (int)((
+        (real32)sound_output->SamplesPerSecond * sound_output->BytesPerSample)
+        / game_update_hz);
     real32 seconds_left_until_flip = target_seconds_per_frame
         - seconds_elapsed_before_audio;
     DWORD expected_bytes_until_flip = (DWORD)((seconds_left_until_flip
@@ -263,7 +265,7 @@ Internal void CorrectAndOutputSound(LARGE_INTEGER counter_frame_flip,
     sound_buffer.Samples = samples;
 
     if (game_code)
-        game_code->GetSoundSamples(game_memory, &sound_buffer);
+        game_code->GetSoundSamples(thread, game_memory, &sound_buffer);
 
 #if WIN32_DEBUG
 
