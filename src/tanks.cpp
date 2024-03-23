@@ -1,4 +1,5 @@
 #include "tanks.h"
+#include "intrinsics.h"
 
 #define TILEMAP_WIDTH 33
 #define TILEMAP_HEIGHT 18
@@ -109,30 +110,6 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
         if (game_state->SineStep > (2.0f * Pi32))
             game_state->SineStep -= 2.0f * Pi32;
     }
-}
-
-inline int32 FloorReal32ToInt32(real32 real)
-{
-    int32 result = (int32)floorf(real);
-    return result;
-}
-
-inline uint32 RoundReal32ToInt32(real32 real)
-{
-    int32 result = (int32)(real + 0.5f);
-    return result;
-}
-
-inline uint32 RoundReal32ToUInt32(real32 real)
-{
-    int32 result = (uint32)(real + 0.5f);
-    return result;
-}
-
-inline int32 TruncateReal32ToInt32(real32 real)
-{
-    int32 result = (int32)real;
-    return result;
 }
 
 inline WorldPosition GetWorldPosition(World* world, RawPosition position)
