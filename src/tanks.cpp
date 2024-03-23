@@ -94,7 +94,6 @@ uint32 TILES11[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
 
 Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
 {
-    LocalPersist real32 sine_step;
     int16 tone_volume = 3000;
     int wave_period = sound_buffer->SamplesPerSecond / game_state->ToneHz;
 
