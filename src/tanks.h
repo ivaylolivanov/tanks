@@ -1,31 +1,13 @@
 #include <cstdint>
 #ifndef TANKS
 
-#include <math.h>
-#include <cinttypes>
+#include "platform.h"
 
 #define Internal       static
 #define LocalPersist   static
 #define GlobalVariable static
 
 #define Pi32 3.14159265359f
-
-typedef int8_t  int8;
-typedef int16_t int16;
-typedef int32_t int32;
-typedef int64_t int64;
-typedef int32   bool32;
-
-typedef uint8_t  uint8;
-typedef uint16_t uint16;
-typedef uint32_t uint32;
-typedef uint64_t uint64;
-
-typedef uintptr_t umm;
-typedef intptr_t smm;
-
-typedef float  real32;
-typedef double real64;
 
 #define ArrayCount(array) (sizeof(array) / sizeof(array[0]))
 
@@ -47,102 +29,6 @@ inline uint32 TruncateUInt64(uint64 Value)
     return(result);
 }
 
-struct ThreadContext
-{
-    int PlaceHolder;
-};
-
-struct ReadFileResult
-{
-    uint32 Size;
-    void* Content;
-};
-
-ReadFileResult ReadFileStub(ThreadContext *thread, char* filename)
-{
-    ReadFileResult result = {};
-
-    result.Size = 0;
-    result.Content = 0;
-
-    return result;
-}
-typedef ReadFileResult FPtrReadFile(ThreadContext *thread, char* filename);
-
-bool32 WriteFileStub(ThreadContext *thread, char* filename, uint32  memory_size,
-    void* memory)
-{
-    return 0;
-}
-typedef bool32 FPtrWriteFile(ThreadContext *thread, char* filename,
-    uint32 memory_size, void* memory);
-
-void FreeFileMemoryStub(ThreadContext *thread, void *memory) {}
-typedef void FPtrFreeFileMemory(ThreadContext *thread, void* memory);
-
-struct ButtonState
-{
-    int HalfTransitions;
-    bool32 EndedDown;
-};
-
-struct ControllerState
-{
-    bool32 IsConnected;
-    bool32 IsAnalog;
-
-    real32 LeftStickAverageX;
-    real32 LeftStickAverageY;
-
-    union
-    {
-        ButtonState Buttons[12];
-        struct
-        {
-            ButtonState ActionUp;
-            ButtonState ActionDown;
-            ButtonState ActionLeft;
-            ButtonState ActionRight;
-
-            ButtonState MoveUp;
-            ButtonState MoveDown;
-            ButtonState MoveLeft;
-            ButtonState MoveRight;
-
-            ButtonState ShoulderLeft;
-            ButtonState ShoulderRight;
-
-            ButtonState Back;
-            ButtonState Start;
-
-            ButtonState MAX;
-        };
-    };
-};
-
-struct GameMemory
-{
-    bool32 IsInitialized;
-
-    uint64 PermanentStorageSize;
-    void*  PermanentStorage;
-
-    uint64 TransientStorageSize;
-    void*  TransientStorage;
-
-    FPtrWriteFile      *WriteFile;
-    FPtrReadFile       *ReadFile;
-    FPtrFreeFileMemory *FreeFileMemory;
-};
-
-struct GameInput
-{
-    ButtonState MouseButtons[5];
-    int32 MouseX, MouseY, MouseZ;
-
-    ControllerState Controllers[4];
-};
-
 inline ControllerState* GetController(GameInput* input, int unsigned controller_index)
 {
     Assert(controller_index < ArrayCount(input->Controllers));
@@ -152,37 +38,61 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
     return result;
 }
 
-struct GameBackBuffer
-{
-    void* Memory;
-    int Width;
-    int Height;
-    int Pitch;
-    int BytesPerPixel;
-};
-
-struct GameSoundBuffer
-{
-    int SamplesPerSecond;
-    int SamplesCount;
-    int16 *Samples;
-};
-
 struct GameState
 {
     int ToneHz;
 
-    int PlayerX;
-    int PlayerY;
+    int32 PlayerTilemapX;
+    int32 PlayerTilemapY;
+
+    real32 PlayerX;
+    real32 PlayerY;
 
     real32 SineStep;
 };
 
-typedef void FPtrUpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
-    GameBackBuffer *display_buffer);
+struct RawPosition
+{
+    int32 TilemapX;
+    int32 TilemapY;
 
-typedef void FPtrGetSoundSamples(ThreadContext* thread, GameMemory *memory,
-    GameSoundBuffer *sound_buffer);
+    real32 X;
+    real32 Y;
+};
+
+struct WorldPosition
+{
+    int32 TilemapX;
+    int32 TilemapY;
+
+    int32 TileX;
+    int32 TileY;
+
+    real32 TileRelativeX;
+    real32 TileRelativeY;
+};
+
+struct Tilemap
+{
+    uint32 *Tiles;
+};
+
+struct World
+{
+    int32 WorldWidth;
+    int32 WorldHeight;
+
+    int32 TilemapWidth;
+    int32 TilemapHeight;
+
+    real32 TileWidth;
+    real32 TileHeight;
+
+    real32 UpperLeftX;
+    real32 UpperLeftY;
+
+    Tilemap *Tilemaps;
+};
 
 #define TANKS
 #endif
