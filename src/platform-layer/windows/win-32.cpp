@@ -439,6 +439,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     IS_RUNNING = true;
     while (IS_RUNNING)
     {
+        new_input->DeltaTime = target_seconds_per_frame;
+
         FILETIME dll_last_edit_time = GetLastEditTime(dll_filepath);
         if (CompareFileTime(&dll_last_edit_time, &game_code.DllLastEditTime) != 0)
         {
