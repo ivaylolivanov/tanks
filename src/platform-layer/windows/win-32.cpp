@@ -4,6 +4,9 @@
 #include "..\..\tanks.h"
 #include "win-32.h"
 
+#define WINDOW_WIDTH 1980
+#define WINDOW_HEIGHT 1080
+
 GlobalVariable bool32 IS_RUNNING = false;
 GlobalVariable bool32 IS_PAUSED  = false;
 GlobalVariable BackBuffer BACK_BUFFER;
@@ -310,7 +313,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     IS_RUNNING = false;
     LoadXInput();
 
-    ResizeBuffer(&BACK_BUFFER, 1280, 720);
+    ResizeBuffer(&BACK_BUFFER, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     // Register the window class.
     const char CLASS_NAME[]   = "Tanks";
@@ -331,7 +334,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         WINDOW_TITLE,
         WS_OVERLAPPEDWINDOW | WS_VISIBLE,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        CW_USEDEFAULT, CW_USEDEFAULT,
+        WINDOW_WIDTH, WINDOW_HEIGHT,
         NULL,
         NULL,
         instance,
