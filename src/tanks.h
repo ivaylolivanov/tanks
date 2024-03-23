@@ -85,8 +85,8 @@ struct World
     int32 TilemapWidth;
     int32 TilemapHeight;
 
-    real32 TileWidth;
-    real32 TileHeight;
+    real32 TileSideGameUnits;
+    real32 TileSidePixels;
 
     real32 UpperLeftX;
     real32 UpperLeftY;
