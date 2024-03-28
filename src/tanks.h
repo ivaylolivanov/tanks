@@ -65,6 +65,7 @@ struct World
 
     real32 TileSideGameUnits;
     real32 TileSidePixels;
+    real32 GameUnits2Pixels;
 
     real32 UpperLeftX;
     real32 UpperLeftY;
