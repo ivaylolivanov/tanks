@@ -393,7 +393,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
     if (!game_memory.PermanentStorage
         || !game_memory.TransientStorage) return 0;
 
-    for (int i = 0; i < ArrayCount(windows_state.InputReplayBuffers); ++i)
+    for (int i = 1; i < ArrayCount(windows_state.InputReplayBuffers); ++i)
     {
         InputReplayBuffer *buffer = &windows_state.InputReplayBuffers[i];
         GetInputRecordsFilepath(&windows_state, false, i, buffer->Filepath,
