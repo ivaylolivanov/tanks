@@ -38,18 +38,6 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
     return result;
 }
 
-struct GameState
-{
-    int ToneHz;
-
-    int32 PlayerTilemapX;
-    int32 PlayerTilemapY;
-
-    real32 PlayerX;
-    real32 PlayerY;
-
-    real32 SineStep;
-};
 
 struct RawPosition
 {
@@ -92,6 +80,14 @@ struct World
     real32 UpperLeftY;
 
     Tilemap *Tilemaps;
+};
+
+struct GameState
+{
+    int ToneHz;
+    real32 SineStep;
+
+    WorldPosition PlayerPosition;
 };
 
 #define TANKS
