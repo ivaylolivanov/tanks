@@ -38,16 +38,6 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
     return result;
 }
 
-
-struct RawPosition
-{
-    int32 TilemapX;
-    int32 TilemapY;
-
-    real32 X;
-    real32 Y;
-};
-
 struct WorldPosition
 {
     int32 TilemapX;
