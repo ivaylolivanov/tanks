@@ -111,49 +111,37 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
     }
 }
 
-inline WorldPosition GetWorldPosition(World* world, RawPosition position)
+inline void NormalizeWorldCoordinates(World* world, int32 tile_count, int32* tilemap,
+    int32* tile, real32* tile_relative)
 {
-    WorldPosition result;
+    int32 offset = FloorReal32ToInt32(*tile_relative / world->TileSideGameUnits);
+    *tile += offset;
+    *tile_relative -= offset * world->TileSideGameUnits;
 
-    result.TilemapX = position.TilemapX;
-    result.TilemapY = position.TilemapY;
+    Assert(*tile_relative >= 0);
+    Assert(*tile_relative <= world->TileSideGameUnits);
 
-    real32 x = position.X - world->UpperLeftX;
-    real32 y = position.Y - world->UpperLeftY;
-    result.TileX = FloorReal32ToInt32(x / world->TileSidePixels);
-    result.TileY = FloorReal32ToInt32(y / world->TileSidePixels);
-
-    result.TileRelativeX = x - result.TileX * world->TileSidePixels;
-    result.TileRelativeY = y - result.TileY * world->TileSidePixels;
-
-    Assert(result->TileRelativeX >= 0);
-    Assert(result->TileRelativeY >= 0);
-    Assert(result->TileRelativeX < world->TileSidePixels);
-    Assert(result->TileRelativeY < world->TileSidePixels);
-
-    if (result.TileX < 0)
+    if (*tile < 0)
     {
-        result.TileX = world->TilemapWidth + result.TileX;
-        --result.TilemapX;
+        *tile = tile_count + *tile;
+        --*tilemap;
     }
 
-    if (result.TileY < 0)
+    if (*tile >= tile_count)
     {
-        result.TileY = world->TilemapHeight + result.TileY;
-        --result.TilemapY;
+        *tile = *tile - tile_count;
+        ++*tilemap;
     }
+}
 
-    if (result.TileX >= world->TilemapWidth)
-    {
-        result.TileX = world->TilemapWidth - result.TileX;
-        ++result.TilemapX;
-    }
+inline WorldPosition NormalizeWorldPosition(World* world, WorldPosition position)
+{
+    WorldPosition result = position;
 
-    if (result.TileY >= world->TilemapHeight)
-    {
-        result.TileY = world->TilemapHeight - result.TileY;
-        ++result.TilemapY;
-    }
+    NormalizeWorldCoordinates(world, world->TilemapWidth, &result.TilemapX,
+        &result.TileX, &result.TileRelativeX);
+    NormalizeWorldCoordinates(world, world->TilemapHeight, &result.TilemapY,
+        &result.TileY, &result.TileRelativeY);
 
     return result;
 }
@@ -193,16 +181,14 @@ inline bool32 IsTilemapPointEmpty(World* world, Tilemap* tilemap, int32 x, int32
     return result;
 }
 
-Internal bool32 IsWorldPointEmpty(World* world, RawPosition position)
+Internal bool32 IsWorldPointEmpty(World* world, WorldPosition position)
 {
     bool32 result = false;
 
-    WorldPosition world_position = GetWorldPosition(world, position);
-    Tilemap* tilemap = GetTilemap(world, world_position.TilemapX,
-        world_position.TilemapY);
+    Tilemap* tilemap = GetTilemap(world, position.TilemapX, position.TilemapY);
     if (!tilemap) return result;
 
-    result = IsTilemapPointEmpty(world, tilemap, world_position.TileX, world_position.TileY);
+    result = IsTilemapPointEmpty(world, tilemap, position.TileX, position.TileY);
     return result;
 }
 
@@ -266,84 +252,83 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     world.TilemapHeight = TILEMAP_HEIGHT;
     world.TileSideGameUnits = 1.4f;
     world.TileSidePixels = 60;
+    world.GameUnits2Pixels = (real32)world.TileSidePixels
+        / (real32)world.TileSideGameUnits;
     world.Tilemaps = (Tilemap*)tilemaps;
 
     real32 player_r = 0.45f;
     real32 player_g = 0.15f;
     real32 player_b = 0.65f;
-    real32 player_width = 0.65f * world.TileSidePixels;
-    real32 player_height = world.TileSidePixels;
+    real32 player_height = 1.4f;
+    real32 player_width = 0.65f * player_height;
+    real32 player_speed = 8.0f;
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
-        game_state->PlayerX = 250;
-        game_state->PlayerY = 250;
+        game_state->PlayerPosition.TilemapX = 0;
+        game_state->PlayerPosition.TilemapY = 0;
+        game_state->PlayerPosition.TileX = 10;
+        game_state->PlayerPosition.TileY = 6;
+        game_state->PlayerPosition.TileRelativeX = 5.0f;
+        game_state->PlayerPosition.TileRelativeY = 5.0f;
 
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
     }
-    Tilemap* tilemap = GetTilemap(&world, game_state->PlayerTilemapX,
-        game_state->PlayerTilemapY);
+    Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.TilemapX,
+        game_state->PlayerPosition.TilemapY);
 
     for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
     {
+        real32 x = 0;
+        real32 y = 0;
         ControllerState *controller = GetController(input, controller_index);
         if (controller->IsAnalog)
         {
-            game_state->PlayerX += (int)(4.0f * controller->LeftStickAverageX);
-            game_state->PlayerY -= (int)(4.0f * controller->LeftStickAverageY);
+            x += (int)(4.0f * controller->LeftStickAverageX);
+            y -= (int)(4.0f * controller->LeftStickAverageY);
         }
         else
         {
-            real32 x = 0;
-            real32 y = 0;
             if (controller->MoveLeft.EndedDown)  x -= 1;
             if (controller->MoveRight.EndedDown) x += 1;
             if (controller->MoveUp.EndedDown)    y -= 1;
             if (controller->MoveDown.EndedDown)  y += 1;
-
-            real32 player_speed = 128.0f;
-            x *= player_speed;
-            y *= player_speed;
-
-            real32 new_player_x = game_state->PlayerX + x * input->DeltaTime;
-            real32 new_player_y = game_state->PlayerY + y * input->DeltaTime;
-            RawPosition player_position = {
-                game_state->PlayerTilemapX,
-                game_state->PlayerTilemapY,
-                new_player_x,
-                new_player_y };
-            RawPosition player_position_bottom_left = player_position;
-            player_position_bottom_left.X -= 0.5f * player_width;
-            RawPosition player_position_bottom_right = player_position;
-            player_position_bottom_right.X += 0.5f * player_width;
-            RawPosition player_position_top_left = player_position_bottom_left;
-            player_position_top_left.Y -= player_height;
-            RawPosition player_position_top_right = player_position_bottom_right;
-            player_position_top_right.Y -= player_height;
-
-            bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
-            bool32 bottom_middle_is_emtpy = IsWorldPointEmpty(&world, player_position);
-            bool32 bottom_right_is_empty = IsWorldPointEmpty(&world, player_position_bottom_right);
-            bool32 top_left_is_empty = IsWorldPointEmpty(&world, player_position_top_left);
-            bool32 top_right_is_empty = IsWorldPointEmpty(&world, player_position_top_right);
-            if (bottom_left_is_empty && bottom_middle_is_emtpy && bottom_right_is_empty
-                && top_left_is_empty && top_right_is_empty)
-            {
-                WorldPosition player_position_world = GetWorldPosition(&world,
-                    player_position);
-
-                game_state->PlayerTilemapX = player_position_world.TilemapX;
-                game_state->PlayerTilemapY = player_position_world.TilemapY;
-                game_state->PlayerX = world.UpperLeftX
-                    + world.TileSidePixels * player_position_world.TileX
-                    + player_position_world.TileRelativeX;
-                game_state->PlayerY = world.UpperLeftY
-                    + world.TileSidePixels * player_position_world.TileY
-                    + player_position_world.TileRelativeY;
-            }
         }
+
+        x *= player_speed * input->DeltaTime;
+        y *= player_speed * input->DeltaTime;
+
+        WorldPosition next_player_position = game_state->PlayerPosition;
+        next_player_position.TileRelativeX += x;
+        next_player_position.TileRelativeY += y;
+        next_player_position = NormalizeWorldPosition(&world,
+            next_player_position);
+
+        WorldPosition player_position_bottom_left = next_player_position;
+        player_position_bottom_left.TileRelativeX -= 0.5f * player_width;
+        player_position_bottom_left = NormalizeWorldPosition(&world,
+            player_position_bottom_left);
+        WorldPosition player_position_bottom_right = next_player_position;
+        player_position_bottom_right.TileRelativeX += 0.5f * player_width;
+        player_position_bottom_right = NormalizeWorldPosition(&world,
+            player_position_bottom_right);
+        WorldPosition player_position_top_left = player_position_bottom_left;
+        player_position_top_left.TileRelativeY -= player_height;
+        player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
+        WorldPosition player_position_top_right = player_position_bottom_right;
+        player_position_top_right.TileRelativeY -= player_height;
+        player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
+
+        bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
+        bool32 bottom_middle_is_emtpy = IsWorldPointEmpty(&world, next_player_position);
+        bool32 bottom_right_is_empty = IsWorldPointEmpty(&world, player_position_bottom_right);
+        bool32 top_left_is_empty = IsWorldPointEmpty(&world, player_position_top_left);
+        bool32 top_right_is_empty = IsWorldPointEmpty(&world, player_position_top_right);
+        if (bottom_left_is_empty && bottom_middle_is_emtpy && bottom_right_is_empty
+            && top_left_is_empty && top_right_is_empty)
+            game_state->PlayerPosition = next_player_position;
     }
 
     for (int row = 0; row < world.TilemapHeight; ++row)
@@ -355,23 +340,34 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             if (tile_id == 1)
                 gray = 1.0f;
 
+            if (column == game_state->PlayerPosition.TileX
+                && row == game_state->PlayerPosition.TileY)
+                gray = 0.2f;
+
             real32 min_x = world.UpperLeftX + ((real32)column) * world.TileSidePixels;
             real32 min_y = world.UpperLeftY + ((real32)row) * world.TileSidePixels;
             real32 max_x = min_x + world.TileSidePixels;
             real32 max_y = min_y + world.TileSidePixels;
             DrawRectangle(display_buffer,
-            min_x, min_y,
-            max_x, max_y,
-            gray, gray, gray);
+                min_x, min_y,
+                max_x, max_y,
+                gray, gray, gray);
         }
     }
 
-    real32 player_left = game_state->PlayerX - 0.5f * player_width;
-    real32 player_top = game_state->PlayerY - player_height;
+    real32 player_left = world.UpperLeftX
+        + world.TileSidePixels * game_state->PlayerPosition.TileX
+        + game_state->PlayerPosition.TileRelativeX * world.GameUnits2Pixels
+        - 0.5f * player_width * world.GameUnits2Pixels;
+    real32 player_top = world.UpperLeftY
+        + world.TileSidePixels * game_state->PlayerPosition.TileY
+        + game_state->PlayerPosition.TileRelativeY * world.GameUnits2Pixels
+        - player_height * world.GameUnits2Pixels;
 
     DrawRectangle(display_buffer,
         player_left, player_top,
-        player_left + player_width, player_top + player_height,
+        player_left + player_width * world.GameUnits2Pixels,
+        player_top + player_height * world.GameUnits2Pixels,
         player_r, player_g, player_b);
 }
 
