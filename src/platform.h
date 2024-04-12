@@ -24,6 +24,14 @@ typedef intptr_t smm;
 typedef float  real32;
 typedef double real64;
 
+#define ArrayCount(array) (sizeof(array) / sizeof(array[0]))
+
+#if ASSERT_ENABLED
+#define Assert(expression) if (!(expression)) {*(int*)0=0;}
+#else
+#define Assert(expression)
+#endif
+
 struct ThreadContext
 {
     int PlaceHolder;

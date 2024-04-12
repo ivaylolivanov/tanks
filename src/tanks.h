@@ -5,14 +5,6 @@
 
 #define Pi32 3.14159265359f
 
-#define ArrayCount(array) (sizeof(array) / sizeof(array[0]))
-
-#if ASSERT_ENABLED
-#define Assert(expression) if (!(expression)) {*(int*)0=0;}
-#else
-#define Assert(expression)
-#endif
-
 #define KILOBYTES(value) ((value)*1024LL)
 #define MEGABYTES(value) (KILOBYTES(value)*1024LL)
 #define GIGABYTES(value) (MEGABYTES(value)*1024LL)
