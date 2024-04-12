@@ -3,10 +3,6 @@
 
 #include "platform.h"
 
-#define Internal       static
-#define LocalPersist   static
-#define GlobalVariable static
-
 #define Pi32 3.14159265359f
 
 #define ArrayCount(array) (sizeof(array) / sizeof(array[0]))
