@@ -11,6 +11,13 @@ GlobalVariable const uint8 PNG_SIGNATURE[] = { 137, 80, 78, 71, 13, 10, 26, 10 }
 GlobalVariable const uint8 MAX_REVERSE_BITS_COUNT = 13;
 GlobalVariable uint16 REVERSED_BITS[1 << MAX_REVERSE_BITS_COUNT];
 
+struct Image
+{
+    uint32  Width;
+    uint32  Height;
+    uint32* Pixels;
+};
+
 #pragma pack(push, 1)
 
 struct PngHeader
@@ -77,28 +84,6 @@ struct BitmapHeader
 
 #pragma pack(pop)
 
-struct StreamingChunk
-{
-    uint32 Size;
-    void* Content;
-
-    StreamingChunk* Next;
-};
-
-struct StreamingBuffer
-{
-    uint32 Size;
-    void* Content;
-
-    uint32 BitCount;
-    uint32 BitBuffer;
-
-    bool32 Underflowed;
-
-    StreamingChunk* First;
-    StreamingChunk* Last;
-};
-
 struct PngHuffmanEntry
 {
     uint16 Symbol;
@@ -110,13 +95,6 @@ struct PngHuffman
     uint32 BitsCountLimit;
     uint32 EntryCount;
     PngHuffmanEntry* Entries;
-};
-
-struct Image
-{
-    uint32 Width;
-    uint32 Height;
-    uint32* Pixels;
 };
 
 GlobalVariable PngHuffmanEntry PNG_LENGTH_EXTRA[] =

@@ -2,6 +2,7 @@
 #include <cstdlib>
 #include <stdlib.h>
 #include "png-parser.h"
+#include "data-stream.cpp"
 
 Internal uint32 SwapRedAndBlue(uint32 color)
 {
@@ -86,12 +87,6 @@ Internal void EndianSwap(uint16 *Value)
     //*Value = _byteswap_ushort(temp);
 }
 
-Internal void FlushStreamingBufferBits(StreamingBuffer* buffer)
-{
-    buffer->BitCount = 0;
-    buffer->BitBuffer = 0;
-}
-
 Internal void* AllocatePixels(uint32 width, uint32 height,
     uint32 bytes_per_pixels, uint32 extra_bytes = 0)
 {
@@ -101,9 +96,9 @@ Internal void* AllocatePixels(uint32 width, uint32 height,
     return result;
 }
 
-Internal StreamingChunk* AllocateStreamingChunk()
+Internal StreamChunk* AllocateStreamChunk()
 {
-    StreamingChunk* result = (StreamingChunk*)malloc(sizeof(StreamingChunk));
+    StreamChunk* result = (StreamChunk*)malloc(sizeof(StreamChunk));
     return result;
 }
 
@@ -136,9 +131,9 @@ Internal bool32 IsPngFormat(PngHeader* header)
     return result;
 }
 
-Internal StreamingBuffer ReadWholeFile(char* filepath)
+Internal Stream ReadWholeFile(char* filepath)
 {
-    StreamingBuffer result = {};
+    Stream result = {};
 
     FILE* file_stream;
     fopen_s(&file_stream, filepath, "rb");
@@ -152,71 +147,6 @@ Internal StreamingBuffer ReadWholeFile(char* filepath)
         fread(result.Content, result.Size, 1, file_stream);
     }
     fclose(file_stream);
-
-    return result;
-}
-
-Internal void* ConsumeStreamingBufferSection(StreamingBuffer* file, uint32 size)
-{
-    void* result = 0;
-
-    if ((file->Size == 0) && file->First)
-    {
-        StreamingChunk* chunk = file->First;
-        file->Size -= chunk->Size;
-        file->Content = chunk->Content;
-        file->First = chunk->Next;
-    }
-
-    if (file->Size >= size)
-    {
-        result = file->Content;
-        file->Content = (uint8*)file->Content + size;
-        file->Size -= size;
-    }
-    else
-    {
-        file->Size = 0;
-        file->Underflowed = true;
-    }
-
-    Assert(!file->Underflowed);
-
-    return result;
-}
-
-Internal uint32 PeekStreamingBufferBits(StreamingBuffer* buffer,
-    uint32 bit_count)
-{
-    Assert(bit_count <= 32);
-
-    uint32 result = 0;
-
-    while ((buffer->BitCount < bit_count) && (!buffer->Underflowed))
-    {
-        uint32 byte = *(uint8*)ConsumeStreamingBufferSection(
-            buffer, sizeof(uint8));
-        buffer->BitBuffer |= (byte << buffer->BitCount);
-        buffer->BitCount += 8;
-    }
-
-    result = buffer->BitBuffer & ((1 << bit_count) - 1);
-
-    return result;
-}
-
-Internal void DiscardStreamingBufferBits(StreamingBuffer* buffer,
-    uint32 bit_count)
-{
-    buffer->BitCount -= bit_count;
-    buffer->BitBuffer >>= bit_count;
-}
-
-Internal uint32 ConsumeStreamingBufferBits(StreamingBuffer* buffer,
-    uint32 bit_count)
-{
-    uint32 result = PeekStreamingBufferBits(buffer, bit_count);
-    DiscardStreamingBufferBits(buffer, bit_count);
 
     return result;
 }
@@ -284,16 +214,16 @@ Internal void ComputeHuffman(uint32 symbol_count, uint32 *symbol_code_length,
     }
 }
 
-Internal uint32 HuffmanDecode(PngHuffman *huffman, StreamingBuffer *input)
+Internal uint32 HuffmanDecode(PngHuffman *huffman, Stream *input)
 {
-    uint32 entry_index = PeekStreamingBufferBits(input,
+    uint32 entry_index = PeekStreamBits(input,
         huffman->BitsCountLimit);
     Assert(entry_index < Huffman->EntryCount);
 
     PngHuffmanEntry entry = huffman->Entries[entry_index];
 
     uint32 result = entry.Symbol;
-    DiscardStreamingBufferBits(input, entry.BitsUsed);
+    DiscardStreamBits(input, entry.BitsUsed);
     Assert(entry.BitsUsed);
 
     return result;
@@ -457,9 +387,9 @@ Internal void PNGFilterReconstruct(uint32 width, uint32 height,
     }
 }
 
-Internal Image ParsePNG(StreamingBuffer file)
+Internal Image ParsePNG(Stream file)
 {
-    StreamingBuffer *reading_marker = &file;
+    Stream *reading_marker = &file;
 
     bool32 supported = false;
     for (uint16 r_index = 0; r_index < ArrayCount(REVERSED_BITS); ++r_index)
@@ -472,28 +402,26 @@ Internal Image ParsePNG(StreamingBuffer file)
 
     Image result = {};
 
-    PngHeader *png_header = (PngHeader*)ConsumeStreamingBufferSection(
+    PngHeader *png_header = (PngHeader*)ConsumeStreamSize(
         reading_marker, sizeof(PngHeader));
     if (!png_header)
         return result;
 
-    StreamingBuffer comp_data = {};
+    Stream comp_data = {};
 
     while (reading_marker->Size > 0)
     {
-        PngChunkHeader *chunk_header = (PngChunkHeader*)
-            ConsumeStreamingBufferSection(
-                reading_marker, sizeof(PngChunkHeader));
+        PngChunkHeader *chunk_header = (PngChunkHeader*)ConsumeStreamSize(
+            reading_marker, sizeof(PngChunkHeader));
         if (chunk_header)
         {
             EndianSwap(&chunk_header->Length);
             EndianSwap(&chunk_header->TypeUint32);
 
-            void *chunk_data = ConsumeStreamingBufferSection(reading_marker,
+            void *chunk_data = ConsumeStreamSize(reading_marker,
                 chunk_header->Length);
-            PngChunkFooter *chunk_footer = (PngChunkFooter*)
-                ConsumeStreamingBufferSection(
-                    reading_marker, sizeof(PngChunkFooter));
+            PngChunkFooter *chunk_footer = (PngChunkFooter*)ConsumeStreamSize(
+                reading_marker, sizeof(PngChunkFooter));
             EndianSwap(&chunk_footer->CRC);
 
             if(chunk_header->TypeUint32 == 'IHDR')
@@ -528,7 +456,7 @@ Internal Image ParsePNG(StreamingBuffer file)
             {
                 fprintf(stdout, "IDAT (%u)\n", chunk_header->Length);
 
-                StreamingChunk *chunk = AllocateStreamingChunk();
+                StreamChunk *chunk = AllocateStreamChunk();
                 chunk->Size = chunk_header->Length;
                 chunk->Content = chunk_data;
                 chunk->Next = 0;
@@ -543,8 +471,8 @@ Internal Image ParsePNG(StreamingBuffer file)
         return result;
 
     fprintf(stdout, "Examining ZLIB headers...\n");
-    PngIdatHeader* idat_header = (PngIdatHeader*)
-        ConsumeStreamingBufferSection(&comp_data, sizeof(PngIdatHeader));
+    PngIdatHeader* idat_header = (PngIdatHeader*)ConsumeStreamSize(
+        &comp_data, sizeof(PngIdatHeader));
 
     uint8 CM = (idat_header->ZlibMethodFlags & 0xF);
     uint8 CINFO = (idat_header->ZlibMethodFlags >> 4);
@@ -573,23 +501,20 @@ Internal Image ParsePNG(StreamingBuffer file)
     uint32 bfinal = 0;
     while (bfinal == 0)
     {
-        bfinal = ConsumeStreamingBufferBits(&comp_data, 1);
-        uint32 btype = ConsumeStreamingBufferBits(&comp_data, 2);
+        bfinal = ConsumeStreamBits(&comp_data, 1);
+        uint32 btype = ConsumeStreamBits(&comp_data, 2);
 
         if (btype == 0)
         {
-            FlushStreamingBufferBits(&comp_data);
+            FlushStreamByte(&comp_data);
 
-            uint16 len = *((uint16*)ConsumeStreamingBufferSection(&comp_data,
-                sizeof(uint16)));
-            uint16 nlen = *((uint16*)ConsumeStreamingBufferSection(&comp_data,
-                sizeof(uint16)));
+            uint16 len = *((uint16*)ConsumeStreamSize(&comp_data, sizeof(uint16)));
+            uint16 nlen = *((uint16*)ConsumeStreamSize(&comp_data, sizeof(uint16)));
 
             if ((uint16)len != (uint16)~nlen)
                 fprintf(stderr, "ERROR: len/nlen mismatch.\n");
 
-            uint8 *source = (uint8 *)ConsumeStreamingBufferSection(&comp_data,
-                len);
+            uint8 *source = (uint8 *)ConsumeStreamSize(&comp_data, len);
             if (!source)
                 continue;
 
@@ -610,9 +535,9 @@ Internal Image ParsePNG(StreamingBuffer file)
             uint32 hdist = 0;
             if (btype == 2)
             {
-                hlit         = ConsumeStreamingBufferBits(&comp_data, 5);
-                hdist        = ConsumeStreamingBufferBits(&comp_data, 5);
-                uint32 hclen = ConsumeStreamingBufferBits(&comp_data, 4);
+                hlit         = ConsumeStreamBits(&comp_data, 5);
+                hdist        = ConsumeStreamBits(&comp_data, 5);
+                uint32 hclen = ConsumeStreamBits(&comp_data, 4);
 
                 hlit += 257;
                 hdist += 1;
@@ -628,7 +553,7 @@ Internal Image ParsePNG(StreamingBuffer file)
 
                 for(uint32 index = 0; index < hclen; ++index)
                     hclen_table[hclen_swizzle[index]] =
-                        ConsumeStreamingBufferBits(&comp_data, 3);
+                        ConsumeStreamBits(&comp_data, 3);
 
                 PngHuffman dict_huffman = AllocateHuffman(7);
                 ComputeHuffman(ArrayCount(hclen_swizzle), hclen_table,
@@ -649,25 +574,24 @@ Internal Image ParsePNG(StreamingBuffer file)
                     else if (encoded_len == 16)
                     {
                         rep_count = 3
-                            + ConsumeStreamingBufferBits(&comp_data, 2);
+                            + ConsumeStreamBits(&comp_data, 2);
 
                         Assert(LitLenCount > 0);
                         rep_val = lit_len_dist_table[lit_len_count - 1];
                     }
                     else if (encoded_len == 17)
                     {
-                        rep_count = 3
-                            + ConsumeStreamingBufferBits(&comp_data, 3);
+                        rep_count = 3 + ConsumeStreamBits(&comp_data, 3);
                     }
                     else if(encoded_len == 18)
                     {
-                        rep_count = 11
-                            + ConsumeStreamingBufferBits(&comp_data, 7);
+                        rep_count = 11 + ConsumeStreamBits(&comp_data, 7);
                     }
                     else
                     {
                         fprintf(stderr,
-                            "ERROR: EncodedLen of %u encountered.\n", encoded_len);
+                            "ERROR: EncodedLen of %u encountered.\n",
+                            encoded_len);
                     }
 
                     while(rep_count--)
@@ -723,8 +647,8 @@ Internal Image ParsePNG(StreamingBuffer file)
                     uint32 len = len_tab.Symbol;
                     if (len_tab.BitsUsed)
                     {
-                        uint32 extra_bits = ConsumeStreamingBufferBits(
-                            &comp_data, len_tab.BitsUsed);
+                        uint32 extra_bits = ConsumeStreamBits(&comp_data,
+                            len_tab.BitsUsed);
                         len += extra_bits;
                     }
 
@@ -734,8 +658,8 @@ Internal Image ParsePNG(StreamingBuffer file)
                     uint32 distance = dist_tab.Symbol;
                     if (dist_tab.BitsUsed)
                     {
-                        uint32 extra_bits = ConsumeStreamingBufferBits(
-                            &comp_data, dist_tab.BitsUsed);
+                        uint32 extra_bits = ConsumeStreamBits(&comp_data,
+                            dist_tab.BitsUsed);
                         distance += extra_bits;
                     }
 
@@ -779,7 +703,7 @@ int main(int arguments_count, char** arguments)
         printf("Loading from %s\n", png_filepath);
         printf("Writing to   %s\n", bmp_filepath);
 
-        StreamingBuffer file_data = ReadWholeFile(png_filepath);
+        Stream file_data = ReadWholeFile(png_filepath);
         Image image = ParsePNG(file_data);
 
         printf("%d bytes read\n", file_data.Size);
