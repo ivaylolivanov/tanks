@@ -92,6 +92,74 @@ uint32 TILES11[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
+Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, real32 originX, real32 originY, real32 scale_x, real32 scale_y)
+{
+    real32 scaled_real_width  = image->Width * scale_x;
+    real32 scaled_real_height = image->Height * scale_y;
+    int32 scaled_width  = RoundReal32ToInt32(scaled_real_width);
+    int32 scaled_height = RoundReal32ToInt32(scaled_real_height);
+
+    int32 min_x = RoundReal32ToInt32(originX - (scaled_width  / 2));
+    int32 min_y = RoundReal32ToInt32(originY - (scaled_height / 2));
+    int32 max_x = RoundReal32ToInt32(originX + (scaled_width  / 2));
+    int32 max_y = RoundReal32ToInt32(originY + (scaled_height / 2));
+
+    if (min_x < 0)
+        min_x = 0;
+
+    if (min_y < 0)
+        min_y = 0;
+
+    if (max_x > buffer->Width)
+        max_x = buffer->Width;
+
+    if (max_y > buffer->Height)
+        max_y = buffer->Height;
+
+    uint8* row_buffer = ((uint8*)buffer->Memory
+        + min_x * buffer->BytesPerPixel
+        + min_y * buffer->Pitch);
+
+    for (int y = min_y; y < max_y; ++y)
+    {
+        uint32 unscaled_y = (int32)((y - min_y) / scale_y);
+
+        uint32* pixel_buffer = (uint32*)row_buffer;
+        for (int x = min_x; x < max_x; ++x)
+        {
+            uint32 unscaled_x = (int32)((x - min_x) / scale_x);
+            uint32* pixel_image = (uint32*)(image->Pixels)
+                + (unscaled_y * image->Width + unscaled_x);
+
+            uint32 pixel_buffer_color = *pixel_buffer;
+            uint32 pixel_buffer_color_red   = (pixel_buffer_color >> 16) & 0xFF;
+            uint32 pixel_buffer_color_green = (pixel_buffer_color >> 8)  & 0xFF;
+            uint32 pixel_buffer_color_blue  =  pixel_buffer_color        & 0xFF;
+
+            uint32 pixel_image_color = *pixel_image;
+            uint32 pixel_image_color_red   = (pixel_image_color >> 16) & 0xFF;
+            uint32 pixel_image_color_green = (pixel_image_color >> 8)  & 0xFF;
+            uint32 pixel_image_color_blue  =  pixel_image_color        & 0xFF;
+            uint32 pixel_image_color_alpha =  pixel_image_color >> 24;
+            real32 pixel_image_color_alpha_real = pixel_image_color_alpha / 255.0f;
+
+            uint32 result_red   = (uint32)(pixel_image_color_red   * pixel_image_color_alpha_real + pixel_buffer_color_red   * (1 - pixel_image_color_alpha_real));
+            uint32 result_green = (uint32)(pixel_image_color_green * pixel_image_color_alpha_real + pixel_buffer_color_green * (1 - pixel_image_color_alpha_real));
+            uint32 result_blue  = (uint32)(pixel_image_color_blue  * pixel_image_color_alpha_real + pixel_buffer_color_blue  * (1 - pixel_image_color_alpha_real));
+
+            // Combine the components back into a single uint32 color
+            if (pixel_image_color_alpha == 255)
+                *pixel_buffer = *pixel_image;
+            else if ((pixel_image_color_alpha > 0) && (pixel_image_color_alpha < 255))
+                *pixel_buffer = (pixel_image_color_alpha << 24) | (result_red << 16) | (result_green << 8) | result_blue;
+
+            ++pixel_buffer;
+        }
+
+        row_buffer += buffer->Pitch;
+    }
+}
+
 Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
 {
     int16 tone_volume = 3000;
@@ -266,6 +334,14 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
+        char* tank_png_relative_path = "tank.png";
+        ReadFileResult raw_png = memory->ReadFile(thread, tank_png_relative_path);
+        Stream raw_png_stream = {};
+        raw_png_stream.Size = raw_png.Size;
+        raw_png_stream.Content = raw_png.Content;
+
+        game_state->PlayerImage = ParsePNG(raw_png_stream);
+
         game_state->PlayerPosition.TilemapX = 0;
         game_state->PlayerPosition.TilemapY = 0;
         game_state->PlayerPosition.TileX = 10;
@@ -342,7 +418,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
             if (column == game_state->PlayerPosition.TileX
                 && row == game_state->PlayerPosition.TileY)
-                gray = 0.2f;
+                gray = 0.4f;
 
             real32 min_x = world.UpperLeftX + ((real32)column) * world.TileSidePixels;
             real32 min_y = world.UpperLeftY + ((real32)row) * world.TileSidePixels;
@@ -369,6 +445,13 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         player_left + player_width * world.GameUnits2Pixels,
         player_top + player_height * world.GameUnits2Pixels,
         player_r, player_g, player_b);
+
+    real32 player_center_x = player_left
+        + (player_width * world.GameUnits2Pixels) / 2;
+    real32 player_center_y = player_top
+        + (player_height * world.GameUnits2Pixels) / 2;
+    DrawPngImage(display_buffer, &game_state->PlayerImage, player_center_x,
+                 player_center_y, 0.25f, 0.25f);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,

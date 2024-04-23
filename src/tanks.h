@@ -1,7 +1,7 @@
-#include <cstdint>
 #ifndef TANKS
 
 #include "platform.h"
+#include "png-parser/png-parser.cpp"
 
 #define Pi32 3.14159265359f
 
@@ -63,6 +63,8 @@ struct World
 
 struct GameState
 {
+    Image PlayerImage;
+
     int ToneHz;
     real32 SineStep;
 
