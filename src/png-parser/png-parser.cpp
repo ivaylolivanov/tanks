@@ -6,66 +6,30 @@
 
 Internal uint32 SwapRedAndBlue(uint32 color)
 {
-    uint32 result = ((color & 0xFF00FF00)
-        | ((color >> 16) & 0xFF)
-        | ((color & 0xFF) << 16));
+    uint32 blue = (color >> 16) & 0xFF;
+    uint32 red  = (color & 0xFF) << 16;
+    uint32 result = (color & 0xFF00FF00) | blue | red;
 
     return result;
 }
 
-Internal void WriteImageTopDownRGBA(uint32 width, uint32 height, uint8 *pixels,
-    char *output_file_name)
+Internal uint32 ApplyAlpha(uint32 color)
 {
-    uint32 output_pixel_size = 4 * width * height;
+    uint32 red   = (color >> 0)  & 0xFF;
+    uint32 green = (color >> 8)  & 0xFF;
+    uint32 blue  = (color >> 16) & 0xFF;
+    uint32 alpha =  color >> 24;
 
-    BitmapHeader header = {};
-    header.FileType = 0x4D42;
-    header.FileSize = sizeof(header) + output_pixel_size;
-    header.BitmapOffset = sizeof(header);
-    header.Size = sizeof(header) - 14;
-    header.Width = width;
-    header.Height = height;
-    header.Planes = 1;
-    header.BitsPerPixel = 32;
-    header.Compression = 0;
-    header.SizeOfBitmap = output_pixel_size;
-    header.HorzResolution = 0;
-    header.VertResolution = 0;
-    header.ColorsUsed = 0;
-    header.ColorsImportant = 0;
+    red   = (((red   * alpha) + 128) >> 8);
+    green = (((green * alpha) + 128) >> 8);
+    blue  = (((blue  * alpha) + 128) >> 8);
 
-    uint32 mid_point_y = ((header.Height + 1) / 2);
-    uint32 *row0 = (uint32 *)pixels;
-    uint32 *row1 = row0 + ((height - 1) * width);
-    for (uint32 y = 0; y < mid_point_y; ++y)
-    {
-        uint32 *pixel0 = row0;
-        uint32 *pixel1 = row1;
-        for (uint32 x = 0; x < width; ++x)
-        {
-            uint32 color0 = SwapRedAndBlue(*pixel0);
-            uint32 color1 = SwapRedAndBlue(*pixel1);
+    uint32 result = (alpha << 24)
+        | (blue << 16)
+        | (green <<  8)
+        | (red <<  0);
 
-            *pixel0++ = color1;
-            *pixel1++ = color0;
-        }
-
-        row0 += width;
-        row1 -= width;
-    }
-
-    FILE* out_file;
-    fopen_s(&out_file, output_file_name, "wb");
-    if (!out_file)
-    {
-        fprintf(stderr, "[ERROR] Unable to write output file %s.\n", output_file_name);
-        fclose(out_file);
-        return;
-    }
-
-    fwrite(&header, sizeof(header), 1, out_file);
-    fwrite(pixels, output_pixel_size, 1, out_file);
-    fclose(out_file);
+    return result;
 }
 
 Internal void EndianSwap(uint32* value)
@@ -288,6 +252,7 @@ Internal void PNGFilterReconstruct(uint32 width, uint32 height,
                 for (uint32 x = 0; x < width; ++x)
                 {
                     *(uint32 *)destination = *(uint32 *)source;
+
                     destination += 4;
                     source += 4;
                 }
@@ -387,9 +352,52 @@ Internal void PNGFilterReconstruct(uint32 width, uint32 height,
     }
 }
 
+enum PixelOpcode
+{
+    PixelOpcode_SwapRedAndBlue = 0x01,
+    PixelOpcode_ApplyAlpha     = 0x02,
+};
+
+Internal void PNGApplyPixelOperations(uint32 width, uint32 height,
+    uint8* final_pixels, uint32 pixel_opcode)
+{
+    bool32 apply_alpha       = pixel_opcode & PixelOpcode_ApplyAlpha;
+    bool32 swap_red_and_blue = pixel_opcode & PixelOpcode_SwapRedAndBlue;
+
+    uint32 mid_point_y = ((height + 1) / 2);
+    uint32 *row_above = (uint32 *)final_pixels;
+    uint32 *row_below = row_above + ((height - 1) * width);
+    for (uint32 y = 0; y < mid_point_y; ++y)
+    {
+        uint32 *pixel0 = row_above;
+        uint32 *pixel1 = row_below;
+        for (uint32 x = 0; x < width; ++x)
+        {
+            uint32 color0 = *pixel0;
+            uint32 color1 = *pixel1;
+            if (swap_red_and_blue)
+            {
+                color0 = SwapRedAndBlue(*pixel0);
+                color1 = SwapRedAndBlue(*pixel1);
+            }
+
+            if (apply_alpha)
+            {
+                color0 = ApplyAlpha(*pixel0);
+                color1 = ApplyAlpha(*pixel1);
+            }
+
+            *pixel0++ = color0;
+            *pixel1++ = color1;
+        }
+        row_above += width;
+        row_below -= width;
+    }
+}
+
 Internal Image ParsePNG(Stream file)
 {
-    Stream *reading_marker = &file;
+    Stream *raw = &file;
 
     bool32 supported = false;
     for (uint16 r_index = 0; r_index < ArrayCount(REVERSED_BITS); ++r_index)
@@ -402,44 +410,32 @@ Internal Image ParsePNG(Stream file)
 
     Image result = {};
 
-    PngHeader *png_header = (PngHeader*)ConsumeStreamSize(
-        reading_marker, sizeof(PngHeader));
+    PngHeader *png_header = (PngHeader*)ConsumeStreamSize(raw, sizeof(PngHeader));
     if (!png_header)
         return result;
 
-    Stream comp_data = {};
-
-    while (reading_marker->Size > 0)
+    Stream compact_data = {};
+    while (raw->Size > 0)
     {
-        PngChunkHeader *chunk_header = (PngChunkHeader*)ConsumeStreamSize(
-            reading_marker, sizeof(PngChunkHeader));
+        PngChunkHeader *chunk_header = (PngChunkHeader*)ConsumeStreamSize(raw,
+            sizeof(PngChunkHeader));
         if (chunk_header)
         {
             EndianSwap(&chunk_header->Length);
             EndianSwap(&chunk_header->TypeUint32);
 
-            void *chunk_data = ConsumeStreamSize(reading_marker,
+            void *chunk_data = ConsumeStreamSize(raw,
                 chunk_header->Length);
             PngChunkFooter *chunk_footer = (PngChunkFooter*)ConsumeStreamSize(
-                reading_marker, sizeof(PngChunkFooter));
+                raw, sizeof(PngChunkFooter));
             EndianSwap(&chunk_footer->CRC);
 
             if(chunk_header->TypeUint32 == 'IHDR')
             {
-                fprintf(stdout, "IHDR\n");
-
                 PngIhdr *ihdr = (PngIhdr *)chunk_data;
 
                 EndianSwap(&ihdr->Width);
                 EndianSwap(&ihdr->Height);
-
-                fprintf(stdout, "    Width: %u\n", ihdr->Width);
-                fprintf(stdout, "    Height: %u\n", ihdr->Height);
-                fprintf(stdout, "    BitDepth: %u\n", ihdr->BitDepth);
-                fprintf(stdout, "    ColorType: %u\n", ihdr->ColorType);
-                fprintf(stdout, "    CompressionMethod: %u\n", ihdr->CompressionMethod);
-                fprintf(stdout, "    FilterMethod: %u\n", ihdr->FilterMethod);
-                fprintf(stdout, "    InterlaceMethod: %u\n", ihdr->InterlaceMethod);
 
                 supported = (ihdr->BitDepth == 8)
                     && (ihdr->ColorType == 6)
@@ -454,15 +450,13 @@ Internal Image ParsePNG(Stream file)
             }
             else if (chunk_header->TypeUint32 == 'IDAT')
             {
-                fprintf(stdout, "IDAT (%u)\n", chunk_header->Length);
-
                 StreamChunk *chunk = AllocateStreamChunk();
                 chunk->Size = chunk_header->Length;
                 chunk->Content = chunk_data;
                 chunk->Next = 0;
 
-                comp_data.Last = ((comp_data.Last ?
-                    comp_data.Last->Next : comp_data.First) = chunk);
+                compact_data.Last = ((compact_data.Last ?
+                    compact_data.Last->Next : compact_data.First) = chunk);
             }
         }
     }
@@ -470,21 +464,14 @@ Internal Image ParsePNG(Stream file)
     if (!supported)
         return result;
 
-    fprintf(stdout, "Examining ZLIB headers...\n");
     PngIdatHeader* idat_header = (PngIdatHeader*)ConsumeStreamSize(
-        &comp_data, sizeof(PngIdatHeader));
+        &compact_data, sizeof(PngIdatHeader));
 
     uint8 CM = (idat_header->ZlibMethodFlags & 0xF);
     uint8 CINFO = (idat_header->ZlibMethodFlags >> 4);
     uint8 FCHECK = (idat_header->AdditionalFlags & 0x1F);
     uint8 FDICT = (idat_header->AdditionalFlags >> 5) & 0x1;
     uint8 FLEVEL = (idat_header->AdditionalFlags >> 6);
-
-    fprintf(stdout, "    CM: %u\n", CM);
-    fprintf(stdout, "    CINFO: %u\n", CINFO);
-    fprintf(stdout, "    FCHECK: %u\n", FCHECK);
-    fprintf(stdout, "    FDICT: %u\n", FDICT);
-    fprintf(stdout, "    FLEVEL: %u\n", FLEVEL);
 
     supported = ((CM == 8) && (FDICT == 0));
 
@@ -501,20 +488,20 @@ Internal Image ParsePNG(Stream file)
     uint32 bfinal = 0;
     while (bfinal == 0)
     {
-        bfinal = ConsumeStreamBits(&comp_data, 1);
-        uint32 btype = ConsumeStreamBits(&comp_data, 2);
+        bfinal = ConsumeStreamBits(&compact_data, 1);
+        uint32 btype = ConsumeStreamBits(&compact_data, 2);
 
         if (btype == 0)
         {
-            FlushStreamByte(&comp_data);
+            FlushStreamByte(&compact_data);
 
-            uint16 len = *((uint16*)ConsumeStreamSize(&comp_data, sizeof(uint16)));
-            uint16 nlen = *((uint16*)ConsumeStreamSize(&comp_data, sizeof(uint16)));
+            uint16 len = *((uint16*)ConsumeStreamSize(&compact_data, sizeof(uint16)));
+            uint16 nlen = *((uint16*)ConsumeStreamSize(&compact_data, sizeof(uint16)));
 
             if ((uint16)len != (uint16)~nlen)
                 fprintf(stderr, "ERROR: len/nlen mismatch.\n");
 
-            uint8 *source = (uint8 *)ConsumeStreamSize(&comp_data, len);
+            uint8 *source = (uint8 *)ConsumeStreamSize(&compact_data, len);
             if (!source)
                 continue;
 
@@ -535,9 +522,9 @@ Internal Image ParsePNG(Stream file)
             uint32 hdist = 0;
             if (btype == 2)
             {
-                hlit         = ConsumeStreamBits(&comp_data, 5);
-                hdist        = ConsumeStreamBits(&comp_data, 5);
-                uint32 hclen = ConsumeStreamBits(&comp_data, 4);
+                hlit         = ConsumeStreamBits(&compact_data, 5);
+                hdist        = ConsumeStreamBits(&compact_data, 5);
+                uint32 hclen = ConsumeStreamBits(&compact_data, 4);
 
                 hlit += 257;
                 hdist += 1;
@@ -553,7 +540,7 @@ Internal Image ParsePNG(Stream file)
 
                 for(uint32 index = 0; index < hclen; ++index)
                     hclen_table[hclen_swizzle[index]] =
-                        ConsumeStreamBits(&comp_data, 3);
+                        ConsumeStreamBits(&compact_data, 3);
 
                 PngHuffman dict_huffman = AllocateHuffman(7);
                 ComputeHuffman(ArrayCount(hclen_swizzle), hclen_table,
@@ -566,7 +553,7 @@ Internal Image ParsePNG(Stream file)
                 {
                     uint32 rep_count = 1;
                     uint32 rep_val = 0;
-                    uint32 encoded_len = HuffmanDecode(&dict_huffman, &comp_data);
+                    uint32 encoded_len = HuffmanDecode(&dict_huffman, &compact_data);
                     if (encoded_len <= 15)
                     {
                         rep_val = encoded_len;
@@ -574,18 +561,18 @@ Internal Image ParsePNG(Stream file)
                     else if (encoded_len == 16)
                     {
                         rep_count = 3
-                            + ConsumeStreamBits(&comp_data, 2);
+                            + ConsumeStreamBits(&compact_data, 2);
 
                         Assert(LitLenCount > 0);
                         rep_val = lit_len_dist_table[lit_len_count - 1];
                     }
                     else if (encoded_len == 17)
                     {
-                        rep_count = 3 + ConsumeStreamBits(&comp_data, 3);
+                        rep_count = 3 + ConsumeStreamBits(&compact_data, 3);
                     }
                     else if(encoded_len == 18)
                     {
-                        rep_count = 11 + ConsumeStreamBits(&comp_data, 7);
+                        rep_count = 11 + ConsumeStreamBits(&compact_data, 7);
                     }
                     else
                     {
@@ -634,7 +621,7 @@ Internal Image ParsePNG(Stream file)
 
             for (;;)
             {
-                uint32 lit_len = HuffmanDecode(&lit_len_huffman, &comp_data);
+                uint32 lit_len = HuffmanDecode(&lit_len_huffman, &compact_data);
                 if(lit_len <= 255)
                 {
                     uint32 out = (lit_len & 0xFF);
@@ -647,18 +634,18 @@ Internal Image ParsePNG(Stream file)
                     uint32 len = len_tab.Symbol;
                     if (len_tab.BitsUsed)
                     {
-                        uint32 extra_bits = ConsumeStreamBits(&comp_data,
+                        uint32 extra_bits = ConsumeStreamBits(&compact_data,
                             len_tab.BitsUsed);
                         len += extra_bits;
                     }
 
                     uint32 dist_tab_index = HuffmanDecode(
-                        &dist_huffman, &comp_data);
+                        &dist_huffman, &compact_data);
                     PngHuffmanEntry dist_tab = PNG_DIST_EXTRA[dist_tab_index];
                     uint32 distance = dist_tab.Symbol;
                     if (dist_tab.BitsUsed)
                     {
-                        uint32 extra_bits = ConsumeStreamBits(&comp_data,
+                        uint32 extra_bits = ConsumeStreamBits(&compact_data,
                             dist_tab.BitsUsed);
                         distance += extra_bits;
                     }
@@ -681,6 +668,8 @@ Internal Image ParsePNG(Stream file)
 
     Assert(dest == decompressed_pixels_end);
     PNGFilterReconstruct(width, height, decompressed_pixels, final_pixels);
+    uint32 pixel_operations = PixelOpcode_SwapRedAndBlue;
+    PNGApplyPixelOperations(width, height, final_pixels, pixel_operations);
 
     fprintf(stdout, "Supported: %s\n", supported ? "TRUE" : "FALSE");
 
@@ -688,32 +677,4 @@ Internal Image ParsePNG(Stream file)
     result.Height = height;
     result.Pixels = (uint32 *)final_pixels;
     return result;
-}
-
-int main(int arguments_count, char** arguments)
-{
-    arguments_count = 3;
-    arguments[1] = "tank.png";
-    arguments[2] = "test.bmp";
-
-    if (arguments_count == 3)
-    {
-        char* png_filepath = arguments[1];
-        char* bmp_filepath = arguments[2];
-        printf("Loading from %s\n", png_filepath);
-        printf("Writing to   %s\n", bmp_filepath);
-
-        Stream file_data = ReadWholeFile(png_filepath);
-        Image image = ParsePNG(file_data);
-
-        printf("%d bytes read\n", file_data.Size);
-        WriteImageTopDownRGBA(image.Width, image.Height, (uint8*)image.Pixels,
-            bmp_filepath);
-    }
-    else
-    {
-        fprintf(stderr, "Usage: %s (png file to load)\n", arguments[0]);
-    }
-
-    return 0;
 }
