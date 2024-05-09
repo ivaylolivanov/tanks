@@ -1,4 +1,4 @@
-$CommonCompilerFlags = "-MT", "-nologo", "-Gm-", "-GR-", "-EHa-", "-Od", "-Oi", "-WX", "-W4", "-wd4201", "-wd4100", "-wd4189", "-DWIN32_DEBUG=1", "-DWIN32_DEBUG_SOUND=0", "-FC", "-Z7";
+$CommonCompilerFlags = "-MT", "-nologo", "-Gm-", "-GR-", "-EHa-", "-Od", "-Oi", "-WX", "-W4", "-wd4201", "-wd4100", "-wd4189", "-wd4505", "-DWIN32_DEBUG=1", "-DWIN32_DEBUG_SOUND=0", "-FC", "-Z7";
 $CommonLinkerFlags = "-incremental:no", "-opt:ref", "user32.lib", "gdi32.lib", "winmm.lib";
 
 $VcvarsallFilename = "vcvarsall.bat";
