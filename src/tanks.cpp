@@ -451,7 +451,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     real32 player_center_y = player_top
         + (player_height * world.GameUnits2Pixels) / 2;
     DrawPngImage(display_buffer, &game_state->PlayerImage, player_center_x,
-                 player_center_y, 0.25f, 0.25f);
+        player_center_y, 0.25f, 0.25f);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,
@@ -460,5 +460,6 @@ extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,
     GameState* game_state = (GameState*)memory->PermanentStorage;
 
     bool32 is_sound_unmuted = false;
-    if (is_sound_unmuted) OutputSound(game_state, sound_buffer);
+    if (is_sound_unmuted)
+        OutputSound(game_state, sound_buffer);
 }
