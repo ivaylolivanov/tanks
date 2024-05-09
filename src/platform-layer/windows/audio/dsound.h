@@ -14,7 +14,8 @@ typedef HRESULT WINAPI FPtrDirectSoundCreate
 Internal void InitDirectSound(HWND window, int32 samples_per_second, int32 buffer_size)
 {
     HMODULE direct_sound_library = LoadLibrary("dsound.dll");
-    if (!direct_sound_library) return;
+    if (!direct_sound_library)
+        return;
 
     DirectSoundCreate *direct_sound_create = (DirectSoundCreate *)
         GetProcAddress(direct_sound_library, "DirectSoundCreate");
@@ -41,14 +42,16 @@ Internal void InitDirectSound(HWND window, int32 samples_per_second, int32 buffe
     buffer_description.dwFlags = DSBCAPS_PRIMARYBUFFER;
 
     LPDIRECTSOUNDBUFFER primary_buffer;
-    if (FAILED(
-            direct_sound->CreateSoundBuffer(
-                &buffer_description, &primary_buffer, 0)))
+    HRESULT creation_status = direct_sound->CreateSoundBuffer(
+        &buffer_description, &primary_buffer, 0);
+    if (FAILED(creation_status))
         return;
 
     HRESULT set_format_status = primary_buffer->SetFormat(&wave_format);
     if (SUCCEEDED(set_format_status))
         OutputDebugStringA("Primary buffer format was set.\n");
+    else
+        return;
 
     DSBUFFERDESC secondary_buffer_description = {};
     secondary_buffer_description.dwSize = sizeof(secondary_buffer_description);

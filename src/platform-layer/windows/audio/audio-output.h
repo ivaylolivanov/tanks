@@ -2,10 +2,13 @@
 
 Internal void DrawVertical(BackBuffer* buffer, int x, int top, int bottom, uint32 color)
 {
-    if (top < 0) top = 0;
-    if (bottom > buffer->Height) bottom = buffer->Height;
+    if (top < 0)
+        top = 0;
+    if (bottom > buffer->Height)
+        bottom = buffer->Height;
 
-    if (x < 0 || x > buffer->Width) return;
+    if (x < 0 || x > buffer->Width)
+        return;
 
     uint8* pixel = ((uint8*)buffer->Memory +
         x * buffer->BytesPerPixel +
@@ -120,7 +123,8 @@ Internal void FillSoundBuffer(SoundOutput *sound_output, DWORD byte_to_lock,
         &region1, &region1_size,
         &region2, &region2_size,
         0);
-    if (FAILED(buffer_lock_result)) return;
+    if (FAILED(buffer_lock_result))
+        return;
 
     int16 *source_sample = game_sound_buffer->Samples;
 
@@ -178,42 +182,56 @@ Internal void PrintSoundDebugInfo(TimeMarker* marker, SoundOutput* sound_output,
 
 #endif
 
-Internal void CorrectAndOutputSound(ThreadContext* thread,
-    LARGE_INTEGER counter_frame_flip, SoundOutput* sound_output,
-    int game_update_hz, real32 target_seconds_per_frame, int16* samples,
-    GameMemory* game_memory, TimeMarker* time_markers, int time_marker_index,
-    GameCode* game_code)
+Internal void InitializeSoundOutput(SoundOutput* sound_output,
+    int game_update_hz)
 {
-    LARGE_INTEGER counter_audio_start = GetCounterStamp();
-    real32 seconds_elapsed_before_audio = GetSecondsElapsed(
-        counter_frame_flip, counter_audio_start);
+    sound_output->SamplesPerSecond = 48000;
+    sound_output->BytesPerSample = sizeof(int16) * 2;
+    sound_output->BufferSize = sound_output->SamplesPerSecond
+        * sound_output->BytesPerSample;
+    sound_output->LatencySampleCount = 3
+        * (sound_output->SamplesPerSecond / game_update_hz);
+    sound_output->SafetyBytes = (int)(((real32)sound_output->SamplesPerSecond
+        * (real32)sound_output->BytesPerSample / game_update_hz)
+        / sound_output->LatencySampleCount);
+}
 
-    DWORD play_cursor;
-    DWORD write_cursor;
-    if (SOUND_BUFFER->GetCurrentPosition(&play_cursor, &write_cursor) != DS_OK)
+Internal void HandleSoundBufferError(HRESULT result)
+{
+    /*
+      TODO: Handle all errors:
+
+      DSERR_ALLOCATED
+      DSERR_INVALIDPARAM
+      DSERR_NOAGGREGATION
+      DSERR_NODRIVER
+      DSERR_OUTOFMEMORY
+    */
+
+    SOUND_IS_VALID = false;
+}
+
+Internal bool32 VerifySoundBuffer(DWORD* play_cursor, DWORD* write_cursor)
+{
+    HRESULT result = SOUND_BUFFER->GetCurrentPosition(play_cursor, write_cursor);
+    if (result != DS_OK)
     {
-        /*
-          TODO: Handle all errors:
-
-          DSERR_ALLOCATED
-          DSERR_INVALIDPARAM
-          DSERR_NOAGGREGATION
-          DSERR_NODRIVER
-          DSERR_OUTOFMEMORY
-         */
-        SOUND_IS_VALID = false;
-        return;
+        HandleSoundBufferError(result);
+        return false;
     }
 
-    LAST_PLAY_CURSOR = play_cursor;
-    if (!SOUND_IS_VALID)
-    {
-        sound_output->RunningSampleIndex = write_cursor
-            / sound_output->BytesPerSample;
-        SOUND_IS_VALID = true;
-    }
+    LAST_PLAY_CURSOR = *play_cursor;
+    SOUND_IS_VALID = true;
+    return true;
+}
 
-    DWORD byte_to_lock = (sound_output->RunningSampleIndex
+Internal void CalculateLockAndWriteBytes(DWORD* bytes_to_write,
+    DWORD* byte_to_lock, DWORD* expected_frame_boundary_byte,
+    DWORD* target_cursor , SoundOutput* sound_output, int game_update_hz,
+    real32 target_seconds_per_frame, real32 seconds_elapsed_before_audio,
+    DWORD play_cursor, DWORD write_cursor)
+{
+    *byte_to_lock = (sound_output->RunningSampleIndex
         * sound_output->BytesPerSample) % sound_output->BufferSize;
     DWORD expected_sound_bytes_per_frame = (int)((
         (real32)sound_output->SamplesPerSecond * sound_output->BytesPerSample)
@@ -222,7 +240,7 @@ Internal void CorrectAndOutputSound(ThreadContext* thread,
         - seconds_elapsed_before_audio;
     DWORD expected_bytes_until_flip = (DWORD)((seconds_left_until_flip
         / target_seconds_per_frame) * (expected_sound_bytes_per_frame));
-    DWORD expected_frame_boundary_byte = play_cursor
+    *expected_frame_boundary_byte = play_cursor
         + expected_bytes_until_flip;
 
     DWORD safe_write_cursor = write_cursor;
@@ -233,42 +251,65 @@ Internal void CorrectAndOutputSound(ThreadContext* thread,
     safe_write_cursor += sound_output->SafetyBytes;
 
     bool32 audio_card_is_low_latency = (safe_write_cursor
-        < expected_frame_boundary_byte);
+        < *expected_frame_boundary_byte);
 
-    DWORD target_cursor = 0;
+    *target_cursor = 0;
     if (audio_card_is_low_latency)
     {
-        target_cursor = expected_frame_boundary_byte
+        *target_cursor = *expected_frame_boundary_byte
             + expected_sound_bytes_per_frame;
     }
     else
     {
-        target_cursor = write_cursor + expected_sound_bytes_per_frame
+        *target_cursor = write_cursor + expected_sound_bytes_per_frame
             + sound_output->SafetyBytes;
     }
 
-    target_cursor = target_cursor % sound_output->BufferSize;
-    DWORD bytes_to_write = 0;
-    if (byte_to_lock > target_cursor)
+    *target_cursor = *target_cursor % sound_output->BufferSize;
+    *bytes_to_write = 0;
+    if (*byte_to_lock > *target_cursor)
     {
-        bytes_to_write = (sound_output->BufferSize - byte_to_lock);
-        bytes_to_write += target_cursor;
+        *bytes_to_write = (sound_output->BufferSize - *byte_to_lock);
+        *bytes_to_write += *target_cursor;
     }
     else
     {
-        bytes_to_write = target_cursor - byte_to_lock;
+        *bytes_to_write = *target_cursor - *byte_to_lock;
+    }
+}
+
+Internal void CorrectAndOutputSound(ThreadContext* thread,
+    LARGE_INTEGER counter_frame_flip, SoundOutput* sound_output,
+    int game_update_hz, real32 target_seconds_per_frame, int16* samples,
+    GameMemory* game_memory, TimeMarker* time_markers, int time_marker_index,
+    GameCode* game_code)
+{
+    DWORD play_cursor;
+    DWORD write_cursor;
+    if (!VerifySoundBuffer(&play_cursor, &write_cursor))
+        return;
+
+    LARGE_INTEGER counter_audio_start = GetCounterStamp();
+    real32 seconds_elapsed_before_audio = GetSecondsElapsed(
+        counter_frame_flip, counter_audio_start);
+
+    if (!SOUND_IS_VALID)
+    {
+        sound_output->RunningSampleIndex = write_cursor
+            / sound_output->BytesPerSample;
+        SOUND_IS_VALID = true;
     }
 
-    GameSoundBuffer sound_buffer = {};
-    sound_buffer.SamplesPerSecond = sound_output->SamplesPerSecond;
-    sound_buffer.SamplesCount = bytes_to_write / sound_output->BytesPerSample;
-    sound_buffer.Samples = samples;
+    DWORD byte_to_lock = 0;
+    DWORD bytes_to_write = 0;
+    DWORD expected_frame_boundary_byte = 0;
+    DWORD target_cursor = 0;
+    CalculateLockAndWriteBytes(&bytes_to_write, &byte_to_lock,
+        &expected_frame_boundary_byte, &target_cursor, sound_output,
+        game_update_hz, target_seconds_per_frame, seconds_elapsed_before_audio,
+        play_cursor, write_cursor);
 
-    if (game_code)
-        game_code->GetSoundSamples(thread, game_memory, &sound_buffer);
-
-#if WIN32_DEBUG
-
+    /* #if WIN32_DEBUG */
     TimeMarker* marker = &time_markers[time_marker_index];
     marker->OutputPlayCursor = play_cursor;
     marker->OutputWriteCursor = write_cursor;
@@ -277,7 +318,15 @@ Internal void CorrectAndOutputSound(ThreadContext* thread,
     marker->ExpectedFlipPlayCursor = expected_frame_boundary_byte;
 
     PrintSoundDebugInfo(marker, sound_output, target_cursor);
-#endif
+    /* #endif */
+
+    GameSoundBuffer sound_buffer = {};
+    sound_buffer.SamplesPerSecond = sound_output->SamplesPerSecond;
+    sound_buffer.SamplesCount = bytes_to_write / sound_output->BytesPerSample;
+    sound_buffer.Samples = samples;
+
+    if (game_code)
+        game_code->GetSoundSamples(thread, game_memory, &sound_buffer);
 
     FillSoundBuffer(sound_output, byte_to_lock, bytes_to_write, &sound_buffer);
 }
