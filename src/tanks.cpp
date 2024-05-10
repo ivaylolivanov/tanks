@@ -353,7 +353,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
-        char* tank_png_relative_path = "tank.png";
+        char* tank_png_relative_path = "tank-baw.png";
         ReadFileResult raw_png = memory->ReadFile(thread, tank_png_relative_path);
         Stream raw_png_stream = {};
         raw_png_stream.Size = raw_png.Size;
