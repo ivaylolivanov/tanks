@@ -48,7 +48,9 @@ Internal void CatStrings(char* source_a, size_t source_a_count,
 Internal int StringLength(char* string)
 {
     int count = 0;
-    if (string) while(*string++) ++count;
+    if (string)
+        while(*string++)
+            ++count;
 
     return count;
 }
@@ -58,7 +60,8 @@ Internal char* GetPathBasenameSubstring(char* path)
     char* basename = path;
     for (char* symbol = path; *symbol; ++symbol)
     {
-        if (*symbol == '\\') basename = symbol + 1;
+        if (*symbol == '\\')
+            basename = symbol + 1;
     }
 
     return basename;
@@ -66,7 +69,8 @@ Internal char* GetPathBasenameSubstring(char* path)
 
 void FreeFileMemory(ThreadContext* thread, void* memory)
 {
-    if (!memory) return;
+    if (!memory)
+        return;
 
     VirtualFree(memory, 0, MEM_RELEASE);
 }
@@ -81,15 +85,18 @@ ReadFileResult ReadFile(ThreadContext* thread, char* filename)
 
     HANDLE handle = CreateFileA(filename, GENERIC_READ, FILE_SHARE_READ, 0,
         OPEN_EXISTING, 0, 0);
-    if (handle == INVALID_HANDLE_VALUE) return result;
+    if (handle == INVALID_HANDLE_VALUE)
+        return result;
 
     LARGE_INTEGER size;
-    if (!GetFileSizeEx(handle, &size)) return result;
+    if (!GetFileSizeEx(handle, &size))
+        return result;
 
     uint32 size32 = TruncateUInt64(size.QuadPart);
     file.Content = VirtualAlloc(0, size32, MEM_RESERVE | MEM_COMMIT,
         PAGE_READWRITE);
-    if (!file.Content) return result;
+    if (!file.Content)
+        return result;
 
     DWORD bytes_read;
     if (ReadFile(handle, file.Content, size32, &bytes_read, 0)
@@ -117,7 +124,8 @@ bool32 WriteFile(ThreadContext* thread, char* filename, uint32 size,
     bool32 result = false;
 
     HANDLE handle = CreateFileA(filename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
-    if (handle == INVALID_HANDLE_VALUE) return result;
+    if (handle == INVALID_HANDLE_VALUE)
+        return result;
 
     DWORD bytes_written;
     if(WriteFile(handle, memory, size, &bytes_written, 0))
@@ -185,7 +193,8 @@ Internal void UnloadGameCode(GameCode* game_code)
 
 Internal void ResizeBuffer(BackBuffer *buffer, int width, int height)
 {
-    if (buffer->Memory) VirtualFree(buffer->Memory, 0, MEM_RELEASE);
+    if (buffer->Memory)
+        VirtualFree(buffer->Memory, 0, MEM_RELEASE);
 
     int bytes_per_pixel = 4;
 
@@ -368,7 +377,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     int16 *samples = (int16 *)VirtualAlloc(
         0, sound_output.BufferSize, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-    if (!samples) return 0;
+    if (!samples)
+        return 0;
 
     LPVOID base_address = 0;
     GameMemory game_memory = {};
@@ -391,7 +401,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         + game_memory.PermanentStorageSize);
 
     if (!game_memory.PermanentStorage
-        || !game_memory.TransientStorage) return 0;
+        || !game_memory.TransientStorage)
+        return 0;
 
     for (int i = 1; i < ArrayCount(windows_state.InputReplayBuffers); ++i)
     {
@@ -466,7 +477,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         ProcessKeyboard(&windows_state, keyboard_new);
         ProcessGamepadStates(old_input, new_input);
 
-        if (IS_PAUSED) continue;
+        if (IS_PAUSED)
+            continue;
 
         ThreadContext thread = {};
 
@@ -512,7 +524,8 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
                     - seconds_elapsed_for_frame;
                 DWORD sleep_ms = (DWORD)(1000.0f * remaining_seconds_for_frame);
 
-                if (sleep_ms > 0) Sleep(sleep_ms);
+                if (sleep_ms > 0)
+                    Sleep(sleep_ms);
             }
 
             real32 test_seconds_elapsed_for_frame = GetSecondsElapsed(
