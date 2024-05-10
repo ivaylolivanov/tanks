@@ -134,10 +134,10 @@ Internal uint32 BlendColors(uint32 pixel_background, uint32 pixel_foreground)
 
 Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, real32 originX, real32 originY, real32 scale_x, real32 scale_y)
 {
-    real32 scaled_real_width  = image->Width * scale_x;
-    real32 scaled_real_height = image->Height * scale_y;
-    int32 scaled_width  = RoundReal32ToInt32(scaled_real_width);
-    int32 scaled_height = RoundReal32ToInt32(scaled_real_height);
+    real32 scaled_width_real  = image->Width * scale_x;
+    real32 scaled_height_real = image->Height * scale_y;
+    int32 scaled_width  = RoundReal32ToInt32(scaled_width_real);
+    int32 scaled_height = RoundReal32ToInt32(scaled_height_real);
 
     int32 min_x = RoundReal32ToInt32(originX - (scaled_width  / 2));
     int32 min_y = RoundReal32ToInt32(originY - (scaled_height / 2));
