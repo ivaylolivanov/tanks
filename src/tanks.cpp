@@ -92,6 +92,15 @@ uint32 TILES11[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
+Internal uint8 BlendColorChannel(uint8 background, uint8 foreground,
+    real32 alpha)
+{
+    uint8 result = 0;
+    result = (uint8)(foreground * alpha + background * (1 - alpha));
+
+    return result;
+}
+
 Internal uint32 BlendColors(uint32 pixel_background, uint32 pixel_foreground)
 {
     uint32 result = pixel_foreground;
@@ -109,9 +118,12 @@ Internal uint32 BlendColors(uint32 pixel_background, uint32 pixel_foreground)
     uint8  foreground_blue       =  pixel_foreground        & 0xFF;
     real32 foreground_alpha_real = foreground_alpha / 255.0f;
 
-    uint8 result_red   = (uint8)(foreground_red   * foreground_alpha_real + background_red   * (1 - foreground_alpha_real));
-    uint8 result_green = (uint8)(foreground_green * foreground_alpha_real + background_green * (1 - foreground_alpha_real));
-    uint8 result_blue  = (uint8)(foreground_blue  * foreground_alpha_real + background_blue  * (1 - foreground_alpha_real));
+    uint8 result_red = BlendColorChannel(background_red, foreground_red,
+        foreground_alpha_real);
+    uint8 result_green = BlendColorChannel(background_green, foreground_green,
+        foreground_alpha_real);
+    uint8 result_blue = BlendColorChannel(background_blue, foreground_blue,
+        foreground_alpha_real);
 
     result = (foreground_alpha << 24)
         | (result_red << 16)
