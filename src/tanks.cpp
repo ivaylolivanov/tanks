@@ -92,6 +92,34 @@ uint32 TILES11[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 };
 
+Internal uint32 BlendColors(uint32 pixel_background, uint32 pixel_foreground)
+{
+    uint32 result = pixel_foreground;
+
+    uint8 foreground_alpha = pixel_foreground >> 24;
+    if (foreground_alpha == 255)
+        return result;
+
+    uint8 background_red   = (pixel_background >> 16) & 0xFF;
+    uint8 background_green = (pixel_background >> 8)  & 0xFF;
+    uint8 background_blue  =  pixel_background        & 0xFF;
+
+    uint8  foreground_red        = (pixel_foreground >> 16) & 0xFF;
+    uint8  foreground_green      = (pixel_foreground >> 8)  & 0xFF;
+    uint8  foreground_blue       =  pixel_foreground        & 0xFF;
+    real32 foreground_alpha_real = foreground_alpha / 255.0f;
+
+    uint8 result_red   = (uint8)(foreground_red   * foreground_alpha_real + background_red   * (1 - foreground_alpha_real));
+    uint8 result_green = (uint8)(foreground_green * foreground_alpha_real + background_green * (1 - foreground_alpha_real));
+    uint8 result_blue  = (uint8)(foreground_blue  * foreground_alpha_real + background_blue  * (1 - foreground_alpha_real));
+
+    result = (foreground_alpha << 24)
+        | (result_red << 16)
+        | (result_green << 8)
+        | result_blue;
+    return result;
+}
+
 Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, real32 originX, real32 originY, real32 scale_x, real32 scale_y)
 {
     real32 scaled_real_width  = image->Width * scale_x;
@@ -131,29 +159,8 @@ Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, real32 originX,
             uint32* pixel_image = (uint32*)(image->Pixels)
                 + (unscaled_y * image->Width + unscaled_x);
 
-            uint32 pixel_buffer_color = *pixel_buffer;
-            uint32 pixel_buffer_color_red   = (pixel_buffer_color >> 16) & 0xFF;
-            uint32 pixel_buffer_color_green = (pixel_buffer_color >> 8)  & 0xFF;
-            uint32 pixel_buffer_color_blue  =  pixel_buffer_color        & 0xFF;
-
-            uint32 pixel_image_color = *pixel_image;
-            uint32 pixel_image_color_red   = (pixel_image_color >> 16) & 0xFF;
-            uint32 pixel_image_color_green = (pixel_image_color >> 8)  & 0xFF;
-            uint32 pixel_image_color_blue  =  pixel_image_color        & 0xFF;
-            uint32 pixel_image_color_alpha =  pixel_image_color >> 24;
-            real32 pixel_image_color_alpha_real = pixel_image_color_alpha / 255.0f;
-
-            uint32 result_red   = (uint32)(pixel_image_color_red   * pixel_image_color_alpha_real + pixel_buffer_color_red   * (1 - pixel_image_color_alpha_real));
-            uint32 result_green = (uint32)(pixel_image_color_green * pixel_image_color_alpha_real + pixel_buffer_color_green * (1 - pixel_image_color_alpha_real));
-            uint32 result_blue  = (uint32)(pixel_image_color_blue  * pixel_image_color_alpha_real + pixel_buffer_color_blue  * (1 - pixel_image_color_alpha_real));
-
-            // Combine the components back into a single uint32 color
-            if (pixel_image_color_alpha == 255)
-                *pixel_buffer = *pixel_image;
-            else if ((pixel_image_color_alpha > 0) && (pixel_image_color_alpha < 255))
-                *pixel_buffer = (pixel_image_color_alpha << 24) | (result_red << 16) | (result_green << 8) | result_blue;
-
-            ++pixel_buffer;
+            uint32 blend_color = BlendColors(*pixel_buffer, *pixel_image);
+            *pixel_buffer++ = blend_color;
         }
 
         row_buffer += buffer->Pitch;
