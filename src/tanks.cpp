@@ -409,6 +409,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     real32 tank_height = 1.4f;
     real32 tank_width = 0.65f * tank_height;
     real32 tank_speed = 8.0f;
+    int32 collider_visual_width = 3;
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
@@ -518,12 +519,11 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         + world.TileSidePixels * game_state->PlayerPosition.TileY
         + game_state->PlayerPosition.TileRelativeY * world.GameUnits2Pixels
         - tank_height * world.GameUnits2Pixels;
+    real32 player_right = player_left + tank_width * world.GameUnits2Pixels;
+    real32 player_bottom = player_top + tank_height * world.GameUnits2Pixels;
 
-    DrawRectangle(display_buffer,
-        player_left, player_top,
-        player_left + player_width * world.GameUnits2Pixels,
-        player_top + player_height * world.GameUnits2Pixels,
-        player_r, player_g, player_b);
+    DrawWireRectangle(display_buffer, player_left, player_top, player_right,
+        player_bottom, collider_visual_width, 0, 1, 0);
 
     real32 player_center_x = player_left
         + (tank_width * world.GameUnits2Pixels) / 2;
