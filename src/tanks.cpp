@@ -359,7 +359,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         raw_png_stream.Size = raw_png.Size;
         raw_png_stream.Content = raw_png.Content;
 
-        game_state->PlayerImage = ParsePNG(raw_png_stream);
+        game_state->TankImage = ParsePNG(raw_png_stream);
 
         game_state->PlayerPosition.TilemapX = 0;
         game_state->PlayerPosition.TilemapY = 0;
@@ -468,8 +468,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     real32 player_center_x = player_left
         + (tank_width * world.GameUnits2Pixels) / 2;
     real32 player_center_y = player_top
-    DrawPngImage(display_buffer, &game_state->PlayerImage, player_center_x,
         + (tank_height * world.GameUnits2Pixels) / 2;
+    DrawPngImage(display_buffer, &game_state->TankImage, player_center_x,
         player_center_y, 0.25f, 0.25f);
 }
 

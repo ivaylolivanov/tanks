@@ -63,7 +63,7 @@ struct World
 
 struct GameState
 {
-    Image PlayerImage;
+    Image TankImage;
 
     int ToneHz;
     real32 SineStep;
