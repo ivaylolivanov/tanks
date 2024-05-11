@@ -317,6 +317,66 @@ Internal void DrawRectangle(GameBackBuffer *buffer, real32 real_min_x,
     }
 }
 
+Internal void DrawWireRectangle(GameBackBuffer *buffer, real32 real_min_x,
+    real32 real_min_y, real32 real_max_x, real32 real_max_y, int32 thickness,
+    real32 r, real32 g, real32 b)
+{
+    int32 min_x        = RoundReal32ToInt32(real_min_x);
+    int32 min_y        = RoundReal32ToInt32(real_min_y);
+    int32 max_x        = RoundReal32ToInt32(real_max_x);
+    int32 max_y        = RoundReal32ToInt32(real_max_y);
+    int32 inner_left   = min_x + thickness;
+    int32 inner_right  = max_x - thickness - 1;
+    int32 inner_top    = min_y + thickness;
+    int32 inner_bottom = max_y - 1 - thickness;
+    int32 hollow_size  = inner_right - inner_left - 1;
+
+    if (min_x < 0)             min_x = 0;
+    if (min_x > buffer->Width) min_x = buffer->Width;
+
+    if (min_y < 0)              min_y = 0;
+    if (min_y > buffer->Height) min_y = buffer->Height;
+
+    if (max_x < 0)             max_x = 0;
+    if (max_x > buffer->Width) max_x = buffer->Width;
+
+    if (max_y < 0)              max_y = 0;
+    if (max_y > buffer->Height) max_y = buffer->Height;
+
+    uint32 color = ((RoundReal32ToInt32(r * 255.0f) << 16)
+        | (RoundReal32ToInt32(g * 255.0f) << 8)
+        | (RoundReal32ToInt32(b * 255.0f) << 0));
+
+    uint8* row = ((uint8 *) buffer->Memory
+        + min_x * buffer->BytesPerPixel
+        + min_y * buffer->Pitch);
+    for (int y = min_y; y < max_y; ++y)
+    {
+        uint32 *pixel = (uint32 *)row;
+
+        bool32 is_horizontal = ((y >= min_y) && (y < inner_top))
+            || ((y > inner_bottom) && (y < max_y));
+
+        if (is_horizontal)
+        {
+            for (int x = min_x; x < max_x; ++x)
+                *pixel++ = color;
+        }
+        else
+        {
+            for (int x = min_x; x <= inner_left; ++x)
+                *pixel++ = color;
+
+            pixel += hollow_size;
+
+            for (int x = inner_right; x < max_x; ++x)
+                *pixel++ = color;
+        }
+
+        row += buffer->Pitch;
+    }
+}
+
 extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer)
 {
