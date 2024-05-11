@@ -346,9 +346,9 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     real32 player_r = 0.45f;
     real32 player_g = 0.15f;
     real32 player_b = 0.65f;
-    real32 player_height = 1.4f;
-    real32 player_width = 0.65f * player_height;
-    real32 player_speed = 8.0f;
+    real32 tank_height = 1.4f;
+    real32 tank_width = 0.65f * tank_height;
+    real32 tank_speed = 8.0f;
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
@@ -392,8 +392,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             if (controller->MoveDown.EndedDown)  y += 1;
         }
 
-        x *= player_speed * input->DeltaTime;
-        y *= player_speed * input->DeltaTime;
+        x *= tank_speed * input->DeltaTime;
+        y *= tank_speed * input->DeltaTime;
 
         WorldPosition next_player_position = game_state->PlayerPosition;
         next_player_position.TileRelativeX += x;
@@ -402,18 +402,18 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             next_player_position);
 
         WorldPosition player_position_bottom_left = next_player_position;
-        player_position_bottom_left.TileRelativeX -= 0.5f * player_width;
+        player_position_bottom_left.TileRelativeX -= 0.5f * tank_width;
         player_position_bottom_left = NormalizeWorldPosition(&world,
             player_position_bottom_left);
         WorldPosition player_position_bottom_right = next_player_position;
-        player_position_bottom_right.TileRelativeX += 0.5f * player_width;
+        player_position_bottom_right.TileRelativeX += 0.5f * tank_width;
         player_position_bottom_right = NormalizeWorldPosition(&world,
             player_position_bottom_right);
         WorldPosition player_position_top_left = player_position_bottom_left;
-        player_position_top_left.TileRelativeY -= player_height;
+        player_position_top_left.TileRelativeY -= tank_height;
         player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
         WorldPosition player_position_top_right = player_position_bottom_right;
-        player_position_top_right.TileRelativeY -= player_height;
+        player_position_top_right.TileRelativeY -= tank_height;
         player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
 
         bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
@@ -453,11 +453,11 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     real32 player_left = world.UpperLeftX
         + world.TileSidePixels * game_state->PlayerPosition.TileX
         + game_state->PlayerPosition.TileRelativeX * world.GameUnits2Pixels
-        - 0.5f * player_width * world.GameUnits2Pixels;
+        - 0.5f * tank_width * world.GameUnits2Pixels;
     real32 player_top = world.UpperLeftY
         + world.TileSidePixels * game_state->PlayerPosition.TileY
         + game_state->PlayerPosition.TileRelativeY * world.GameUnits2Pixels
-        - player_height * world.GameUnits2Pixels;
+        - tank_height * world.GameUnits2Pixels;
 
     DrawRectangle(display_buffer,
         player_left, player_top,
@@ -466,10 +466,10 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         player_r, player_g, player_b);
 
     real32 player_center_x = player_left
-        + (player_width * world.GameUnits2Pixels) / 2;
+        + (tank_width * world.GameUnits2Pixels) / 2;
     real32 player_center_y = player_top
-        + (player_height * world.GameUnits2Pixels) / 2;
     DrawPngImage(display_buffer, &game_state->PlayerImage, player_center_x,
+        + (tank_height * world.GameUnits2Pixels) / 2;
         player_center_y, 0.25f, 0.25f);
 }
 
