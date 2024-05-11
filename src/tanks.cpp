@@ -425,7 +425,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         game_state->PlayerPosition.TilemapX = 0;
         game_state->PlayerPosition.TilemapY = 0;
         game_state->PlayerPosition.TileX = 10;
-        game_state->PlayerPosition.TileY = 6;
+        game_state->PlayerPosition.TileY = 10;
         game_state->PlayerPosition.TileRelativeX = 5.0f;
         game_state->PlayerPosition.TileRelativeY = 5.0f;
 
