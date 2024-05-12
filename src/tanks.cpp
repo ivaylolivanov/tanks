@@ -1,4 +1,5 @@
 #include "tanks.h"
+#include "vectors.h"
 #include "intrinsics.h"
 
 #define TILEMAP_WIDTH 33
