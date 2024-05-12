@@ -429,6 +429,13 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         game_state->PlayerPosition.TileRelativeX = 5.0f;
         game_state->PlayerPosition.TileRelativeY = 5.0f;
 
+        game_state->EnemyPosition.TilemapX = 0;
+        game_state->EnemyPosition.TilemapY = 0;
+        game_state->EnemyPosition.TileX = 10;
+        game_state->EnemyPosition.TileY = 2;
+        game_state->EnemyPosition.TileRelativeX = 5.0f;
+        game_state->EnemyPosition.TileRelativeY = 5.0f;
+
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
     }
@@ -531,6 +538,27 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         + (tank_height * world.GameUnits2Pixels) / 2;
     DrawPngImage(display_buffer, &game_state->TankImage, player_center_x,
         player_center_y, 0.25f, 0.25f);
+
+    real32 enemy_left = world.UpperLeftX
+        + world.TileSidePixels * game_state->EnemyPosition.TileX
+        + game_state->EnemyPosition.TileRelativeX * world.GameUnits2Pixels
+        - 0.5f * tank_width * world.GameUnits2Pixels;
+    real32 enemy_top = world.UpperLeftY
+        + world.TileSidePixels * game_state->EnemyPosition.TileY
+        + game_state->EnemyPosition.TileRelativeY * world.GameUnits2Pixels
+        - tank_height * world.GameUnits2Pixels;
+    real32 enemy_right = enemy_left + tank_width * world.GameUnits2Pixels;
+    real32 enemy_bottom = enemy_top + tank_height * world.GameUnits2Pixels;
+
+    DrawWireRectangle(display_buffer, enemy_left, enemy_top, enemy_right,
+        enemy_bottom, collider_visual_width, 0, 1, 0);
+
+    real32 enemy_center_x = enemy_left
+        + (tank_width * world.GameUnits2Pixels) / 2;
+    real32 enemy_center_y = enemy_top
+        + (tank_height * world.GameUnits2Pixels) / 2;
+    DrawPngImage(display_buffer, &game_state->TankImage, enemy_center_x,
+        enemy_center_y, 0.25f, 0.25f);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,

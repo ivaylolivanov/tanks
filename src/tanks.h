@@ -69,6 +69,7 @@ struct GameState
     real32 SineStep;
 
     WorldPosition PlayerPosition;
+    WorldPosition EnemyPosition;
 };
 
 #define TANKS
