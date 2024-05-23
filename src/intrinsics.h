@@ -27,7 +27,7 @@
 #error SEE/NEON No intrinsics implementations for this compiler!
 #endif
 
-inline uint32 RoundReal32ToInt32(real32 real)
+inline int32 RoundReal32ToInt32(real32 real)
 {
     int32 result = _mm_cvtss_si32(_mm_set_ss(real));
     return result;
