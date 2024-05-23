@@ -1,5 +1,4 @@
 #include "tanks.h"
-#include "vectors.h"
 #include "intrinsics.h"
 
 #define TILEMAP_WIDTH 33
@@ -226,10 +225,10 @@ inline WorldPosition NormalizeWorldPosition(World* world, WorldPosition position
 {
     WorldPosition result = position;
 
-    NormalizeWorldCoordinates(world, world->TilemapWidth, &result.TilemapX,
-        &result.TileX, &result.TileRelativeX);
-    NormalizeWorldCoordinates(world, world->TilemapHeight, &result.TilemapY,
-        &result.TileY, &result.TileRelativeY);
+    NormalizeWorldCoordinates(world, world->TilemapWidth, &result.Tilemap.X,
+        &result.Tile.X, &result.TileRelative.X);
+    NormalizeWorldCoordinates(world, world->TilemapHeight, &result.Tilemap.Y,
+        &result.Tile.Y, &result.TileRelative.Y);
 
     return result;
 }
@@ -273,10 +272,10 @@ Internal bool32 IsWorldPointEmpty(World* world, WorldPosition position)
 {
     bool32 result = false;
 
-    Tilemap* tilemap = GetTilemap(world, position.TilemapX, position.TilemapY);
+    Tilemap* tilemap = GetTilemap(world, position.Tilemap.X, position.Tilemap.Y);
     if (!tilemap) return result;
 
-    result = IsTilemapPointEmpty(world, tilemap, position.TileX, position.TileY);
+    result = IsTilemapPointEmpty(world, tilemap, position.Tile.X, position.Tile.Y);
     return result;
 }
 
@@ -392,8 +391,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     tilemaps[1][1].Tiles = (uint32 *) TILES11;
 
     World world;
-    world.UpperLeftX = 0;
-    world.UpperLeftY = 0;
+    world.Origin = { 0, 0 };
     world.WorldWidth = 2;
     world.WorldHeight = 2;
     world.TilemapWidth = TILEMAP_WIDTH;
@@ -423,25 +421,22 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
         game_state->TankImage = ParsePNG(raw_png_stream);
 
-        game_state->PlayerPosition.TilemapX = 0;
-        game_state->PlayerPosition.TilemapY = 0;
-        game_state->PlayerPosition.TileX = 10;
-        game_state->PlayerPosition.TileY = 10;
-        game_state->PlayerPosition.TileRelativeX = 5.0f;
-        game_state->PlayerPosition.TileRelativeY = 5.0f;
+        game_state->PlayerPosition.Tilemap = { 0, 0 };
+        game_state->PlayerPosition.Tile = { 10, 10 };
+        game_state->PlayerPosition.TileRelative = { 5.0f, 5.0f };
 
-        game_state->EnemyPosition.TilemapX = 0;
-        game_state->EnemyPosition.TilemapY = 0;
-        game_state->EnemyPosition.TileX = 10;
-        game_state->EnemyPosition.TileY = 2;
-        game_state->EnemyPosition.TileRelativeX = 5.0f;
-        game_state->EnemyPosition.TileRelativeY = 5.0f;
+        // game_state->EnemyPosition.TilemapX = 0;
+        // game_state->EnemyPosition.TilemapY = 0;
+        // game_state->EnemyPosition.TileX = 10;
+        // game_state->EnemyPosition.TileY = 2;
+        // game_state->EnemyPosition.TileRelativeX = 5.0f;
+        // game_state->EnemyPosition.TileRelativeY = 5.0f;
 
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
     }
-    Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.TilemapX,
-        game_state->PlayerPosition.TilemapY);
+    Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.Tilemap.X,
+        game_state->PlayerPosition.Tilemap.Y);
 
     for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
     {
@@ -465,24 +460,24 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         y *= tank_speed * input->DeltaTime;
 
         WorldPosition next_player_position = game_state->PlayerPosition;
-        next_player_position.TileRelativeX += x;
-        next_player_position.TileRelativeY += y;
+        next_player_position.TileRelative.X += x;
+        next_player_position.TileRelative.Y += y;
         next_player_position = NormalizeWorldPosition(&world,
             next_player_position);
 
         WorldPosition player_position_bottom_left = next_player_position;
-        player_position_bottom_left.TileRelativeX -= 0.5f * tank_width;
+        player_position_bottom_left.TileRelative.X -= 0.5f * tank_width;
         player_position_bottom_left = NormalizeWorldPosition(&world,
             player_position_bottom_left);
         WorldPosition player_position_bottom_right = next_player_position;
-        player_position_bottom_right.TileRelativeX += 0.5f * tank_width;
+        player_position_bottom_right.TileRelative.X += 0.5f * tank_width;
         player_position_bottom_right = NormalizeWorldPosition(&world,
             player_position_bottom_right);
         WorldPosition player_position_top_left = player_position_bottom_left;
-        player_position_top_left.TileRelativeY -= tank_height;
+        player_position_top_left.TileRelative.Y -= tank_height;
         player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
         WorldPosition player_position_top_right = player_position_bottom_right;
-        player_position_top_right.TileRelativeY -= tank_height;
+        player_position_top_right.TileRelative.Y -= tank_height;
         player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
 
         bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
@@ -504,12 +499,12 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             if (tile_id == 1)
                 gray = 1.0f;
 
-            if (column == game_state->PlayerPosition.TileX
-                && row == game_state->PlayerPosition.TileY)
+            if (column == game_state->PlayerPosition.Tile.X
+                && row == game_state->PlayerPosition.Tile.Y)
                 gray = 0.4f;
 
-            real32 min_x = world.UpperLeftX + ((real32)column) * world.TileSidePixels;
-            real32 min_y = world.UpperLeftY + ((real32)row) * world.TileSidePixels;
+            real32 min_x = world.Origin.X + ((real32)column) * world.TileSidePixels;
+            real32 min_y = world.Origin.Y + ((real32)row) * world.TileSidePixels;
             real32 max_x = min_x + world.TileSidePixels;
             real32 max_y = min_y + world.TileSidePixels;
             DrawRectangle(display_buffer,
@@ -519,13 +514,13 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         }
     }
 
-    real32 player_left = world.UpperLeftX
-        + world.TileSidePixels * game_state->PlayerPosition.TileX
-        + game_state->PlayerPosition.TileRelativeX * world.GameUnits2Pixels
+    real32 player_left = world.Origin.X
+        + world.TileSidePixels * game_state->PlayerPosition.Tile.X
+        + game_state->PlayerPosition.TileRelative.X * world.GameUnits2Pixels
         - 0.5f * tank_width * world.GameUnits2Pixels;
-    real32 player_top = world.UpperLeftY
-        + world.TileSidePixels * game_state->PlayerPosition.TileY
-        + game_state->PlayerPosition.TileRelativeY * world.GameUnits2Pixels
+    real32 player_top = world.Origin.Y
+        + world.TileSidePixels * game_state->PlayerPosition.Tile.Y
+        + game_state->PlayerPosition.TileRelative.Y * world.GameUnits2Pixels
         - tank_height * world.GameUnits2Pixels;
     real32 player_right = player_left + tank_width * world.GameUnits2Pixels;
     real32 player_bottom = player_top + tank_height * world.GameUnits2Pixels;
@@ -540,26 +535,26 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     DrawPngImage(display_buffer, &game_state->TankImage, player_center_x,
         player_center_y, 0.25f, 0.25f);
 
-    real32 enemy_left = world.UpperLeftX
-        + world.TileSidePixels * game_state->EnemyPosition.TileX
-        + game_state->EnemyPosition.TileRelativeX * world.GameUnits2Pixels
-        - 0.5f * tank_width * world.GameUnits2Pixels;
-    real32 enemy_top = world.UpperLeftY
-        + world.TileSidePixels * game_state->EnemyPosition.TileY
-        + game_state->EnemyPosition.TileRelativeY * world.GameUnits2Pixels
-        - tank_height * world.GameUnits2Pixels;
-    real32 enemy_right = enemy_left + tank_width * world.GameUnits2Pixels;
-    real32 enemy_bottom = enemy_top + tank_height * world.GameUnits2Pixels;
+    // real32 enemy_left = world.UpperLeftX
+    //     + world.TileSidePixels * game_state->EnemyPosition.TileX
+    //     + game_state->EnemyPosition.TileRelativeX * world.GameUnits2Pixels
+    //     - 0.5f * tank_width * world.GameUnits2Pixels;
+    // real32 enemy_top = world.UpperLeftY
+    //     + world.TileSidePixels * game_state->EnemyPosition.TileY
+    //     + game_state->EnemyPosition.TileRelativeY * world.GameUnits2Pixels
+    //     - tank_height * world.GameUnits2Pixels;
+    // real32 enemy_right = enemy_left + tank_width * world.GameUnits2Pixels;
+    // real32 enemy_bottom = enemy_top + tank_height * world.GameUnits2Pixels;
 
-    DrawWireRectangle(display_buffer, enemy_left, enemy_top, enemy_right,
-        enemy_bottom, collider_visual_width, 0, 1, 0);
+    // DrawWireRectangle(display_buffer, enemy_left, enemy_top, enemy_right,
+    //     enemy_bottom, collider_visual_width, 0, 1, 0);
 
-    real32 enemy_center_x = enemy_left
-        + (tank_width * world.GameUnits2Pixels) / 2;
-    real32 enemy_center_y = enemy_top
-        + (tank_height * world.GameUnits2Pixels) / 2;
-    DrawPngImage(display_buffer, &game_state->TankImage, enemy_center_x,
-        enemy_center_y, 0.25f, 0.25f);
+    // real32 enemy_center_x = enemy_left
+    //     + (tank_width * world.GameUnits2Pixels) / 2;
+    // real32 enemy_center_y = enemy_top
+    //     + (tank_height * world.GameUnits2Pixels) / 2;
+    // DrawPngImage(display_buffer, &game_state->TankImage, enemy_center_x,
+    //     enemy_center_y, 0.25f, 0.25f);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,

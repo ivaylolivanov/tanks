@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "png-parser/png-parser.cpp"
+#include "math/vectors.h"
 
 #define Pi32 3.14159265359f
 
@@ -28,14 +29,9 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
 
 struct WorldPosition
 {
-    int32 TilemapX;
-    int32 TilemapY;
-
-    int32 TileX;
-    int32 TileY;
-
-    real32 TileRelativeX;
-    real32 TileRelativeY;
+    V2i Tilemap;
+    V2i Tile;
+    V2r TileRelative;
 };
 
 struct Tilemap
@@ -55,8 +51,7 @@ struct World
     real32 TileSidePixels;
     real32 GameUnits2Pixels;
 
-    real32 UpperLeftX;
-    real32 UpperLeftY;
+    V2r Origin;
 
     Tilemap *Tilemaps;
 };
