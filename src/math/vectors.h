@@ -10,6 +10,12 @@ inline V2r V2rZero()
     return zero;
 }
 
+inline V2r V2rOne()
+{
+    V2r zero = { 1, 1 };
+    return zero;
+}
+
 inline V2i V2iZero()
 {
     V2i zero = { 0, 0 };
