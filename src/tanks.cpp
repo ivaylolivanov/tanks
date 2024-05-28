@@ -440,28 +440,28 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
     for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
     {
-        real32 x = 0;
-        real32 y = 0;
+        V2r direction = V2rZero();
         ControllerState *controller = GetController(input, controller_index);
         if (controller->IsAnalog)
         {
-            x += (int)(4.0f * controller->LeftStickAverageX);
-            y -= (int)(4.0f * controller->LeftStickAverageY);
+            direction.X += (int)(4.0f * controller->LeftStickAverageX);
+            direction.Y -= (int)(4.0f * controller->LeftStickAverageY);
         }
         else
         {
-            if (controller->MoveLeft.EndedDown)  x -= 1;
-            if (controller->MoveRight.EndedDown) x += 1;
-            if (controller->MoveUp.EndedDown)    y -= 1;
-            if (controller->MoveDown.EndedDown)  y += 1;
+            if (controller->MoveLeft.EndedDown)
+                direction.X -= 1;
+            if (controller->MoveRight.EndedDown)
+                direction.X += 1;
+            if (controller->MoveUp.EndedDown)
+                direction.Y -= 1;
+            if (controller->MoveDown.EndedDown)
+                direction.Y += 1;
         }
 
-        x *= tank_speed * input->DeltaTime;
-        y *= tank_speed * input->DeltaTime;
-
+        V2r step = direction * tank_speed * input->DeltaTime;
         WorldPosition next_player_position = game_state->PlayerPosition;
-        next_player_position.TileRelative.X += x;
-        next_player_position.TileRelative.Y += y;
+        next_player_position.TileRelative += step;
         next_player_position = NormalizeWorldPosition(&world,
             next_player_position);
 
