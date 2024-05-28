@@ -2,6 +2,7 @@
 
 #include "platform.h"
 #include "png-parser/png-parser.cpp"
+#include "math/math.h"
 #include "math/vectors.h"
 
 #define Pi32 3.14159265359f
