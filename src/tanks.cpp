@@ -425,12 +425,9 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         game_state->PlayerPosition.Tile = { 10, 10 };
         game_state->PlayerPosition.TileRelative = { 5.0f, 5.0f };
 
-        // game_state->EnemyPosition.TilemapX = 0;
-        // game_state->EnemyPosition.TilemapY = 0;
-        // game_state->EnemyPosition.TileX = 10;
-        // game_state->EnemyPosition.TileY = 2;
-        // game_state->EnemyPosition.TileRelativeX = 5.0f;
-        // game_state->EnemyPosition.TileRelativeY = 5.0f;
+        game_state->EnemyPosition.Tilemap = { 0, 0 };
+        game_state->EnemyPosition.Tile = { 10, 2 };
+        game_state->EnemyPosition.TileRelative = { 5.0f, 5.0f };
 
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
@@ -514,47 +511,34 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         }
     }
 
-    real32 player_left = world.Origin.X
-        + world.TileSidePixels * game_state->PlayerPosition.Tile.X
-        + game_state->PlayerPosition.TileRelative.X * world.GameUnits2Pixels
-        - 0.5f * tank_width * world.GameUnits2Pixels;
-    real32 player_top = world.Origin.Y
-        + world.TileSidePixels * game_state->PlayerPosition.Tile.Y
-        + game_state->PlayerPosition.TileRelative.Y * world.GameUnits2Pixels
-        - tank_height * world.GameUnits2Pixels;
-    real32 player_right = player_left + tank_width * world.GameUnits2Pixels;
-    real32 player_bottom = player_top + tank_height * world.GameUnits2Pixels;
+    V2r player_left_top = world.Origin
+        + game_state->PlayerPosition.Tile * world.TileSidePixels
+        + game_state->PlayerPosition.TileRelative * world.GameUnits2Pixels
+        - V2r{ 0.5f * tank_width, tank_height } * world.GameUnits2Pixels;
+    V2r player_right_bottom = player_left_top
+        + V2r{ tank_width, tank_height } * world.GameUnits2Pixels;
 
-    DrawWireRectangle(display_buffer, player_left, player_top, player_right,
-        player_bottom, collider_visual_width, 0, 1, 0);
+    DrawWireRectangle(display_buffer, player_left_top.X, player_left_top.Y,
+        player_right_bottom.X, player_right_bottom.Y, collider_visual_width,
+        0, 1, 0);
 
-    real32 player_center_x = player_left
-        + (tank_width * world.GameUnits2Pixels) / 2;
-    real32 player_center_y = player_top
-        + (tank_height * world.GameUnits2Pixels) / 2;
-    DrawPngImage(display_buffer, &game_state->TankImage, player_center_x,
-        player_center_y, 0.25f, 0.25f);
+    V2r player_center = player_left_top
+        + (V2r{ tank_width, tank_height } * world.GameUnits2Pixels * 0.5f);
+    DrawPngImage(display_buffer, &game_state->TankImage, player_center.X,
+        player_center.Y, 0.25f, 0.25f);
 
-    // real32 enemy_left = world.UpperLeftX
-    //     + world.TileSidePixels * game_state->EnemyPosition.TileX
-    //     + game_state->EnemyPosition.TileRelativeX * world.GameUnits2Pixels
-    //     - 0.5f * tank_width * world.GameUnits2Pixels;
-    // real32 enemy_top = world.UpperLeftY
-    //     + world.TileSidePixels * game_state->EnemyPosition.TileY
-    //     + game_state->EnemyPosition.TileRelativeY * world.GameUnits2Pixels
-    //     - tank_height * world.GameUnits2Pixels;
-    // real32 enemy_right = enemy_left + tank_width * world.GameUnits2Pixels;
-    // real32 enemy_bottom = enemy_top + tank_height * world.GameUnits2Pixels;
+    V2r enemy_left_top = world.Origin
+        + game_state->EnemyPosition.Tile * world.TileSidePixels
+        + game_state->EnemyPosition.TileRelative * world.GameUnits2Pixels;
+    V2r enemy_right_bottom = enemy_left_top
+        + V2r{ tank_width, tank_height } * world.GameUnits2Pixels;
+    DrawWireRectangle(display_buffer, enemy_left_top.X, enemy_left_top.Y, enemy_right_bottom.X,
+        enemy_right_bottom.Y, collider_visual_width, 0, 1, 0);
 
-    // DrawWireRectangle(display_buffer, enemy_left, enemy_top, enemy_right,
-    //     enemy_bottom, collider_visual_width, 0, 1, 0);
-
-    // real32 enemy_center_x = enemy_left
-    //     + (tank_width * world.GameUnits2Pixels) / 2;
-    // real32 enemy_center_y = enemy_top
-    //     + (tank_height * world.GameUnits2Pixels) / 2;
-    // DrawPngImage(display_buffer, &game_state->TankImage, enemy_center_x,
-    //     enemy_center_y, 0.25f, 0.25f);
+    V2r enemy_center = enemy_left_top
+        + (V2r{ tank_width, tank_height } * world.GameUnits2Pixels * 0.5f);
+    DrawPngImage(display_buffer, &game_state->TankImage, enemy_center.X,
+        enemy_center.Y, 0.25f, 0.25f);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,
