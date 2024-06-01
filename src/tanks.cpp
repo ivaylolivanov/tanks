@@ -279,39 +279,28 @@ Internal bool32 IsWorldPointEmpty(World* world, WorldPosition position)
     return result;
 }
 
-Internal void DrawRectangle(GameBackBuffer *buffer, real32 real_min_x,
-    real32 real_min_y, real32 real_max_x, real32 real_max_y, real32 r, real32 g,
-    real32 b)
+Internal void DrawRectangle(GameBackBuffer *buffer, V2r min, V2r max, V3r color)
 {
-    int32 min_x = RoundReal32ToInt32(real_min_x);
-    int32 min_y = RoundReal32ToInt32(real_min_y);
-    int32 max_x = RoundReal32ToInt32(real_max_x);
-    int32 max_y = RoundReal32ToInt32(real_max_y);
+    V2i int_min = RoundReal32ToInt32(min);
+    V2i int_max = RoundReal32ToInt32(max);
 
-    if (min_x < 0)             min_x = 0;
-    if (min_x > buffer->Width) min_x = buffer->Width;
+    ClampInt32(int_min.X, 0, buffer->Width);
+    ClampInt32(int_max.X, 0, buffer->Width);
+    ClampInt32(int_min.Y, 0, buffer->Height);
+    ClampInt32(int_max.Y, 0, buffer->Height);
 
-    if (min_y < 0)              min_y = 0;
-    if (min_y > buffer->Height) min_y = buffer->Height;
-
-    if (max_x < 0)             max_x = 0;
-    if (max_x > buffer->Width) max_x = buffer->Width;
-
-    if (max_y < 0)              max_y = 0;
-    if (max_y > buffer->Height) max_y = buffer->Height;
-
-    uint32 color = ((RoundReal32ToInt32(r * 255.0f) << 16)
-        | (RoundReal32ToInt32(g * 255.0f) << 8)
-        | (RoundReal32ToInt32(b * 255.0f) << 0));
+    uint32 rgb = ((RoundReal32ToInt32(color.R * 255.0f) << 16)
+        | (RoundReal32ToInt32(color.G * 255.0f) << 8)
+        | (RoundReal32ToInt32(color.B * 255.0f) << 0));
 
     uint8* row = ((uint8 *) buffer->Memory
-        + min_x * buffer->BytesPerPixel
-        + min_y * buffer->Pitch);
-    for (int y = min_y; y < max_y; ++y)
+        + int_min.X * buffer->BytesPerPixel
+        + int_min.Y * buffer->Pitch);
+    for (int y = int_min.Y; y < int_max.Y; ++y)
     {
         uint32 *pixel = (uint32 *)row;
-        for (int x = min_x; x < max_x; ++x)
-            *pixel++ = color;
+        for (int x = int_min.X; x < int_max.X; ++x)
+            *pixel++ = rgb;
 
         row += buffer->Pitch;
     }
@@ -402,9 +391,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         / (real32)world.TileSideGameUnits;
     world.Tilemaps = (Tilemap*)tilemaps;
 
-    real32 player_r = 0.45f;
-    real32 player_g = 0.15f;
-    real32 player_b = 0.65f;
+    V3r player_color = { 0.45f, 0.15f, 0.65f };
     real32 tank_height = 1.4f;
     real32 tank_width = 0.65f * tank_height;
     real32 tank_speed = 8.0f;
@@ -491,23 +478,24 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     {
         for (int column = 0; column < world.TilemapWidth; ++column)
         {
+            V3r tile_color = { 0.5f, 0.5f, 0.5f };
             uint32 tile_id = GetTileValue(&world, tilemap, column, row);
-            real32 gray = 0.5f;
             if (tile_id == 1)
-                gray = 1.0f;
+                tile_color = { 1.0f, 1.0f, 1.0f };
 
+            V2i tile = { column, row };
             if (column == game_state->PlayerPosition.Tile.X
                 && row == game_state->PlayerPosition.Tile.Y)
-                gray = 0.4f;
+                tile_color = { 0.4f, 0.4f, 0.4f };
+            // else if (column == game_state->EnemyPosition.Tile.X
+            //     && row == game_state->EnemyPosition.Tile.Y)
+            //     tile_color = { 0.4f, 0.4f, 0.4f };
 
-            real32 min_x = world.Origin.X + ((real32)column) * world.TileSidePixels;
-            real32 min_y = world.Origin.Y + ((real32)row) * world.TileSidePixels;
-            real32 max_x = min_x + world.TileSidePixels;
-            real32 max_y = min_y + world.TileSidePixels;
-            DrawRectangle(display_buffer,
-                min_x, min_y,
-                max_x, max_y,
-                gray, gray, gray);
+            V2r min = world.Origin + tile * world.TileSidePixels;
+            V2r max = min + V2rOne() * world.TileSidePixels;
+            DrawRectangle(display_buffer, min, max, tile_color);
+            DrawWireRectangle(display_buffer, min.X, min.Y, max.X, max.Y, 1,
+                0.34f, 0.71f, 0.12f);
         }
     }
 
