@@ -33,6 +33,16 @@ inline int32 RoundReal32ToInt32(real32 real)
     return result;
 }
 
+inline V2i RoundReal32ToInt32(V2r v2r)
+{
+    V2i result =
+    {
+        _mm_cvtss_si32(_mm_set_ss(v2r.X)),
+        _mm_cvtss_si32(_mm_set_ss(v2r.Y))
+    };
+    return result;
+}
+
 inline int32 FloorReal32ToInt32(real32 real)
 {
     int32 result = _mm_cvtss_si32(
