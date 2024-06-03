@@ -50,6 +50,23 @@ inline V2r operator+(V2i a, V2r b)
     return result;
 }
 
+inline V2r operator-(V2r a, V2i b)
+{
+    V2r result;
+    result.X = a.X - (real32)b.X;
+    result.Y = a.Y - (real32)b.Y;
+
+    return result;
+}
+
+inline V2r operator-(V2i a, V2r b)
+{
+    V2r result;
+    result.X = (real32)a.X - b.X;
+    result.Y = (real32)a.Y - b.Y;
+    return result;
+}
+
 inline V3r operator+(V3r a, V2r b)
 {
     V3r result;
