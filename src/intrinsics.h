@@ -1,5 +1,5 @@
-#include <cmath>
 #if !defined INTRINSICS
+#include <cmath>
 
 #if !defined(COMPILER_CL)
 #define COMPILER_CL 0
