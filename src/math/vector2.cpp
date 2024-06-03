@@ -57,8 +57,8 @@ inline V2i operator*(int32 a, V2i b)
 inline V2i operator*(V2i a, real32 b)
 {
     V2i result;
-    result.X = a.X * (int32)b;
-    result.Y = a.Y * (int32)b;
+    result.X = (int32)(a.X * b);
+    result.Y = (int32)(a.Y * b);
 
     return result;
 }
