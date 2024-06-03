@@ -4,6 +4,7 @@
 #include "png-parser/png-parser.cpp"
 #include "math/math.h"
 #include "math/vectors.h"
+#include "intrinsics.h"
 
 #define Pi32 3.14159265359f
 
