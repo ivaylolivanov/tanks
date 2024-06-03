@@ -104,7 +104,7 @@ inline V2r operator-(V2r a, V2r b)
 
 inline V2r &operator-=(V2r& a, V2r b)
 {
-    a = a + b;
+    a = a - b;
     return a;
 }
 
