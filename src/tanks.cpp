@@ -458,17 +458,24 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
         WorldPosition player_position_bottom_left = next_player_position;
         player_position_bottom_left.TileRelative.X -= 0.5f * tank_width;
+        player_position_bottom_left.TileRelative.Y += 0.5f * tank_height;
         player_position_bottom_left = NormalizeWorldPosition(&world,
             player_position_bottom_left);
+
         WorldPosition player_position_bottom_right = next_player_position;
         player_position_bottom_right.TileRelative.X += 0.5f * tank_width;
+        player_position_bottom_right.TileRelative.Y += 0.5f * tank_height;
         player_position_bottom_right = NormalizeWorldPosition(&world,
             player_position_bottom_right);
-        WorldPosition player_position_top_left = player_position_bottom_left;
-        player_position_top_left.TileRelative.Y -= tank_height;
+
+        WorldPosition player_position_top_left = next_player_position;
+        player_position_top_left.TileRelative.X -= 0.5f * tank_width;
+        player_position_top_left.TileRelative.Y -= 0.5f * tank_height;
         player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
-        WorldPosition player_position_top_right = player_position_bottom_right;
-        player_position_top_right.TileRelative.Y -= tank_height;
+
+        WorldPosition player_position_top_right = next_player_position;
+        player_position_top_right.TileRelative.X += 0.5f * tank_width;;
+        player_position_top_right.TileRelative.Y -= 0.5f * tank_height;
         player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
 
         bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
@@ -481,13 +488,13 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             game_state->PlayerPosition = next_player_position;
     }
 
-
-    V2r player_left_top = world.Origin
+    V2r player_position = world.Origin
         + game_state->PlayerPosition.Tile * world.TileSidePixels
-        + game_state->PlayerPosition.TileRelative * world.GameUnits2Pixels
-        - V2r{ 0.5f * tank_width, tank_height } * world.GameUnits2Pixels;
-    V2r player_right_bottom = player_left_top
-        + V2r{ tank_width, tank_height } * world.GameUnits2Pixels;
+        + game_state->PlayerPosition.TileRelative * world.GameUnits2Pixels;
+    V2r player_left_top = player_position
+        - (V2r{ tank_width, tank_height } * 0.5f) * world.GameUnits2Pixels;
+    V2r player_right_bottom = player_position
+        + (V2r{ tank_width, tank_height } * 0.5f) * world.GameUnits2Pixels;
 
     V3r collider_color = { 0, 1, 0 };
     DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
