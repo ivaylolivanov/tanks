@@ -404,6 +404,31 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.Tilemap.X,
         game_state->PlayerPosition.Tilemap.Y);
 
+    for (int row = 0; row < world.TilemapHeight; ++row)
+    {
+        for (int column = 0; column < world.TilemapWidth; ++column)
+        {
+            V3r tile_color = { 0.5f, 0.5f, 0.5f };
+            uint32 tile_id = GetTileValue(&world, tilemap, column, row);
+            if (tile_id == 1)
+                tile_color = { 1.0f, 1.0f, 1.0f };
+
+            V2i tile = { column, row };
+            if (column == game_state->PlayerPosition.Tile.X
+                && row == game_state->PlayerPosition.Tile.Y)
+                tile_color = { 0.4f, 0.4f, 0.4f };
+            else if (column == game_state->EnemyPosition.Tile.X
+                && row == game_state->EnemyPosition.Tile.Y)
+                tile_color = { 0.4f, 0.4f, 0.4f };
+
+            V2r min = world.Origin + tile * world.TileSidePixels;
+            V2r max = min + V2rOne() * world.TileSidePixels;
+            DrawRectangle(display_buffer, min, max, tile_color);
+            V3r color = { 0.34f, 0.71f, 0.12f };
+            DrawWireRectangle(display_buffer, min, max, 1, color);
+        }
+    }
+
     for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
     {
         V2r direction = V2rZero();
@@ -456,30 +481,6 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             game_state->PlayerPosition = next_player_position;
     }
 
-    for (int row = 0; row < world.TilemapHeight; ++row)
-    {
-        for (int column = 0; column < world.TilemapWidth; ++column)
-        {
-            V3r tile_color = { 0.5f, 0.5f, 0.5f };
-            uint32 tile_id = GetTileValue(&world, tilemap, column, row);
-            if (tile_id == 1)
-                tile_color = { 1.0f, 1.0f, 1.0f };
-
-            V2i tile = { column, row };
-            if (column == game_state->PlayerPosition.Tile.X
-                && row == game_state->PlayerPosition.Tile.Y)
-                tile_color = { 0.4f, 0.4f, 0.4f };
-            else if (column == game_state->EnemyPosition.Tile.X
-                && row == game_state->EnemyPosition.Tile.Y)
-                tile_color = { 0.4f, 0.4f, 0.4f };
-
-            V2r min = world.Origin + tile * world.TileSidePixels;
-            V2r max = min + V2rOne() * world.TileSidePixels;
-            DrawRectangle(display_buffer, min, max, tile_color);
-            V3r color = { 0.34f, 0.71f, 0.12f };
-            DrawWireRectangle(display_buffer, min, max, 1, color);
-        }
-    }
 
     V2r player_left_top = world.Origin
         + game_state->PlayerPosition.Tile * world.TileSidePixels
