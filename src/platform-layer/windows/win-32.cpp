@@ -12,7 +12,6 @@ GlobalVariable bool32 IS_PAUSED  = false;
 GlobalVariable BackBuffer BACK_BUFFER;
 GlobalVariable int64 PERFORMANCE_COUNTER_FREQUENCY;
 GlobalVariable bool32 SOUND_IS_VALID = false;
-
 GlobalVariable DWORD LAST_PLAY_CURSOR = 0;
 GlobalVariable bool32 SHOW_CURSOR = 1;
 GlobalVariable WINDOWPLACEMENT WINDOW_POSITION = { sizeof(WINDOW_POSITION) };
