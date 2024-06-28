@@ -214,6 +214,12 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
                         OutputDebugStringA("You have pressed RETURN key.\n");
                     } break;
 
+                    case VK_F11:
+                    {
+                        if (is_down && message.hwnd)
+                            ToggleFullscreen(message.hwnd);
+                    } break;
+
                     case VK_F4:
                     {
                         // TODO: Pass too?

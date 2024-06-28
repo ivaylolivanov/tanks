@@ -14,6 +14,8 @@ GlobalVariable int64 PERFORMANCE_COUNTER_FREQUENCY;
 GlobalVariable bool32 SOUND_IS_VALID = false;
 
 GlobalVariable DWORD LAST_PLAY_CURSOR = 0;
+GlobalVariable bool32 SHOW_CURSOR = 1;
+GlobalVariable WINDOWPLACEMENT WINDOW_POSITION = { sizeof(WINDOW_POSITION) };
 
 inline LARGE_INTEGER GetCounterStamp()
 {
@@ -134,6 +136,42 @@ bool32 WriteFile(ThreadContext* thread, char* filename, uint32 size,
     CloseHandle(handle);
 
     return result;
+}
+
+Internal void ToggleFullscreen(HWND window)
+{
+    DWORD style = GetWindowLong(window, GWL_STYLE);
+    bool32 is_fullscreen = style & WS_OVERLAPPEDWINDOW;
+    DWORD style_toggled = style | WS_OVERLAPPEDWINDOW;
+    int32 monitor_x      = 0;
+    int32 monitor_y      = 0;
+    int32 monitor_width  = 0;
+    int32 monitor_height = 0;
+    UINT  flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER
+        | SWP_FRAMECHANGED;
+
+    if (is_fullscreen)
+    {
+        MONITORINFO monitor_info = { sizeof(monitor_info) };
+        HMONITOR monitor = MonitorFromWindow(window, MONITOR_DEFAULTTOPRIMARY);
+        BOOL invalid_placement = !GetWindowPlacement(window, &WINDOW_POSITION);
+        BOOL invalid_monitor_info = !GetMonitorInfo(monitor, &monitor_info);
+        if (invalid_placement || invalid_monitor_info)
+            return;
+
+        style_toggled = style & ~WS_OVERLAPPEDWINDOW;
+        flags = SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+
+        RECT monitor_rect = monitor_info.rcMonitor;
+        monitor_x = monitor_rect.left;
+        monitor_y = monitor_rect.top;
+        monitor_width = monitor_rect.right - monitor_rect.left;
+        monitor_height = monitor_rect.bottom - monitor_rect.top;
+    }
+
+    SetWindowLong(window, GWL_STYLE, style_toggled);
+    SetWindowPos(window, HWND_TOP, monitor_x, monitor_y, monitor_width,
+        monitor_height, flags);
 }
 
 #include "input.h"
@@ -257,6 +295,14 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
         case WM_DESTROY:
         {
             IS_RUNNING = false;
+        } break;
+
+        case WM_SETCURSOR:
+        {
+            if (SHOW_CURSOR)
+                result = DefWindowProc(window, message, w_param, l_param);
+            else
+                SetCursor(0);
         } break;
 
         case WM_ACTIVATEAPP:
