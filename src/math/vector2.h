@@ -29,6 +29,8 @@ union V2r
 };
 
 void Normalize(V2i& vector);
+int32 DotProduct(V2i a, V2i b);
+
 V2i operator+(V2i a, V2i b);
 V2i &operator+=(V2i &a, V2i b);
 V2i operator-(V2i a, V2i b);
@@ -42,6 +44,7 @@ V2i operator*(real32 a, V2i b);
 bool operator!=(V2i a, V2i b);
 
 void Normalize(V2r& vector);
+real32 DotProduct(V2r a, V2r b);
 
 V2r operator+(V2r a, V2r b);
 V2r &operator+=(V2r& a, V2r b);

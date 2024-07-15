@@ -7,6 +7,12 @@ inline void Normalize(V2i& vector)
     vector.Y /= lenght;
 }
 
+inline int32 DotProduct(V2i a, V2i b)
+{
+    int32 result = a.X * b.X + a.Y & b.Y;
+    return result;
+}
+
 inline V2i operator+(V2i a, V2i b)
 {
     V2i result;
@@ -99,6 +105,12 @@ inline void Normalize(V2r& vector)
     real32 lenght = (real32) sqrt(vector.X * vector.X + vector.Y * vector.Y);
     vector.X /= lenght;
     vector.Y /= lenght;
+}
+
+inline real32 DotProduct(V2r a, V2r b)
+{
+    real32 result = a.X * b.X + a.Y * b.Y;
+    return result;
 }
 
 inline V2r operator+(V2r a, V2r b)
