@@ -67,6 +67,8 @@ struct GameState
 
     WorldPosition CameraPosition;
     WorldPosition PlayerPosition;
+    V2r PlayerVelocity;
+
     WorldPosition EnemyPosition;
 };
 

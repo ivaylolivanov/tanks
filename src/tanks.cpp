@@ -376,7 +376,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     V3r player_color = { 0.45f, 0.15f, 0.65f };
     real32 tank_height = 1.4f;
     real32 tank_width = 0.65f * tank_height;
-    real32 tank_speed = 8.0f;
+    real32 tank_speed = 10.0f;
     int32 collider_visual_width = 3;
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
@@ -463,9 +463,19 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
                 direction.Y += 1;
         }
 
-        V2r step = direction * tank_speed * input->DeltaTime;
+        if (direction != V2rZero())
+            Normalize(direction);
+
+        real32 friction_coeficient = 1.75f;
+        V2r friction = friction_coeficient * game_state->PlayerVelocity;
+        V2r velocity = direction * tank_speed - friction;
+
         WorldPosition next_player_position = game_state->PlayerPosition;
+        V2r step = game_state->PlayerVelocity * input->DeltaTime
+            + (0.5f * velocity * (input->DeltaTime * input->DeltaTime));
         next_player_position.TileRelative += step;
+        game_state->PlayerVelocity += velocity * input->DeltaTime;
+
         next_player_position = NormalizeWorldPosition(&world,
             next_player_position);
 
@@ -496,8 +506,50 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         bool32 bottom_right_is_empty = IsWorldPointEmpty(&world, player_position_bottom_right);
         bool32 top_left_is_empty = IsWorldPointEmpty(&world, player_position_top_left);
         bool32 top_right_is_empty = IsWorldPointEmpty(&world, player_position_top_right);
+
+        bool32 collided = false;
+        WorldPosition collision_position = {};
+        if (!bottom_left_is_empty)
+        {
+            collision_position = player_position_bottom_left;
+            collided = true;
+        }
+        if (!bottom_right_is_empty)
+        {
+            collision_position = player_position_bottom_right;
+            collided = true;
+        }
+        if (!top_left_is_empty)
+        {
+            collision_position = player_position_top_left;
+            collided = true;
+        }
+        if (!top_right_is_empty)
+        {
+            collision_position = player_position_top_right;
+            collided = true;
+        }
+
+
+        if (collided && (collision_position.Tilemap.X == game_state->PlayerPosition.Tilemap.X)
+            && (collision_position.Tilemap.Y == game_state->PlayerPosition.Tilemap.Y))
+        {
+            V2r r = { 0, 0 };
+            if (collision_position.Tile.X < game_state->PlayerPosition.Tile.X)
+                r = V2r { 1, 0 };
+            if (collision_position.Tile.X > game_state->PlayerPosition.Tile.X)
+                r = V2r { -1, 0 };
+            if (collision_position.Tile.Y < game_state->PlayerPosition.Tile.Y)
+                r = V2r { 0, 1 };
+            if (collision_position.Tile.Y > game_state->PlayerPosition.Tile.Y)
+                r = V2r { 0, -1 };
+
+            game_state->PlayerVelocity -= 2 * r
+                * DotProduct(game_state->PlayerVelocity, r);
+        }
+
         if (bottom_left_is_empty && bottom_middle_is_emtpy && bottom_right_is_empty
-            && top_left_is_empty && top_right_is_empty)
+            && top_left_is_empty && top_right_is_empty && !collided)
             game_state->PlayerPosition = next_player_position;
     }
 
@@ -517,7 +569,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     V2r player_center = player_left_top
         + (V2r{ tank_width, tank_height } * world.GameUnits2Pixels * 0.5f);
     DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
-        V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
+         V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
 
     game_state->EnemyPosition = NormalizeWorldPosition(&world, game_state->EnemyPosition);
     V2r enemy_left_top = world.Origin
