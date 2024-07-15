@@ -474,7 +474,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
 
         WorldPosition player_position_top_right = next_player_position;
-        player_position_top_right.TileRelative.X += 0.5f * tank_width;;
+        player_position_top_right.TileRelative.X += 0.5f * tank_width;
         player_position_top_right.TileRelative.Y -= 0.5f * tank_height;
         player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
 
