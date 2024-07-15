@@ -78,6 +78,15 @@ inline V2i operator*(real32 a, V2i b)
     return result;
 }
 
+inline bool operator!=(V2i a, V2i b)
+{
+    bool result = false;
+
+    result = (a.X == b.X) && (a.Y == b.Y);
+
+    return result;
+}
+
 inline V2r operator+(V2r a, V2r b)
 {
     V2r result;
@@ -152,6 +161,15 @@ inline V2r operator*(int32 a, V2r b)
     V2r result;
     result.X = a * b.X;
     result.Y = a * b.Y;
+
+    return result;
+}
+
+inline bool operator!=(V2r a, V2r b)
+{
+    bool result = false;
+
+    result = (a.X != b.X) && (a.Y != b.Y);
 
     return result;
 }
