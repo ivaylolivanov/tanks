@@ -126,7 +126,7 @@ inline V2r operator*(V2r a, real32 b)
     return result;
 }
 
-inline V2r &operator*=(V2r a, real32 b)
+inline V2r &operator*=(V2r &a, real32 b)
 {
     a = a * b;
     return a;

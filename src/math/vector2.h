@@ -46,7 +46,7 @@ V2r &operator+=(V2r& a, V2r b);
 V2r operator-(V2r a, V2r b);
 V2r &operator-=(V2r& a, V2r b);
 V2r operator*(V2r a, real32 b);
-V2r &operator*=(V2r a, real32 b);
+V2r &operator*=(V2r &a, real32 b);
 V2r operator*(real32 a, V2r b);
 V2r operator*(V2r a, int32 b);
 V2r &operator*=(V2r &a, int32 b);
