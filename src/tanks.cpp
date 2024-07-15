@@ -390,6 +390,10 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
         game_state->TankImage = ParsePNG(raw_png_stream);
 
+        game_state->CameraPosition.Tilemap = { 0, 0 };
+        game_state->CameraPosition.Tile = { 15, 9 };
+        game_state->CameraPosition.TileRelative = { 0, 0 };
+
         game_state->PlayerPosition.Tilemap = { 0, 0 };
         game_state->PlayerPosition.Tile = { 10, 10 };
         game_state->PlayerPosition.TileRelative = { 5.0f, 5.0f };
@@ -401,13 +405,22 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
     }
+
+    // The camera follows the player
+    game_state->CameraPosition = game_state->PlayerPosition;
+    int32 camera_half_height = 10;
+    int32 camera_half_width = 16;
+
     Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.Tilemap.X,
         game_state->PlayerPosition.Tilemap.Y);
 
-    for (int row = 0; row < world.TilemapHeight; ++row)
+    for (int relative_row = -camera_half_height; relative_row < camera_half_height; ++relative_row)
     {
-        for (int column = 0; column < world.TilemapWidth; ++column)
+        for (int relative_column = -camera_half_width; relative_column < camera_half_width; ++relative_column)
         {
+            int row = game_state->CameraPosition.Tile.Y + relative_row;
+            int column = game_state->CameraPosition.Tile.X + relative_column;
+
             V3r tile_color = { 0.5f, 0.5f, 0.5f };
             uint32 tile_id = GetTileValue(&world, tilemap, column, row);
             if (tile_id == 1)
@@ -516,6 +529,18 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         collider_visual_width, collider_color);
     DrawPngImage(display_buffer, &game_state->TankImage, enemy_left_top,
         V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
+
+    // Camera area visualization
+    // V2r camera_position = world.Origin
+    //     + game_state->CameraPosition.Tile * world.TileSidePixels
+    //     + game_state->CameraPosition.TileRelative * world.GameUnits2Pixels;
+    // V3r camera_wire_color = V3r{ 1, 0, 1 };
+    // V2r camera_left_top = camera_position
+    //     - V2r{ 5, 5 } * world.GameUnits2Pixels;
+    // V2r camera_right_bottom = camera_position
+    //     + V2r{ 5, 5 } * world.GameUnits2Pixels;
+    // DrawWireRectangle(display_buffer, camera_left_top, camera_right_bottom,
+    //     collider_visual_width, camera_wire_color);
 }
 
 extern "C" void GetSoundSamples(ThreadContext* thread, GameMemory* memory,

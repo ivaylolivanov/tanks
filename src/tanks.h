@@ -65,6 +65,7 @@ struct GameState
     int ToneHz;
     real32 SineStep;
 
+    WorldPosition CameraPosition;
     WorldPosition PlayerPosition;
     WorldPosition EnemyPosition;
 };
