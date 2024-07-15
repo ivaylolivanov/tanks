@@ -1,5 +1,12 @@
 #include "vector2.h"
 
+inline void Normalize(V2i& vector)
+{
+    int32 lenght = (int32)sqrt(vector.X * vector.X + vector.Y * vector.Y);
+    vector.X /= lenght;
+    vector.Y /= lenght;
+}
+
 inline V2i operator+(V2i a, V2i b)
 {
     V2i result;
@@ -85,6 +92,13 @@ inline bool operator!=(V2i a, V2i b)
     result = (a.X == b.X) && (a.Y == b.Y);
 
     return result;
+}
+
+inline void Normalize(V2r& vector)
+{
+    real32 lenght = (real32) sqrt(vector.X * vector.X + vector.Y * vector.Y);
+    vector.X /= lenght;
+    vector.Y /= lenght;
 }
 
 inline V2r operator+(V2r a, V2r b)
