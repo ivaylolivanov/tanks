@@ -490,6 +490,7 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
 
     uint32 game_code_load_time = 0;
     GameCode game_code = LoadGameCode(dll_filepath, dll2load_filepath);
+    ToggleFullscreen(window);
 
     SOUND_IS_VALID = false;
     IS_RUNNING = true;
