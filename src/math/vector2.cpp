@@ -91,9 +91,18 @@ inline V2i operator*(real32 a, V2i b)
     return result;
 }
 
-inline bool operator!=(V2i a, V2i b)
+inline bool32 operator!=(V2i a, V2i b)
 {
-    bool result = false;
+    bool32 result = false;
+
+    result = (a.X != b.X) && (a.Y != b.Y);
+
+    return result;
+}
+
+inline bool32 operator==(V2i a, V2i b)
+{
+    bool32 result = false;
 
     result = (a.X == b.X) && (a.Y == b.Y);
 
@@ -191,11 +200,23 @@ inline V2r operator*(int32 a, V2r b)
     return result;
 }
 
-inline bool operator!=(V2r a, V2r b)
+inline bool32 operator!=(V2r a, V2r b)
 {
-    bool result = false;
+    bool32 result = false;
 
     result = (a.X != b.X) && (a.Y != b.Y);
+
+    return result;
+}
+
+inline bool32 operator==(V2r a, V2r b)
+{
+    bool32 result = false;
+
+    real32 epsilon = 0.001f;
+
+    result = (abs(a.X - b.X) <= epsilon)
+        && (abs(a.Y - b.Y) <= epsilon);
 
     return result;
 }

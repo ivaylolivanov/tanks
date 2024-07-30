@@ -41,7 +41,8 @@ V2i operator*(int32 a, V2i b);
 V2i operator*(V2i a, real32 b);
 V2i &operator*=(V2i &a, real32 b);
 V2i operator*(real32 a, V2i b);
-bool operator!=(V2i a, V2i b);
+bool32 operator!=(V2i a, V2i b);
+bool32 operator==(V2i a, V2i b);
 
 void Normalize(V2r& vector);
 real32 DotProduct(V2r a, V2r b);
@@ -56,4 +57,5 @@ V2r operator*(real32 a, V2r b);
 V2r operator*(V2r a, int32 b);
 V2r &operator*=(V2r &a, int32 b);
 V2r operator*(int32 a, V2r b);
-bool operator!=(V2r a, V2r b);
+bool32 operator!=(V2r a, V2r b);
+bool32 operator==(V2r a, V2r b);
