@@ -348,6 +348,136 @@ Internal void DrawWireRectangle(GameBackBuffer *buffer, V2r min, V2r max,
     }
 }
 
+Internal uint32 AddEntity(GameState* game_state)
+{
+    uint32 index = game_state->EntitiesCount++;
+
+    Assert(game_state->EntitiesCount < ArrayCount(game_state->Entities));
+    Entity* entity = &game_state->Entities[index];
+    *entity = {};
+
+    return index;
+}
+
+inline Entity* GetEntity(GameState* game_state, uint32 index)
+{
+    Entity* entity = 0;
+
+    if ((index > 0) && (index < (game_state->EntitiesCount)))
+        entity = &game_state->Entities[index];
+
+    return entity;
+}
+
+Internal void InitializeMainCamera(GameState* game_state, uint32 index)
+{
+    Entity* main_camera = GetEntity(game_state, index);
+    game_state->EntityIndexMainCamera = index;
+    main_camera->Enabled = true;
+    main_camera->Position.Tile = V2i { TILEMAP_WIDTH / 2, TILEMAP_HEIGHT / 2 };
+    main_camera->Position.Offset = { 0, 0 };
+    main_camera->Size = V2r { 20, 15 };
+}
+
+Internal void InitializePlayer(GameState* game_state, uint32 index)
+{
+    Entity* player = GetEntity(game_state, index);
+    player->Enabled = true;
+    player->Position.Tile = { 10, 10 };
+    player->Position.Offset = { 5.0f, 5.0f };
+
+    real32 tank_height = 1.4f;
+    real32 tank_width = 0.65f * tank_height;
+    player->Size = V2r{ tank_width, tank_height };
+
+    if (!game_state->EntityIndexCameraTarget)
+        game_state->EntityIndexCameraTarget = index;
+}
+
+Internal void MoveEntity(GameState* game_state, Entity* entity,
+    real32 delta_time, V2r direction)
+{
+    if (direction != V2rZero())
+        Normalize(direction);
+
+    real32 friction_coeficient = 3;
+    real32 default_speed = 16;
+    Tilemap* tilemap = &game_state->World->Tilemaps[
+        game_state->World->TilemapIndex];
+
+    V2r friction = friction_coeficient * entity->Velocity;
+    V2r velocity = direction * default_speed - friction;
+
+    Position next_position = entity->Position;
+    V2r step = entity->Velocity * delta_time
+        + (0.5f * velocity * (delta_time * delta_time));
+    next_position.Offset += step;
+    entity->Velocity += velocity * delta_time;
+
+    next_position = NormalizePosition(tilemap, next_position);
+
+    Position bottom_left = next_position;
+    bottom_left.Offset.X -= 0.5f * entity->Size.Width;
+    bottom_left.Offset.Y += 0.5f * entity->Size.Height;
+    bottom_left = NormalizePosition(tilemap, bottom_left);
+
+    Position bottom_right = next_position;
+    bottom_right.Offset += 0.5f * entity->Size;
+    bottom_right = NormalizePosition(tilemap, bottom_right);
+
+    Position top_left = next_position;
+    top_left.Offset -= 0.5f * entity->Size;
+    top_left = NormalizePosition(tilemap, top_left);
+
+    Position top_right = next_position;
+    top_right.Offset.X += 0.5f * entity->Size.Width;
+    top_right.Offset.Y -= 0.5f * entity->Size.Height;
+    top_right = NormalizePosition(tilemap, top_right);
+
+    bool32 is_empty_bottom_left   = IsTileEmpty(tilemap, bottom_left);
+    bool32 is_empty_bottom_right  = IsTileEmpty(tilemap, bottom_right);
+    bool32 is_empty_top_left      = IsTileEmpty(tilemap, top_left);
+    bool32 is_empty_top_right     = IsTileEmpty(tilemap, top_right);
+
+    bool32 collided = (!is_empty_bottom_left)
+        || (!is_empty_bottom_right)
+        || (!is_empty_top_left)
+        || (!is_empty_top_right);
+    Position collision_position = {};
+    if (!is_empty_bottom_left)
+        collision_position = bottom_left;
+
+    if (!is_empty_bottom_right)
+        collision_position = bottom_right;
+
+    if (!is_empty_top_left)
+        collision_position = top_left;
+
+    if (!is_empty_top_right)
+        collision_position = top_right;
+
+    if (collided)
+    {
+        V2r reflection = { 0, 0 };
+        if (collision_position.Tile.X < entity->Position.Tile.X)
+            reflection.X = 1;
+        if (collision_position.Tile.X > entity->Position.Tile.X)
+            reflection.X = -1;
+        if (collision_position.Tile.Y < entity->Position.Tile.Y)
+            reflection.Y = 1;
+        if (collision_position.Tile.Y > entity->Position.Tile.Y)
+            reflection.Y = -1;
+
+        Normalize(reflection);
+        entity->Velocity -= 1.5f * reflection
+            * DotProduct(entity->Velocity, reflection);
+    }
+    else
+    {
+        entity->Position = next_position;
+    }
+}
+
 extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
     GameBackBuffer *display_buffer)
 {

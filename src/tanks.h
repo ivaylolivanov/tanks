@@ -82,6 +82,13 @@ struct World
     V2r Origin;
 
     Tilemap *Tilemaps;
+struct Entity
+{
+    bool32 Enabled;
+    Position Position;
+    V2r Velocity;
+    V2r Size;
+    // TODO: Add rotaition ?
 };
 
 struct GameState
@@ -89,16 +96,20 @@ struct GameState
     MemorySection GameMemory;
     World* World;
 
+    uint32 EntityIndexMainCamera;
+    uint32 EntityIndexCameraTarget;
+    // TODO: tanks.h::GameState.EntityIndicesPlayers size HAS TO BE
+    // the same as platform.h::GameInput.Controllers. Expose
+    // visibility? (Global constant?)
+    uint32 EntityIndexPlayers[4];
+
+    uint32 EntitiesCount;
+    Entity Entities[256];
+
     Image TankImage;
 
     int ToneHz;
     real32 SineStep;
-
-    WorldPosition CameraPosition;
-    WorldPosition PlayerPosition;
-    V2r PlayerVelocity;
-
-    WorldPosition EnemyPosition;
 };
 
 #define TANKS
