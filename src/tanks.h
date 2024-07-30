@@ -55,33 +55,30 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
     return result;
 }
 
-struct WorldPosition
+struct Position
 {
-    V2i Tilemap;
     V2i Tile;
-    V2r TileRelative;
+    V2r Offset;
 };
 
 struct Tilemap
 {
+    V2i Size;
     uint32 *Tiles;
+
+    real32 TileSidePixels;
+    real32 TileSideGameUnits;
+    real32 GameUnits2Pixels;
 };
 
 struct World
 {
-    int32 WorldWidth;
-    int32 WorldHeight;
-
-    int32 TilemapWidth;
-    int32 TilemapHeight;
-
-    real32 TileSideGameUnits;
-    real32 TileSidePixels;
-    real32 GameUnits2Pixels;
-
     V2r Origin;
 
-    Tilemap *Tilemaps;
+    Tilemap* Tilemaps;
+    uint32 TilemapIndex;
+};
+
 struct Entity
 {
     bool32 Enabled;

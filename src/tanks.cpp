@@ -3,92 +3,93 @@
 #define TILEMAP_WIDTH 33
 #define TILEMAP_HEIGHT 18
 
-uint32 TILES00[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
+uint32 TILES[4][TILEMAP_HEIGHT * TILEMAP_WIDTH] =
 {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-   {1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-};
 
-uint32 TILES01[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
 {
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-};
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+},
 
-uint32 TILES10[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
 {
-    {1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,  0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-    {1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-    {1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0,0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,  1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-};
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+},
 
-uint32 TILES11[TILEMAP_HEIGHT][TILEMAP_WIDTH] =
 {
-    {1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-    {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+    1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+},
+
+{
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+}
+
 };
 
 Internal uint8 BlendColorChannel(uint8 background, uint8 foreground,
@@ -188,84 +189,47 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
     }
 }
 
-inline void NormalizeWorldCoordinates(World* world, int32 tile_count, int32* tilemap,
-    int32* tile, real32* tile_relative)
+inline void NormalizeCoordinate(Tilemap* tilemap, int32* tile, real32* relative)
 {
-    int32 offset = FloorReal32ToInt32(*tile_relative / world->TileSideGameUnits);
+    int32 offset = FloorReal32ToInt32(*relative / tilemap->TileSideGameUnits);
     *tile += offset;
-    *tile_relative -= offset * world->TileSideGameUnits;
+    *relative -= offset * tilemap->TileSideGameUnits;
 
-    Assert(*tile_relative >= 0);
-    Assert(*tile_relative <= world->TileSideGameUnits);
-
-    if (*tile < 0)
-    {
-        *tile = tile_count + *tile;
-        --*tilemap;
-    }
-
-    if (*tile >= tile_count)
-    {
-        *tile = *tile - tile_count;
-        ++*tilemap;
-    }
+    Assert(*relative >= 0);
+    Assert(*relative <= tilemap->TileSideGameUnits);
 }
 
-inline WorldPosition NormalizeWorldPosition(World* world, WorldPosition position)
+inline Position NormalizePosition(Tilemap* tilemap, Position position)
 {
-    WorldPosition result = position;
+    Position result = position;
 
-    NormalizeWorldCoordinates(world, world->TilemapWidth, &result.Tilemap.X,
-        &result.Tile.X, &result.TileRelative.X);
-    NormalizeWorldCoordinates(world, world->TilemapHeight, &result.Tilemap.Y,
-        &result.Tile.Y, &result.TileRelative.Y);
+    NormalizeCoordinate(tilemap, &result.Tile.X, &result.Offset.X);
+    NormalizeCoordinate(tilemap, &result.Tile.Y, &result.Offset.Y);
 
     return result;
 }
 
-Internal Tilemap* GetTilemap(World* world, int32 world_x, int32 world_y)
-{
-    Tilemap* tilemap = 0;
-
-    if ((world_x >= 0) && (world_x < world->TilemapWidth)
-        && (world_y >= 0) && (world_y < world->TilemapHeight))
-        tilemap = &world->Tilemaps[world_y * world->WorldWidth + world_x];
-
-    return tilemap;
-}
-
-Internal uint32 GetTileValue(World* world, Tilemap* tilemap, int32 tile_x, int32 tile_y)
+Internal uint32 GetTileValue(Tilemap* tilemap, V2i tile)
 {
     Assert(tilemap);
-    Assert((tile_x >= 0) && (tile_x < world->TilemapWidth));
-    Assert((tile_y >= 0) && (tile_y < world->TilemapHeight));
+    Assert((tile_x >= 0) && (tile_x < world->Size.Width));
+    Assert((tile_y >= 0) && (tile_y < world->Size.Height));
 
-    uint32 value = tilemap->Tiles[world->TilemapWidth * tile_y + tile_x];
+    uint32 value = tilemap->Tiles[tilemap->Size.Width * tile.Y + tile.X];
     return value;
 }
 
-inline bool32 IsTilemapPointEmpty(World* world, Tilemap* tilemap, int32 x, int32 y)
+inline bool32 IsTileEmpty(Tilemap* tilemap, Position position)
 {
     bool32 result = false;
 
-    if ((x >= 0) && (x < world->TilemapWidth)
-        && (y >= 0) && (y < world->TilemapHeight))
+    if ((position.Tile.X >= 0) && (position.Tile.X < tilemap->Size.Width)
+        && (position.Tile.Y >= 0) && (position.Tile.Y < tilemap->Size.Height))
     {
-        uint32 tile_value = GetTileValue(world, tilemap, x, y);
+        uint32 tile_value = GetTileValue(tilemap, position.Tile);
         result = (tile_value == 0);
     }
 
-    return result;
-}
-
-Internal bool32 IsWorldPointEmpty(World* world, WorldPosition position)
-{
-    bool32 result = false;
-
-    Tilemap* tilemap = GetTilemap(world, position.Tilemap.X, position.Tilemap.Y);
-    if (!tilemap) return result;
-
-    result = IsTilemapPointEmpty(world, tilemap, position.Tile.X, position.Tile.Y);
     return result;
 }
 
@@ -485,36 +449,21 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
         == ArrayCount(input->Controller[0].Buttons));
     Assert(sizeof(GameState) <= memory->PermanentStorageSize);
 
-    Tilemap tilemaps[2][2];
-    tilemaps[0][0].Tiles = (uint32 *) TILES00;
-    tilemaps[0][1].Tiles = (uint32 *) TILES01;
-    tilemaps[1][0].Tiles = (uint32 *) TILES10;
-    tilemaps[1][1].Tiles = (uint32 *) TILES11;
-
-    World world;
-    world.Origin = { 0, 0 };
-    world.WorldWidth = 2;
-    world.WorldHeight = 2;
-    world.TilemapWidth = TILEMAP_WIDTH;
-    world.TilemapHeight = TILEMAP_HEIGHT;
-    world.TileSideGameUnits = 1.4f;
-    world.TileSidePixels = 60;
-    world.GameUnits2Pixels = (real32)world.TileSidePixels
-        / (real32)world.TileSideGameUnits;
-    world.Tilemaps = (Tilemap*)tilemaps;
-
-    V3r player_color = { 0.45f, 0.15f, 0.65f };
-    real32 tank_height = 1.4f;
-    real32 tank_width = 0.65f * tank_height;
-    real32 tank_speed = 10.0f;
     int32 collider_visual_width = 3;
 
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
+        // First entity is reserved - a null entity;
+        AddEntity(game_state);
+
         InitializeMemory(&game_state->GameMemory,
             memory->PermanentStorageSize - sizeof(GameState),
             (uint8*)memory->PermanentStorage + sizeof(GameState));
+
+        uint32 main_camera_index = AddEntity(game_state);
+        InitializeMainCamera(game_state, main_camera_index);
+
         game_state->World = AllocateStruct(&game_state->GameMemory, World);
         World* world = game_state->World;
         world->Origin = V2rZero();
@@ -523,205 +472,145 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             &game_state->GameMemory,
             ArrayCount(TILES),
             Tilemap);
+
+        for (int tilemap_index = 0; tilemap_index < ArrayCount(TILES); ++tilemap_index)
+        {
+            uint32 tiles_count = ArrayCount(TILES[tilemap_index]);
+            Tilemap* tilemap = &world->Tilemaps[tilemap_index];
+            tilemap->Tiles = AllocateArray(&game_state->GameMemory, tiles_count, uint32);
+            tilemap->Size = V2i { TILEMAP_WIDTH, TILEMAP_HEIGHT };
+            tilemap->TileSidePixels = 60;
+            tilemap->TileSideGameUnits = 1.4f;
+            tilemap->GameUnits2Pixels = (real32)tilemap->TileSidePixels
+                / (real32)tilemap->TileSideGameUnits;
+
+            for (int row = 0; row < TILEMAP_HEIGHT; ++row)
+            {
+                for (int col = 0; col < TILEMAP_WIDTH; ++col)
+                {
+                    uint32 tile = row * TILEMAP_WIDTH + col;
+                    tilemap->Tiles[tile] = TILES[tilemap_index][tile];
+                }
+            }
+        }
+
         char* tank_png_relative_path = "tank-baw.png";
         ReadFileResult raw_png = memory->ReadFile(thread, tank_png_relative_path);
         Stream raw_png_stream = {};
         raw_png_stream.Size = raw_png.Size;
         raw_png_stream.Content = raw_png.Content;
-
         game_state->TankImage = ParsePNG(raw_png_stream);
-
-        game_state->CameraPosition.Tilemap = { 0, 0 };
-        game_state->CameraPosition.Tile = { 15, 9 };
-        game_state->CameraPosition.TileRelative = { 0, 0 };
-
-        game_state->PlayerPosition.Tilemap = { 0, 0 };
-        game_state->PlayerPosition.Tile = { 10, 10 };
-        game_state->PlayerPosition.TileRelative = { 5.0f, 5.0f };
-
-        game_state->EnemyPosition.Tilemap = { 0, 0 };
-        game_state->EnemyPosition.Tile = { 10, 2 };
-        game_state->EnemyPosition.TileRelative = { 5.0f, 5.0f };
 
         game_state->ToneHz = 400;
         memory->IsInitialized = true;
     }
 
-    // The camera follows the player
-    game_state->CameraPosition = game_state->PlayerPosition;
-    int32 camera_half_height = 10;
-    int32 camera_half_width = 16;
+    Entity* main_camera = GetEntity(game_state,
+        game_state->EntityIndexMainCamera);
 
-    Tilemap* tilemap = GetTilemap(&world, game_state->PlayerPosition.Tilemap.X,
-        game_state->PlayerPosition.Tilemap.Y);
+    Tilemap* tilemap = &game_state->World->Tilemaps[
+        game_state->World->TilemapIndex];
+    real32 tile_side_pixels = game_state->World->Tilemaps[
+        game_state->World->TilemapIndex].TileSidePixels;
 
-    for (int relative_row = -camera_half_height; relative_row < camera_half_height; ++relative_row)
+    for (int relative_row = -(int)main_camera->Size.Height;
+         relative_row < (int)main_camera->Size.Height;
+         ++relative_row)
     {
-        for (int relative_column = -camera_half_width; relative_column < camera_half_width; ++relative_column)
+        for (int relative_column = -(int)main_camera->Size.Width;
+             relative_column < (int)main_camera->Size.Width;
+             ++relative_column)
         {
-            int row = game_state->CameraPosition.Tile.Y + relative_row;
-            int column = game_state->CameraPosition.Tile.X + relative_column;
+            int row = main_camera->Position.Tile.Y + relative_row;
+            int column = main_camera->Position.Tile.X + relative_column;
 
             V3r tile_color = { 0.5f, 0.5f, 0.5f };
-            uint32 tile_id = GetTileValue(&world, tilemap, column, row);
+            V2i tile = { column, row };
+            uint32 tile_id = GetTileValue(tilemap, tile);
             if (tile_id == 1)
                 tile_color = { 1.0f, 1.0f, 1.0f };
 
-            V2i tile = { column, row };
-            if (column == game_state->PlayerPosition.Tile.X
-                && row == game_state->PlayerPosition.Tile.Y)
-                tile_color = { 0.4f, 0.4f, 0.4f };
-            else if (column == game_state->EnemyPosition.Tile.X
-                && row == game_state->EnemyPosition.Tile.Y)
-                tile_color = { 0.4f, 0.4f, 0.4f };
-
-            V2r min = world.Origin + tile * world.TileSidePixels;
-            V2r max = min + V2rOne() * world.TileSidePixels;
+            V2r min = game_state->World->Origin + tile * tile_side_pixels;
+            V2r max = min + V2rOne() * tile_side_pixels;
             DrawRectangle(display_buffer, min, max, tile_color);
+
             V3r color = { 0.34f, 0.71f, 0.12f };
             DrawWireRectangle(display_buffer, min, max, 1, color);
         }
     }
 
-    for (int8 controller_index = 0; controller_index < ArrayCount(input->Controllers); ++controller_index)
+    for (int8 controller_index = 0;
+         controller_index < ArrayCount(input->Controllers);
+         ++controller_index)
     {
-        V2r direction = V2rZero();
         ControllerState *controller = GetController(input, controller_index);
-        if (controller->IsAnalog)
+
+        Entity* player = GetEntity(game_state,
+            game_state->EntityIndexPlayers[controller_index]);
+        if (player)
         {
-            direction.X += (int)(4.0f * controller->LeftStickAverageX);
-            direction.Y -= (int)(4.0f * controller->LeftStickAverageY);
+            V2r direction = V2rZero();
+            if (controller->IsAnalog)
+            {
+                direction.X += (int)(4.0f * controller->LeftStickAverageX);
+                direction.Y -= (int)(4.0f * controller->LeftStickAverageY);
+            }
+            else
+            {
+                if (controller->MoveLeft.EndedDown)
+                    direction.X -= 1;
+                if (controller->MoveRight.EndedDown)
+                    direction.X += 1;
+                if (controller->MoveUp.EndedDown)
+                    direction.Y -= 1;
+                if (controller->MoveDown.EndedDown)
+                    direction.Y += 1;
+            }
+
+            MoveEntity(game_state, player, input->DeltaTime, direction);
         }
         else
         {
-            if (controller->MoveLeft.EndedDown)
-                direction.X -= 1;
-            if (controller->MoveRight.EndedDown)
-                direction.X += 1;
-            if (controller->MoveUp.EndedDown)
-                direction.Y -= 1;
-            if (controller->MoveDown.EndedDown)
-                direction.Y += 1;
+            if (controller->Start.EndedDown)
+            {
+                uint32 player_index = AddEntity(game_state);
+                InitializePlayer(game_state, player_index);
+                game_state->EntityIndexPlayers[controller_index] = player_index;
+            }
         }
-
-        if (direction != V2rZero())
-            Normalize(direction);
-
-        real32 friction_coeficient = 1.75f;
-        V2r friction = friction_coeficient * game_state->PlayerVelocity;
-        V2r velocity = direction * tank_speed - friction;
-
-        WorldPosition next_player_position = game_state->PlayerPosition;
-        V2r step = game_state->PlayerVelocity * input->DeltaTime
-            + (0.5f * velocity * (input->DeltaTime * input->DeltaTime));
-        next_player_position.TileRelative += step;
-        game_state->PlayerVelocity += velocity * input->DeltaTime;
-
-        next_player_position = NormalizeWorldPosition(&world,
-            next_player_position);
-
-        WorldPosition player_position_bottom_left = next_player_position;
-        player_position_bottom_left.TileRelative.X -= 0.5f * tank_width;
-        player_position_bottom_left.TileRelative.Y += 0.5f * tank_height;
-        player_position_bottom_left = NormalizeWorldPosition(&world,
-            player_position_bottom_left);
-
-        WorldPosition player_position_bottom_right = next_player_position;
-        player_position_bottom_right.TileRelative.X += 0.5f * tank_width;
-        player_position_bottom_right.TileRelative.Y += 0.5f * tank_height;
-        player_position_bottom_right = NormalizeWorldPosition(&world,
-            player_position_bottom_right);
-
-        WorldPosition player_position_top_left = next_player_position;
-        player_position_top_left.TileRelative.X -= 0.5f * tank_width;
-        player_position_top_left.TileRelative.Y -= 0.5f * tank_height;
-        player_position_top_left = NormalizeWorldPosition(&world, player_position_top_left);
-
-        WorldPosition player_position_top_right = next_player_position;
-        player_position_top_right.TileRelative.X += 0.5f * tank_width;
-        player_position_top_right.TileRelative.Y -= 0.5f * tank_height;
-        player_position_top_right = NormalizeWorldPosition(&world, player_position_top_right);
-
-        bool32 bottom_left_is_empty = IsWorldPointEmpty(&world, player_position_bottom_left);
-        bool32 bottom_middle_is_emtpy = IsWorldPointEmpty(&world, next_player_position);
-        bool32 bottom_right_is_empty = IsWorldPointEmpty(&world, player_position_bottom_right);
-        bool32 top_left_is_empty = IsWorldPointEmpty(&world, player_position_top_left);
-        bool32 top_right_is_empty = IsWorldPointEmpty(&world, player_position_top_right);
-
-        bool32 collided = false;
-        WorldPosition collision_position = {};
-        if (!bottom_left_is_empty)
-        {
-            collision_position = player_position_bottom_left;
-            collided = true;
-        }
-        if (!bottom_right_is_empty)
-        {
-            collision_position = player_position_bottom_right;
-            collided = true;
-        }
-        if (!top_left_is_empty)
-        {
-            collision_position = player_position_top_left;
-            collided = true;
-        }
-        if (!top_right_is_empty)
-        {
-            collision_position = player_position_top_right;
-            collided = true;
-        }
-
-
-        if (collided && (collision_position.Tilemap.X == game_state->PlayerPosition.Tilemap.X)
-            && (collision_position.Tilemap.Y == game_state->PlayerPosition.Tilemap.Y))
-        {
-            V2r r = { 0, 0 };
-            if (collision_position.Tile.X < game_state->PlayerPosition.Tile.X)
-                r = V2r { 1, 0 };
-            if (collision_position.Tile.X > game_state->PlayerPosition.Tile.X)
-                r = V2r { -1, 0 };
-            if (collision_position.Tile.Y < game_state->PlayerPosition.Tile.Y)
-                r = V2r { 0, 1 };
-            if (collision_position.Tile.Y > game_state->PlayerPosition.Tile.Y)
-                r = V2r { 0, -1 };
-
-            game_state->PlayerVelocity -= 2 * r
-                * DotProduct(game_state->PlayerVelocity, r);
-        }
-
-        if (bottom_left_is_empty && bottom_middle_is_emtpy && bottom_right_is_empty
-            && top_left_is_empty && top_right_is_empty && !collided)
-            game_state->PlayerPosition = next_player_position;
     }
 
-    V2r player_position = world.Origin
-        + game_state->PlayerPosition.Tile * world.TileSidePixels
-        + game_state->PlayerPosition.TileRelative * world.GameUnits2Pixels;
-    V2r player_left_top = player_position
-        - (V2r{ tank_width, tank_height } * 0.5f) * world.GameUnits2Pixels;
-    V2r player_right_bottom = player_position
-        + (V2r{ tank_width, tank_height } * 0.5f) * world.GameUnits2Pixels;
+    Entity* player1 = GetEntity(game_state, game_state->EntityIndexCameraTarget);
+    if (player1)
+    {
+        real32 game_units2pixels = game_state->World->Tilemaps[
+            game_state->World->TilemapIndex].GameUnits2Pixels;
+        V2r player_half_size = player1->Size * 0.5f * game_units2pixels;
+        V2r player_position = game_state->World->Origin
+            + player1->Position.Tile * tile_side_pixels
+            + player1->Position.Offset * game_units2pixels;
+        V2r player_left_top = player_position - player_half_size;
+        V2r player_right_bottom = player_position + player_half_size;
 
-    V3r collider_color = { 0, 1, 0 };
-    DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
-        collider_visual_width, collider_color);
+        DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
+            player1->Size * game_units2pixels);
 
-    V2r tank_scale = V2rOne() * 0.25f;
-    V2r player_center = player_left_top
-        + (V2r{ tank_width, tank_height } * world.GameUnits2Pixels * 0.5f);
-    DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
-         V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
+        V3r collider_color = { 0, 1, 0 };
+        DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
+            collider_visual_width, collider_color);
+    }
 
-    game_state->EnemyPosition = NormalizeWorldPosition(&world, game_state->EnemyPosition);
-    V2r enemy_left_top = world.Origin
-        + game_state->EnemyPosition.Tile * world.TileSidePixels
-        + game_state->EnemyPosition.TileRelative * world.GameUnits2Pixels;
-    V2r enemy_right_bottom = enemy_left_top
-        + V2r{ tank_width, tank_height } * world.GameUnits2Pixels;
-    DrawWireRectangle(display_buffer, enemy_left_top, enemy_right_bottom,
-        collider_visual_width, collider_color);
-    DrawPngImage(display_buffer, &game_state->TankImage, enemy_left_top,
-        V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
+    // Enemy visualization
+    // game_state->EnemyPosition = NormalizeWorldPosition(&world, game_state->EnemyPosition);
+    // V2r enemy_left_top = world.Origin
+    //     + game_state->EnemyPosition.Tile * world.TileSidePixels
+    //     + game_state->EnemyPosition.TileRelative * world.GameUnits2Pixels;
+    // V2r enemy_right_bottom = enemy_left_top
+    //     + V2r{ tank_width, tank_height } * world.GameUnits2Pixels;
+    // DrawWireRectangle(display_buffer, enemy_left_top, enemy_right_bottom,
+    //     collider_visual_width, collider_color);
+    // DrawPngImage(display_buffer, &game_state->TankImage, enemy_left_top,
+    //     V2r{ tank_width, tank_height } * world.GameUnits2Pixels);
 
     // Camera area visualization
     // V2r camera_position = world.Origin
