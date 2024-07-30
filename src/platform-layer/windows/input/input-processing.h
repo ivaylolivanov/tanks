@@ -199,7 +199,6 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
 
                     case VK_ESCAPE:
                     {
-                        ProcessButtonState(&keyboard->Start, is_down);
                         OutputDebugStringA("You have pressed ESC key.\n");
                     } break;
 
@@ -211,6 +210,7 @@ Internal void ProcessKeyboard(WindowsState* state, ControllerState *keyboard)
 
                     case VK_RETURN:
                     {
+                        ProcessButtonState(&keyboard->Start, is_down);
                         OutputDebugStringA("You have pressed RETURN key.\n");
                     } break;
 
