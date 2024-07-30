@@ -13,6 +13,32 @@
 #define GIGABYTES(value) (MEGABYTES(value)*1024LL)
 #define TERABYTES(value) (GIGABYTES(value)*1024LL)
 
+struct MemorySection
+{
+    memoryIndex Size;
+    uint8* Base;
+    memoryIndex Used;
+};
+
+Internal void InitializeMemory(MemorySection* section, memoryIndex size,
+    uint8 *base)
+{
+    section->Size = size;
+    section->Used = 0;
+    section->Base = base;
+}
+
+#define AllocateStruct(section, type) (type*)AllocateSize(section, sizeof(type))
+#define AllocateArray(section, count, type) (type*)AllocateSize(section, count * sizeof(type))
+void* AllocateSize(MemorySection* section, memoryIndex size)
+{
+    Assert((section->Used + size) <= section->Size);
+    void* result = section->Base + section->Used;
+    section->Used += size;
+
+    return result;
+}
+
 inline uint32 TruncateUInt64(uint64 Value)
 {
     Assert(Value <= 0xFFFFFFFF);
@@ -60,6 +86,9 @@ struct World
 
 struct GameState
 {
+    MemorySection GameMemory;
+    World* World;
+
     Image TankImage;
 
     int ToneHz;

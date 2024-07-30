@@ -382,6 +382,17 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     GameState* game_state = (GameState *)memory->PermanentStorage;
     if (!memory->IsInitialized)
     {
+        InitializeMemory(&game_state->GameMemory,
+            memory->PermanentStorageSize - sizeof(GameState),
+            (uint8*)memory->PermanentStorage + sizeof(GameState));
+        game_state->World = AllocateStruct(&game_state->GameMemory, World);
+        World* world = game_state->World;
+        world->Origin = V2rZero();
+        world->TilemapIndex = 0;
+        world->Tilemaps = AllocateArray(
+            &game_state->GameMemory,
+            ArrayCount(TILES),
+            Tilemap);
         char* tank_png_relative_path = "tank-baw.png";
         ReadFileResult raw_png = memory->ReadFile(thread, tank_png_relative_path);
         Stream raw_png_stream = {};
