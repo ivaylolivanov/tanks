@@ -13,6 +13,9 @@
 #define GIGABYTES(value) (MEGABYTES(value)*1024LL)
 #define TERABYTES(value) (GIGABYTES(value)*1024LL)
 
+#define MIN(a, b) ((a < b) ? (a) : (b))
+#define MAX(a, b) ((a > b) ? (a) : (b))
+
 struct MemorySection
 {
     memoryIndex Size;
