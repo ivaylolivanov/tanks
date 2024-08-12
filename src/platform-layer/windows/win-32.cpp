@@ -304,6 +304,21 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
                 SetCursor(0);
         } break;
 
+        case WM_SIZE:
+        {
+            UINT width = LOWORD(l_param);
+            UINT height = HIWORD(l_param);
+            ResizeBuffer(&BACK_BUFFER, width, height);
+
+            char dbg_msg_buffer[256];
+            sprintf_s(
+                dbg_msg_buffer,
+                "Game window's dimension set to w:%u, h:%u.\n",
+                width,
+                height);
+            OutputDebugStringA(dbg_msg_buffer);
+        } break;
+
         case WM_ACTIVATEAPP:
         {
             // if (w_param == TRUE)
