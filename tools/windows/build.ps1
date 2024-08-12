@@ -159,13 +159,12 @@ function main
     $gameEntryPointFilepath = "${sourceDir}/tanks.cpp";
     $windowsEntryPointFilepath = "${sourceDir}/platform-layer/windows/win-32.cpp";
 
-    Remove-Item "${workingDir}\*.pdb" -Force -Verbose `
-        -ErrorAction SilentlyContinue;
-    New-Item -Path "$workingDir" -ItemType Directory -Force;
+    Remove-Item "${workingDir}\*.pdb" -Force -ErrorAction SilentlyContinue;
+    $newItemOutput = New-Item -Path "$workingDir" -ItemType Directory -Force;
 
     $initialLocation = (Get-Location).Path;
 
-    $buildStatus = BuildProject -workingDirectory "$workingDir" `
+    $buildOutput = BuildProject -workingDirectory "$workingDir" `
         -gameEntryPoint "$gameEntryPointFilepath"               `
         -windowsEntryPoint "$windowsEntryPointFilepath";
 
