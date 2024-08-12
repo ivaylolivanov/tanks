@@ -168,8 +168,10 @@ function main
         -gameEntryPoint "$gameEntryPointFilepath"               `
         -windowsEntryPoint "$windowsEntryPointFilepath";
 
+    $buildStatus = $?;
+
     Set-Location -Path "$initialLocation";
-    if ($buildStatus -ne $null) { return 3; }
+    if (!$buildStatus) { return 3; }
 
     return 0;
 }
