@@ -126,6 +126,7 @@ struct GameInput
 {
     ButtonState MouseButtons[5];
     int32 MouseX, MouseY, MouseZ;
+    int32 MouseDeltaX, MouseDeltaY, MouseDeltaZ;
 
     real32 DeltaTime;
 

@@ -91,11 +91,17 @@ Internal void ProcessButtonState(ButtonState* state, bool32 is_down)
 
 Internal void ProcessMouse(HWND window, GameInput* input_new)
 {
-    POINT MouseP;
-    GetCursorPos(&MouseP);
-    ScreenToClient(window, &MouseP);
-    input_new->MouseX = MouseP.x;
-    input_new->MouseY = MouseP.y;
+    POINT mouse_position;
+    GetCursorPos(&mouse_position);
+    ScreenToClient(window, &mouse_position);
+
+    input_new->MouseDeltaX = input_new->MouseX - mouse_position.x;
+    input_new->MouseDeltaY = input_new->MouseY - mouse_position.y;
+    // TODO: When implemented scroll in/out:
+    // input_new->MouseDeltaZ = input_new->MouseZ;
+
+    input_new->MouseX = mouse_position.x;
+    input_new->MouseY = mouse_position.y;
     input_new->MouseZ = 0; // Scroll wheel
 
     SHORT mouse_button_left   = GetKeyState(VK_LBUTTON) & (1 << 15);
