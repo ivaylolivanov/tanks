@@ -134,7 +134,7 @@ function BuildProject
     & "$compiler" $argumentsGame | ForEach-Object { Write-Host $_ };
     & "$compiler" $argumentsWindows | ForEach-Object { Write-Host $_ };
 
-    return 0;#$buildStatus;
+    return 0;
 }
 
 function main
