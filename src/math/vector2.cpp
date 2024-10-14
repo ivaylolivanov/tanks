@@ -112,6 +112,9 @@ inline bool32 operator==(V2i a, V2i b)
 inline void Normalize(V2r& vector)
 {
     real32 lenght = (real32) sqrt(vector.X * vector.X + vector.Y * vector.Y);
+    if (lenght <= 0)
+        return;
+
     vector.X /= lenght;
     vector.Y /= lenght;
 }
