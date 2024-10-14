@@ -1,12 +1,5 @@
 #include "vector2.h"
 
-inline void Normalize(V2i& vector)
-{
-    int32 lenght = (int32)sqrt(vector.X * vector.X + vector.Y * vector.Y);
-    vector.X /= lenght;
-    vector.Y /= lenght;
-}
-
 inline int32 DotProduct(V2i a, V2i b)
 {
     int32 result = a.X * b.X + a.Y & b.Y;

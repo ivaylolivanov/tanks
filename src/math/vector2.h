@@ -28,7 +28,6 @@ union V2r
     real32 Values[2];
 };
 
-void Normalize(V2i& vector);
 int32 DotProduct(V2i a, V2i b);
 
 V2i operator+(V2i a, V2i b);
