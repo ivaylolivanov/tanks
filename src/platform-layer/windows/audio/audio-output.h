@@ -168,16 +168,16 @@ Internal void PrintSoundDebugInfo(TimeMarker* marker, SoundOutput* sound_output,
         / (real32)sound_output->BytesPerSample)
         / sound_output->SamplesPerSecond;
 
-    char text_buffer[256];
-    _snprintf_s(
-        text_buffer,
-        sizeof(text_buffer),
-        "LPC: %u BTL: %u TC: %u BTW: %u - PC: %u WC: %u DELTA: %u (%fs)\n",
-        LAST_PLAY_CURSOR, marker->OutputLocation, target_cursor,
-        marker->OutputByteCount, marker->OutputPlayCursor,
-        marker->OutputWriteCursor, audio_latency_bytes,
-        audio_latency_seconds);
-    OutputDebugString(text_buffer);
+    /* char text_buffer[256]; */
+    /* _snprintf_s( */
+    /*     text_buffer, */
+    /*     sizeof(text_buffer), */
+    /*     "LPC: %u BTL: %u TC: %u BTW: %u - PC: %u WC: %u DELTA: %u (%fs)\n", */
+    /*     LAST_PLAY_CURSOR, marker->OutputLocation, target_cursor, */
+    /*     marker->OutputByteCount, marker->OutputPlayCursor, */
+    /*     marker->OutputWriteCursor, audio_latency_bytes, */
+    /*     audio_latency_seconds); */
+    /* OutputDebugString(text_buffer); */
 }
 
 #endif

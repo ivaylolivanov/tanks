@@ -310,13 +310,13 @@ Internal LRESULT CALLBACK WindowProc(HWND window, UINT message, WPARAM w_param,
             UINT height = HIWORD(l_param);
             ResizeBuffer(&BACK_BUFFER, width, height);
 
-            char dbg_msg_buffer[256];
-            sprintf_s(
-                dbg_msg_buffer,
-                "Game window's dimension set to w:%u, h:%u.\n",
-                width,
-                height);
-            OutputDebugStringA(dbg_msg_buffer);
+            // char dbg_msg_buffer[256];
+            // sprintf_s(
+            //     dbg_msg_buffer,
+            //     "Game window's dimension set to w:%u, h:%u.\n",
+            //     width,
+            //     height);
+            // OutputDebugStringA(dbg_msg_buffer);
         } break;
 
         case WM_ACTIVATEAPP:
@@ -643,9 +643,9 @@ int WINAPI WinMain(HINSTANCE instance, HINSTANCE prev_instance, LPSTR cmd_line, 
         real64 fps = 0.0f;
         real64 mc_per_frame = (real64)cycles_elapsed / (1000.0f * 1000.0f);
 
-        char dbg_msg_buffer[256];
-        sprintf_s(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
-        OutputDebugStringA(dbg_msg_buffer);
+        // char dbg_msg_buffer[256];
+        // sprintf_s(dbg_msg_buffer, "%.02fms/f,  %.02ff/s,  %.02fmc/f\n", ms_per_frame, fps, mc_per_frame);
+        // OutputDebugStringA(dbg_msg_buffer);
 
         ++time_marker_index;
         if (time_marker_index == ArrayCount(time_markers))
