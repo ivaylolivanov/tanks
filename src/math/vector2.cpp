@@ -216,3 +216,105 @@ inline bool32 operator==(V2r a, V2r b)
 
     return result;
 }
+
+inline uint32 DotProduct(V2u a, V2u b)
+{
+    uint32 result = a.X * b.X + a.Y & b.Y;
+    return result;
+}
+
+inline V2u operator+(V2u a, V2u b)
+{
+    V2u result;
+    result.X = a.X + b.X;
+    result.Y = a.Y + b.Y;
+
+    return result;
+}
+
+inline V2u &operator+=(V2u &a, V2u b)
+{
+    a = a + b;
+    return a;
+}
+
+inline V2u operator-(V2u a, V2u b)
+{
+    V2u result;
+    result.X = a.X - b.X;
+    result.Y = a.Y - b.Y;
+
+    return result;
+}
+
+inline V2u &operator-=(V2u &a, V2u b)
+{
+    a = a - b;
+    return a;
+}
+
+inline V2u operator*(V2u a, uint32 b)
+{
+    V2u result;
+    result.X = a.X * b;
+    result.Y = a.Y * b;
+
+    return result;
+}
+
+inline V2u &operator*=(V2u &a, uint32 b)
+{
+    a = a * b;
+    return a;
+}
+
+inline V2u operator*(uint32 a, V2u b)
+{
+    V2u result;
+    result.X = b.X * a;
+    result.Y = b.Y * a;
+
+    return result;
+}
+
+inline V2u operator*(V2u a, real32 b)
+{
+    V2u result;
+    result.X = (uint32)(a.X * b);
+    result.Y = (uint32)(a.Y * b);
+
+    return result;
+}
+
+inline V2u &operator*=(V2u &a, real32 b)
+{
+    a = a * b;
+    return a;
+}
+
+inline V2u operator*(real32 a, V2u b)
+{
+    V2u result;
+    result.X = (uint32)a * b.X;
+    result.Y = (uint32)a * b.Y;
+
+    return result;
+}
+
+inline bool32 operator!=(V2u a, V2u b)
+{
+    bool32 result = false;
+
+    result = (a.X != b.X) && (a.Y != b.Y);
+
+    return result;
+}
+
+inline bool32 operator==(V2u a, V2u b)
+{
+    bool32 result = false;
+
+    result = (a.X == b.X) && (a.Y == b.Y);
+
+    return result;
+}
