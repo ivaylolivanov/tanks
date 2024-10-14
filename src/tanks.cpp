@@ -1,93 +1,93 @@
 #include "tanks.h"
 
-#define TILEMAP_WIDTH 33
+#define TILEMAP_WIDTH 32
 #define TILEMAP_HEIGHT 18
 
 uint32 TILES[4][TILEMAP_HEIGHT * TILEMAP_WIDTH] =
 {
 
 {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 },
 
 {
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 },
 
 {
-    1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 },
 
 {
-    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
-    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1,
-    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
+    1, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 1, 1, 0, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 1,
+    0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
 }
 
 };
@@ -191,24 +191,30 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
 
 inline void NormalizeCoordinate(Tilemap* tilemap, int32* tile, real32* relative)
 {
-    int32 offset = FloorReal32ToInt32(*relative / tilemap->TileSideGameUnits);
+    int32 offset = FloorReal32ToInt32(*relative / tilemap->TileSide);
     *tile += offset;
-    *relative -= offset * tilemap->TileSideGameUnits;
+    *relative -= offset * tilemap->TileSide;
 
     Assert(*relative >= 0);
-    Assert(*relative <= tilemap->TileSideGameUnits);
+    Assert(*relative <= tilemap->TileSide);
 }
 
-inline Position NormalizePosition(Tilemap* tilemap, Position position)
+// inline void Position2Tile(Tilemap* tilemap, Position* position)
+inline V2i Position2Tile(V2r position, real32 tile_side)
 {
-    Position result = position;
+    // TODO: Validate position;
+    V2i result = { 0, 0 };
 
-    NormalizeCoordinate(tilemap, &result.Tile.X, &result.Offset.X);
-    NormalizeCoordinate(tilemap, &result.Tile.Y, &result.Offset.Y);
+    result = V2i
+    {
+        TruncateReal32ToInt32(position.X / tile_side),
+        TruncateReal32ToInt32(position.Y / tile_side)
+    };
 
     return result;
 }
 
+// TODO: Use V2u instead V2i
 Internal uint32 GetTileValue(Tilemap* tilemap, V2i tile)
 {
     Assert(tilemap);
@@ -339,33 +345,141 @@ Internal void InitializeMainCamera(GameState* game_state, uint32 index)
     game_state->EntityIndexMainCamera = index;
     main_camera->Enabled = true;
     main_camera->Position.Tile = V2i { TILEMAP_WIDTH / 2, TILEMAP_HEIGHT / 2 };
-    main_camera->Position.Offset = { 0, 0 };
-    main_camera->Size = V2r { 20, 15 };
+    main_camera->Position.Absolute = V2r { 0, 0 };
+    main_camera->Size = V2r { TILEMAP_WIDTH, TILEMAP_HEIGHT };
 }
 
-Internal void InitializePlayer(GameState* game_state, uint32 index)
+Internal void InitializePlayer(GameState* game_state, uint32 index, V2r size)
 {
     Entity* player = GetEntity(game_state, index);
     player->Enabled = true;
-    player->Position.Tile = { 10, 10 };
-    player->Position.Offset = { 5.0f, 5.0f };
+    player->Position.Absolute = { 600.0f, 600.0f };
+    Tilemap tilemap = game_state->World->Tilemaps[game_state->World->TilemapIndex];
+    player->Position.Tile = Position2Tile(player->Position.Absolute,
+        tilemap.TileSide);
 
-    real32 tank_height = 1.4f;
-    real32 tank_width = 0.65f * tank_height;
-    player->Size = V2r{ tank_width, tank_height };
+    player->Size = size;
 
     if (!game_state->EntityIndexCameraTarget)
         game_state->EntityIndexCameraTarget = index;
 }
 
+Internal bool32 CheckCollision(real32 intersection_limit,
+    real32 intersection_relative, real32 projection_relative,
+    V2r projection_limit, real32 intersection_step, real32 projection_step, real32 *fraction)
+{
+    real32 epsilon = 0.001f;
+    bool32 has_collided = false;
+    if (intersection_step == 0)
+        return has_collided;
+
+    real32 intersection = (intersection_limit - intersection_relative) / intersection_step;
+    real32 projection = projection_relative + intersection * projection_step;
+    if ((intersection >= 0.0f) && (*fraction > intersection))
+    {
+        if ((projection >= projection_limit.Min) && (projection <= projection_limit.Max))
+        {
+            *fraction = MAX(0.0f, intersection - epsilon);
+            has_collided = true;
+        }
+    }
+
+    return has_collided;
+}
+
+Internal void GetClosestFreePosition(Entity* entity, Position next_position,
+    Tilemap* tilemap)
+{
+    V2r step = next_position.Absolute - entity->Position.Absolute;
+
+    // real32 rebound_force = 3;
+    // V2r wall_normal = {};
+
+    real32 t_min_x = 1.0f;
+    real32 t_min_y = 1.0f;
+    real32 t_min_y_precheck = 1.0f;
+    V2r tile_min = V2rZero();
+    V2r tile_max = V2rOne() * tilemap->TileSide;
+
+    // V2i oposite_direction = entity->Position.Tile - next_position.Tile;
+    V2i tiles_range[] =
+    {
+        V2i {next_position.Tile.X, entity->Position.Tile.Y},
+        V2i {entity->Position.Tile.X, next_position.Tile.Y},
+        next_position.Tile
+    };
+
+    for (int i = 0; i < ArrayCount(tiles_range); ++i)
+    {
+        V2i tile_test = tiles_range[i];
+
+        Position position_test;
+        position_test.Tile = tile_test;
+        position_test.Absolute = V2r
+        {
+            (real32)position_test.Tile.X * tilemap->TileSide,
+            (real32)position_test.Tile.Y * tilemap->TileSide
+        };
+
+        if (IsTileEmpty(tilemap, position_test))
+            continue;
+
+        V2r position_diff = entity->Position.Absolute - position_test.Absolute;
+
+        // Pre-check the Y axis.
+        CheckCollision(tile_min.Y, position_diff.Y,
+            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X,
+            &t_min_y_precheck);
+        CheckCollision(tile_max.Y, position_diff.Y,
+            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X,
+            &t_min_y_precheck);
+
+        bool32 has_collided_left = CheckCollision(tile_min.X, position_diff.X,
+            position_diff.Y, V2r { tile_min.Y, tile_max.Y }, step.X, step.Y * t_min_y_precheck,
+            &t_min_x);
+        bool32 has_collided_right = CheckCollision(tile_max.X, position_diff.X,
+            position_diff.Y, V2r { tile_min.Y, tile_max.Y }, step.X, step.Y * t_min_y_precheck,
+            &t_min_x);
+        bool32 has_collided_top = CheckCollision(tile_min.Y, position_diff.Y,
+            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X * t_min_x,
+            &t_min_y);
+        bool32 has_collided_bottom = CheckCollision(tile_max.Y, position_diff.Y,
+            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X * t_min_x,
+            &t_min_y);
+
+            // if (has_collided_left)
+            //     wall_normal.X = -1;
+
+            // if (has_collided_right)
+            //     wall_normal.X = 1;
+
+            // if (has_collided_top)
+            //     wall_normal.Y = -1;
+
+            // if (has_collided_bottom)
+            //     wall_normal.Y = 1;
+        // }
+    }
+
+    next_position = entity->Position;
+    next_position.Absolute += V2r{ t_min_x * step.X, t_min_y * step.Y };
+    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
+    if (IsTileEmpty(tilemap, next_position))
+        entity->Position = next_position;
+
+    // entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
+    // step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+}
+
 Internal void MoveEntity(GameState* game_state, Entity* entity,
     real32 delta_time, V2r direction)
 {
-    if (direction != V2rZero())
+    real32 direction_length_sqr = DotProduct(direction, direction);
+    if (direction_length_sqr > 1)
         Normalize(direction);
 
     real32 friction_coeficient = 3;
-    real32 default_speed = 16;
+    real32 default_speed = 250;
     Tilemap* tilemap = &game_state->World->Tilemaps[
         game_state->World->TilemapIndex];
 
@@ -375,75 +489,15 @@ Internal void MoveEntity(GameState* game_state, Entity* entity,
     Position next_position = entity->Position;
     V2r step = entity->Velocity * delta_time
         + (0.5f * velocity * (delta_time * delta_time));
-    next_position.Offset += step;
+    next_position.Absolute += step;
+    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
     entity->Velocity += velocity * delta_time;
 
-    next_position = NormalizePosition(tilemap, next_position);
-
-    Position bottom_left = next_position;
-    bottom_left.Offset.X -= 0.5f * entity->Size.Width;
-    bottom_left.Offset.Y += 0.5f * entity->Size.Height;
-    bottom_left = NormalizePosition(tilemap, bottom_left);
-
-    Position bottom_right = next_position;
-    bottom_right.Offset += 0.5f * entity->Size;
-    bottom_right = NormalizePosition(tilemap, bottom_right);
-
-    Position top_left = next_position;
-    top_left.Offset -= 0.5f * entity->Size;
-    top_left = NormalizePosition(tilemap, top_left);
-
-    Position top_right = next_position;
-    top_right.Offset.X += 0.5f * entity->Size.Width;
-    top_right.Offset.Y -= 0.5f * entity->Size.Height;
-    top_right = NormalizePosition(tilemap, top_right);
-
-    bool32 is_empty_bottom_left   = IsTileEmpty(tilemap, bottom_left);
-    bool32 is_empty_bottom_right  = IsTileEmpty(tilemap, bottom_right);
-    bool32 is_empty_top_left      = IsTileEmpty(tilemap, top_left);
-    bool32 is_empty_top_right     = IsTileEmpty(tilemap, top_right);
-
-    bool32 collided = (!is_empty_bottom_left)
-        || (!is_empty_bottom_right)
-        || (!is_empty_top_left)
-        || (!is_empty_top_right);
-    Position collision_position = {};
-    if (!is_empty_bottom_left)
-        collision_position = bottom_left;
-
-    if (!is_empty_bottom_right)
-        collision_position = bottom_right;
-
-    if (!is_empty_top_left)
-        collision_position = top_left;
-
-    if (!is_empty_top_right)
-        collision_position = top_right;
-
-    if (collided)
-    {
-        V2r reflection = { 0, 0 };
-        if (collision_position.Tile.X < entity->Position.Tile.X)
-            reflection.X = 1;
-        if (collision_position.Tile.X > entity->Position.Tile.X)
-            reflection.X = -1;
-        if (collision_position.Tile.Y < entity->Position.Tile.Y)
-            reflection.Y = 1;
-        if (collision_position.Tile.Y > entity->Position.Tile.Y)
-            reflection.Y = -1;
-
-        Normalize(reflection);
-        entity->Velocity -= 1.5f * reflection
-            * DotProduct(entity->Velocity, reflection);
-    }
-    else
-    {
-        entity->Position = next_position;
-    }
+    GetClosestFreePosition(entity, next_position, tilemap);
 }
 
-extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameInput *input,
-    GameBackBuffer *display_buffer)
+extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
+    GameInput *input, GameBackBuffer *display_buffer)
 {
     Assert((&input->Controller[0].MAX - &input->Controller[0].Buttons[0])
         == ArrayCount(input->Controller[0].Buttons));
@@ -479,10 +533,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             Tilemap* tilemap = &world->Tilemaps[tilemap_index];
             tilemap->Tiles = AllocateArray(&game_state->GameMemory, tiles_count, uint32);
             tilemap->Size = V2i { TILEMAP_WIDTH, TILEMAP_HEIGHT };
-            tilemap->TileSidePixels = 60;
-            tilemap->TileSideGameUnits = 1.4f;
-            tilemap->GameUnits2Pixels = (real32)tilemap->TileSidePixels
-                / (real32)tilemap->TileSideGameUnits;
+            tilemap->TileSide = (real32)((int32)(display_buffer->Width / tilemap->Size.Width));
 
             for (int row = 0; row < TILEMAP_HEIGHT; ++row)
             {
@@ -510,8 +561,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
 
     Tilemap* tilemap = &game_state->World->Tilemaps[
         game_state->World->TilemapIndex];
-    real32 tile_side_pixels = game_state->World->Tilemaps[
-        game_state->World->TilemapIndex].TileSidePixels;
+    tilemap->TileSide = (real32)(display_buffer->Width / tilemap->Size.Width);
 
     for (int relative_row = -(int)main_camera->Size.Height;
          relative_row < (int)main_camera->Size.Height;
@@ -530,8 +580,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             if (tile_id == 1)
                 tile_color = { 1.0f, 1.0f, 1.0f };
 
-            V2r min = game_state->World->Origin + tile * tile_side_pixels;
-            V2r max = min + V2rOne() * tile_side_pixels;
+            V2r min = game_state->World->Origin + tile * tilemap->TileSide;
+            V2r max = min + V2rOne() * tilemap->TileSide;
             DrawRectangle(display_buffer, min, max, tile_color);
 
             V3r color = { 0.34f, 0.71f, 0.12f };
@@ -549,6 +599,12 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             game_state->EntityIndexPlayers[controller_index]);
         if (player)
         {
+            if (controller->Start.EndedDown)
+            {
+                player->Position.Absolute = V2r { 600.0f, 600.0f };
+                player->Position.Tile = Position2Tile(player->Position.Absolute, tilemap->TileSide);
+            }
+
             V2r direction = V2rZero();
             if (controller->IsAnalog)
             {
@@ -574,7 +630,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
             if (controller->Start.EndedDown)
             {
                 uint32 player_index = AddEntity(game_state);
-                InitializePlayer(game_state, player_index);
+                V2r player_size = V2r { 0.6f, 0.9f } * tilemap->TileSide;
+                InitializePlayer(game_state, player_index, player_size);
                 game_state->EntityIndexPlayers[controller_index] = player_index;
             }
         }
@@ -583,17 +640,24 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory, GameI
     Entity* player1 = GetEntity(game_state, game_state->EntityIndexCameraTarget);
     if (player1)
     {
-        real32 game_units2pixels = game_state->World->Tilemaps[
-            game_state->World->TilemapIndex].GameUnits2Pixels;
-        V2r player_half_size = player1->Size * 0.5f * game_units2pixels;
+        V2r player_half_size = player1->Size * 0.5f;
         V2r player_position = game_state->World->Origin
-            + player1->Position.Tile * tile_side_pixels
-            + player1->Position.Offset * game_units2pixels;
+            + player1->Position.Absolute;
         V2r player_left_top = player_position - player_half_size;
         V2r player_right_bottom = player_position + player_half_size;
 
+        V2r player_tile_absolute = V2r
+        {
+            player1->Position.Tile.X * tilemap->TileSide,
+            player1->Position.Tile.Y * tilemap->TileSide
+        };
+
+        DrawRectangle(display_buffer, player_tile_absolute,
+            player_tile_absolute + V2rOne() * tilemap->TileSide,
+            V3r{ 0.25f, 0.25f, 0.25f});
+
         DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
-            player1->Size * game_units2pixels);
+            player1->Size);
 
         V3r collider_color = { 0, 1, 0 };
         DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
