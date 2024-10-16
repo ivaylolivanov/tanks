@@ -366,22 +366,23 @@ Internal void InitializePlayer(GameState* game_state, uint32 index, V2r size)
 
 Internal bool32 CheckCollision(real32 intersection_limit,
     real32 intersection_relative, real32 projection_relative,
-    V2r projection_limit, real32 intersection_step, real32 projection_step, real32 *fraction)
+    V2r projection_limit, real32 intersection_step, real32 projection_step,
+    real32 *fraction)
 {
     real32 epsilon = 0.001f;
     bool32 has_collided = false;
     if (intersection_step == 0)
         return has_collided;
 
-    real32 intersection = (intersection_limit - intersection_relative) / intersection_step;
+    real32 intersection = (intersection_limit - intersection_relative)
+        / intersection_step;
     real32 projection = projection_relative + intersection * projection_step;
     if ((intersection >= 0.0f) && (*fraction > intersection))
     {
-        if ((projection >= projection_limit.Min) && (projection <= projection_limit.Max))
-        {
+        has_collided = (projection >= projection_limit.Min)
+            && (projection <= projection_limit.Max);
+        if (has_collided)
             *fraction = MAX(0.0f, intersection - epsilon);
-            has_collided = true;
-        }
     }
 
     return has_collided;
