@@ -402,7 +402,6 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
     V2r tile_min = V2rZero();
     V2r tile_max = V2rOne() * tilemap->TileSide;
 
-    // V2i oposite_direction = entity->Position.Tile - next_position.Tile;
     V2i tiles_range[] =
     {
         V2i {next_position.Tile.X, entity->Position.Tile.Y},
