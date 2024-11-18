@@ -393,7 +393,9 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
 {
     V2r step = next_position.Absolute - entity->Position.Absolute;
 
+    // TODO: Move as constant
     real32 rebound_force = 3;
+
     V2r wall_normal = {};
 
     real32 t_min_x = 1.0f;
@@ -477,6 +479,7 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     if (direction_length_sqr > 1)
         Normalize(direction);
 
+    // TODO: Move as constants
     real32 friction_coeficient = 3;
     real32 default_speed = 250;
 
