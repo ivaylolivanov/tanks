@@ -470,7 +470,7 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
     step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
 }
 
-Internal void MoveEntity(GameState* game_state, Entity* entity,
+Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     real32 delta_time, V2r direction)
 {
     real32 direction_length_sqr = DotProduct(direction, direction);
@@ -479,8 +479,6 @@ Internal void MoveEntity(GameState* game_state, Entity* entity,
 
     real32 friction_coeficient = 3;
     real32 default_speed = 250;
-    Tilemap* tilemap = &game_state->World->Tilemaps[
-        game_state->World->TilemapIndex];
 
     V2r friction = friction_coeficient * entity->Velocity;
     V2r velocity = direction * default_speed - friction;
@@ -622,7 +620,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
                     direction.Y += 1;
             }
 
-            MoveEntity(game_state, player, input->DeltaTime, direction);
+            MoveEntity(tilemap, player, input->DeltaTime, direction);
         }
         else
         {
