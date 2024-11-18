@@ -470,6 +470,22 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
 
     entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
     step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+Internal Position CalculateNextPosition(Position current, V2r velocity_current,
+    V2r velocity_new, real32 tile_side, real32 delta_time)
+{
+    Position position = current;
+    /*
+    NOTE: The original equation of displacement S = u * t + 1/2 * a * t ^ 2
+    In this case:
+    - velocity_current = u * t, where t is 'delta_time'
+    - velocity_new     = a * t, where t is 'delta_time'
+    In summary: the velocities are already pre-multiplied with the time once.
+    */
+    V2r step = velocity_current + (0.5f * velocity_new * delta_time);
+    position.Absolute += step;
+    position.Tile = Position2Tile(position.Absolute, tile_side);
+
+    return position;
 }
 
 Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
@@ -481,17 +497,14 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
 
     // TODO: Move as constants
     real32 friction_coeficient = 3;
-    real32 default_speed = 250;
+    real32 default_speed = 12;
 
     V2r friction = friction_coeficient * entity->Velocity;
-    V2r velocity = direction * default_speed - friction;
+    V2r velocity = (direction * default_speed - friction) * delta_time;
 
-    Position next_position = entity->Position;
-    V2r step = entity->Velocity * delta_time
-        + (0.5f * velocity * (delta_time * delta_time));
-    next_position.Absolute += step;
-    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
-    entity->Velocity += velocity * delta_time;
+    Position next_position = CalculateNextPosition(entity->Position,
+        entity->Velocity, velocity, tilemap->TileSide, delta_time);
+    entity->Velocity += velocity;
 
     GetClosestFreePosition(entity, next_position, tilemap);
 }
