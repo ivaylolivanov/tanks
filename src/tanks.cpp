@@ -468,8 +468,10 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
     if (IsTileEmpty(tilemap, next_position))
         entity->Position = next_position;
 
-    entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
-    step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+    // entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
+    // step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+}
+
 Internal Position CalculateNextPosition(Position current, V2r velocity_current,
     V2r velocity_new, real32 tile_side, real32 delta_time)
 {
