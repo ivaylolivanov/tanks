@@ -393,8 +393,8 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
 {
     V2r step = next_position.Absolute - entity->Position.Absolute;
 
-    // real32 rebound_force = 3;
-    // V2r wall_normal = {};
+    real32 rebound_force = 3;
+    V2r wall_normal = {};
 
     real32 t_min_x = 1.0f;
     real32 t_min_y = 1.0f;
@@ -447,18 +447,17 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
             position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X * t_min_x,
             &t_min_y);
 
-            // if (has_collided_left)
-            //     wall_normal.X = -1;
+        if (has_collided_left)
+            wall_normal.X = -1;
 
-            // if (has_collided_right)
-            //     wall_normal.X = 1;
+        if (has_collided_right)
+            wall_normal.X = 1;
 
-            // if (has_collided_top)
-            //     wall_normal.Y = -1;
+        if (has_collided_top)
+            wall_normal.Y = -1;
 
-            // if (has_collided_bottom)
-            //     wall_normal.Y = 1;
-        // }
+        if (has_collided_bottom)
+            wall_normal.Y = 1;
     }
 
     next_position = entity->Position;
@@ -467,8 +466,8 @@ Internal void GetClosestFreePosition(Entity* entity, Position next_position,
     if (IsTileEmpty(tilemap, next_position))
         entity->Position = next_position;
 
-    // entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
-    // step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+    entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
+    step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
 }
 
 Internal void MoveEntity(GameState* game_state, Entity* entity,
