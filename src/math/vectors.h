@@ -34,6 +34,24 @@ inline V4r V4rZero()
     return zero;
 }
 
+inline V2r V2iToV2r(V2i a)
+{
+    V2r result = V2rZero();
+    result.X = (real32)a.X;
+    result.Y = (real32)a.Y;
+
+    return result;
+}
+
+inline V2i V2rToV2i(V2r a)
+{
+    V2i result = V2iZero();
+    result.X = (int32)a.X;
+    result.Y = (int32)a.Y;
+
+    return result;
+}
+
 inline V2r operator+(V2r a, V2i b)
 {
     V2r result;
