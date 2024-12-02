@@ -6,6 +6,15 @@ inline int32 DotProduct(V2i a, V2i b)
     return result;
 }
 
+inline V2i V2iComponentsMultiply(V2i a, V2i b)
+{
+    V2i result;
+    result.X = a.X * b.X;
+    result.Y = a.Y * b.Y;
+
+    return result;
+}
+
 inline V2i operator+(V2i a, V2i b)
 {
     V2i result;
@@ -115,6 +124,15 @@ inline void Normalize(V2r& vector)
 inline real32 DotProduct(V2r a, V2r b)
 {
     real32 result = a.X * b.X + a.Y * b.Y;
+    return result;
+}
+
+inline V2r V2rComponentsMultiply(V2r a, V2r b)
+{
+    V2r result;
+    result.X = a.X * b.X;
+    result.Y = a.Y * b.Y;
+
     return result;
 }
 

@@ -58,7 +58,9 @@ union V2u
     uint32 Values[2];
 };
 
+// V2i
 int32 DotProduct(V2i a, V2i b);
+V2i V2iComponentsMultiply(V2i a, V2i b);
 
 V2i operator+(V2i a, V2i b);
 V2i &operator+=(V2i &a, V2i b);
@@ -73,8 +75,10 @@ V2i operator*(real32 a, V2i b);
 bool32 operator!=(V2i a, V2i b);
 bool32 operator==(V2i a, V2i b);
 
+// V2r
 void Normalize(V2r& vector);
 real32 DotProduct(V2r a, V2r b);
+V2r V2rComponentsMultiply(V2r a, V2r b);
 
 V2r operator+(V2r a, V2r b);
 V2r &operator+=(V2r& a, V2r b);
@@ -89,6 +93,7 @@ V2r operator*(int32 a, V2r b);
 bool32 operator!=(V2r a, V2r b);
 bool32 operator==(V2r a, V2r b);
 
+// V2u
 uint32 DotProduct(V2u a, V2u b);
 
 V2u operator+(V2u a, V2u b);
