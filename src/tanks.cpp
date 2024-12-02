@@ -388,90 +388,6 @@ Internal bool32 CheckCollision(real32 intersection_limit,
     return has_collided;
 }
 
-Internal void GetClosestFreePosition(Entity* entity, Position next_position,
-    Tilemap* tilemap)
-{
-    V2r step = next_position.Absolute - entity->Position.Absolute;
-
-    // TODO: Move as constant
-    real32 rebound_force = 3;
-
-    V2r wall_normal = {};
-
-    real32 t_min_x = 1.0f;
-    real32 t_min_y = 1.0f;
-    real32 t_min_y_precheck = 1.0f;
-    V2r tile_min = V2rZero();
-    V2r tile_max = V2rOne() * tilemap->TileSide;
-
-    V2i tiles_range[] =
-    {
-        V2i {next_position.Tile.X, entity->Position.Tile.Y},
-        V2i {entity->Position.Tile.X, next_position.Tile.Y},
-        next_position.Tile
-    };
-
-    for (int i = 0; i < ArrayCount(tiles_range); ++i)
-    {
-        V2i tile_test = tiles_range[i];
-
-        Position position_test;
-        position_test.Tile = tile_test;
-        position_test.Absolute = V2r
-        {
-            (real32)position_test.Tile.X * tilemap->TileSide,
-            (real32)position_test.Tile.Y * tilemap->TileSide
-        };
-
-        if (IsTileEmpty(tilemap, position_test))
-            continue;
-
-        V2r position_diff = entity->Position.Absolute - position_test.Absolute;
-
-        // Pre-check the Y axis.
-        CheckCollision(tile_min.Y, position_diff.Y,
-            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X,
-            &t_min_y_precheck);
-        CheckCollision(tile_max.Y, position_diff.Y,
-            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X,
-            &t_min_y_precheck);
-
-        bool32 has_collided_left = CheckCollision(tile_min.X, position_diff.X,
-            position_diff.Y, V2r { tile_min.Y, tile_max.Y }, step.X, step.Y * t_min_y_precheck,
-            &t_min_x);
-        bool32 has_collided_right = CheckCollision(tile_max.X, position_diff.X,
-            position_diff.Y, V2r { tile_min.Y, tile_max.Y }, step.X, step.Y * t_min_y_precheck,
-            &t_min_x);
-        bool32 has_collided_top = CheckCollision(tile_min.Y, position_diff.Y,
-            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X * t_min_x,
-            &t_min_y);
-        bool32 has_collided_bottom = CheckCollision(tile_max.Y, position_diff.Y,
-            position_diff.X, V2r { tile_min.X, tile_max.X }, step.Y, step.X * t_min_x,
-            &t_min_y);
-
-        if (has_collided_left)
-            wall_normal.X = -1;
-
-        if (has_collided_right)
-            wall_normal.X = 1;
-
-        if (has_collided_top)
-            wall_normal.Y = -1;
-
-        if (has_collided_bottom)
-            wall_normal.Y = 1;
-    }
-
-    next_position = entity->Position;
-    next_position.Absolute += V2r{ t_min_x * step.X, t_min_y * step.Y };
-    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
-    if (IsTileEmpty(tilemap, next_position))
-        entity->Position = next_position;
-
-    // entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
-    // step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
-}
-
 Internal Position CalculateNextPosition(Position current, V2r velocity_current,
     V2r velocity_new, real32 tile_side, real32 delta_time)
 {
@@ -490,25 +406,115 @@ Internal Position CalculateNextPosition(Position current, V2r velocity_current,
     return position;
 }
 
+Internal void CalculateFraction(V2r diff, V2r tile_max, V2r step,
+    real32* t_min_y_precheck, V2r* move_fraction, V2i* wall_normal)
+{
+    V2r tile_min = V2rZero();
+
+    // NOTE: Pre-check the Y axis.
+    CheckCollision(tile_min.Y, diff.Y, diff.X, V2r { tile_min.X, tile_max.X },
+        step.Y, step.X, t_min_y_precheck);
+    CheckCollision(tile_max.Y, diff.Y, diff.X, V2r { tile_min.X, tile_max.X },
+        step.Y, step.X, t_min_y_precheck);
+
+    bool32 has_collided_left = CheckCollision(tile_min.X, diff.X, diff.Y,
+        V2r { tile_min.Y, tile_max.Y }, step.X, step.Y * *t_min_y_precheck,
+        &move_fraction->X);
+    bool32 has_collided_right = CheckCollision(tile_max.X, diff.X,
+        diff.Y, V2r { tile_min.Y, tile_max.Y }, step.X,
+        step.Y * *t_min_y_precheck, &move_fraction->X);
+    bool32 has_collided_top = CheckCollision(tile_min.Y, diff.Y,
+        diff.X, V2r { tile_min.X, tile_max.X }, step.Y,
+        step.X * move_fraction->X, &move_fraction->Y);
+    bool32 has_collided_bottom = CheckCollision(tile_max.Y, diff.Y,
+        diff.X, V2r { tile_min.X, tile_max.X }, step.Y,
+        step.X * move_fraction->X, &move_fraction->Y);
+
+    if (has_collided_left)
+        wall_normal->X = -1;
+
+    if (has_collided_right)
+        wall_normal->X = 1;
+
+    if (has_collided_top)
+        wall_normal->Y = -1;
+
+    if (has_collided_bottom)
+        wall_normal->Y = 1;
+}
+
+Internal V2r CalculatePossibleStep(Position position_current,
+    Position position_next, Tilemap* tilemap)
+{
+    // TODO: Move as constant
+    real32 rebound_force = 3;
+
+    V2r step = position_next.Absolute - position_current.Absolute;
+    V2r move_fraction = V2rOne();
+    V2i wall_normal = {};
+
+    real32 t_min_y_precheck = 1.0f;
+    V2r tile_max = V2rOne() * tilemap->TileSide;
+
+    V2i tiles_range[] =
+    {
+        V2i {position_next.Tile.X, position_current.Tile.Y},
+        V2i {position_current.Tile.X, position_next.Tile.Y},
+        position_next.Tile
+    };
+
+    for (int i = 0; i < ArrayCount(tiles_range); ++i)
+    {
+        V2i tile_test = tiles_range[i];
+
+        Position position_test = {};
+        position_test.Tile = tile_test;
+        position_test.Absolute = V2rComponentsMultiply(
+            V2iToV2r(position_test.Tile),
+            V2rOne() * tilemap->TileSide);
+
+        if (IsTileEmpty(tilemap, position_test))
+            continue;
+
+        V2r position_diff = position_current.Absolute - position_test.Absolute;
+        CalculateFraction(position_diff, tile_max, step, &t_min_y_precheck,
+            &move_fraction, &wall_normal);
+    }
+
+    // TODO: Think of a way to enable rebound feature. The problem now is there
+    // is no clear mark how to pass collision data as one in this function.
+    // entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal) * wall_normal;
+    // step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+    step = V2rComponentsMultiply(step, move_fraction);
+
+    return step;
+}
+
 Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     real32 delta_time, V2r direction)
 {
-    real32 direction_length_sqr = DotProduct(direction, direction);
-    if (direction_length_sqr > 1)
-        Normalize(direction);
-
     // TODO: Move as constants
     real32 friction_coeficient = 3;
     real32 default_speed = 12;
 
+    real32 direction_length_sqr = DotProduct(direction, direction);
+    if (direction_length_sqr > 1)
+        Normalize(direction);
+
     V2r friction = friction_coeficient * entity->Velocity;
     V2r velocity = (direction * default_speed - friction) * delta_time;
+    entity->Velocity += velocity;
 
     Position next_position = CalculateNextPosition(entity->Position,
         entity->Velocity, velocity, tilemap->TileSide, delta_time);
-    entity->Velocity += velocity;
 
-    GetClosestFreePosition(entity, next_position, tilemap);
+    V2r step = CalculatePossibleStep(entity->Position, next_position, tilemap);
+    next_position = entity->Position;
+    next_position.Absolute += step;
+    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
+
+    if (IsTileEmpty(tilemap, next_position))
+        entity->Position = next_position;
 }
 
 extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
