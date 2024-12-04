@@ -680,9 +680,28 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
         DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
             player1->Size);
 
-        V3r collider_color = { 0, 1, 0 };
-        DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
-            collider_visual_width, collider_color);
+        // V3r collider_color = { 0, 1, 1 };
+        // DrawWireRectangle(display_buffer, player_left_top, player_right_bottom,
+        //     collider_visual_width, collider_color);
+
+        // V2r collision_points[] =
+        // {
+        //     player_position - (0.5f * player1->Size),
+        //     player_position + (0.5f * player1->Size),
+        //     player_position + (0.5f * V2r { -player1->Size.Width, player1->Size.Height }),
+        //     player_position + (0.5f * V2r { player1->Size.Width, -player1->Size.Height }),
+        // };
+
+        // for (int c = 0; c < 4; ++c)
+        // {
+        //     V2r point = collision_points[c];
+        //     V2r point_rect_min = point + V2rOne() * -3;
+        //     V2r point_rect_max = point + V2rOne() *  3;
+        //     DrawRectangle(display_buffer,
+        //                   point_rect_min,
+        //                   point_rect_max,
+        //                   V3r{ 1, 0, 0 });
+        // }
     }
 
     // Enemy visualization
