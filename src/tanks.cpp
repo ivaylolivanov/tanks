@@ -508,7 +508,46 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     Position next_position = CalculateNextPosition(entity->Position,
         entity->Velocity, velocity, tilemap->TileSide, delta_time);
 
-    V2r step = CalculatePossibleStep(entity->Position, next_position, tilemap);
+    V2r collider_current[] =
+    {
+        entity->Position.Absolute - (0.5f * entity->Size),
+        entity->Position.Absolute + (0.5f * entity->Size),
+        entity->Position.Absolute + (0.5f * V2r { -entity->Size.Width, entity->Size.Height }),
+        entity->Position.Absolute + (0.5f * V2r { entity->Size.Width, -entity->Size.Height }),
+    };
+
+    V2r collider_next[] =
+    {
+        next_position.Absolute - (0.5f * entity->Size),
+        next_position.Absolute + (0.5f * entity->Size),
+        next_position.Absolute + (0.5f * V2r { -entity->Size.Width, entity->Size.Height }),
+        next_position.Absolute + (0.5f * V2r { entity->Size.Width, -entity->Size.Height }),
+    };
+
+    V2r step = V2r{ 100, 100 };
+    for (int point_index = 0; point_index < ArrayCount(collider_next); ++point_index)
+    {
+        Position collider_position_current;
+        collider_position_current.Absolute = collider_current[point_index];
+        collider_position_current.Tile = Position2Tile(
+            collider_current[point_index],
+            tilemap->TileSide);
+
+        Position collider_position_next;
+        collider_position_next.Absolute = collider_next[point_index];
+        collider_position_next.Tile = Position2Tile(
+            collider_next[point_index],
+            tilemap->TileSide);
+
+        V2r collider_step = CalculatePossibleStep(collider_position_current,
+            collider_position_next, tilemap);
+        if (abs(step.X) >= abs(collider_step.X))
+            step.X = collider_step.X;
+
+        if (abs(step.Y) >= abs(collider_step.Y))
+            step.Y = collider_step.Y;
+    }
+
     next_position = entity->Position;
     next_position.Absolute += step;
     next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
