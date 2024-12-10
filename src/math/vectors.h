@@ -28,6 +28,12 @@ inline V3r V3rZero()
     return zero;
 }
 
+inline V3r V3rOne()
+{
+    V3r zero = { 1, 1, 1 };
+    return zero;
+}
+
 inline V4r V4rZero()
 {
     V4r zero = { 0, 0, 0, 0 };
