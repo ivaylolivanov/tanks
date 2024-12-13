@@ -189,27 +189,29 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
     }
 }
 
-inline void NormalizeCoordinate(Tilemap* tilemap, int32* tile, real32* relative)
+inline void NormalizePositionsAxis(int32* tile, real32* offset, real32 tile_side)
 {
-    int32 offset = FloorReal32ToInt32(*relative / tilemap->TileSide);
-    *tile += offset;
-    *relative -= offset * tilemap->TileSide;
+    // TODO: Verify if adjusting for overflow is needed, what happens if player
+    // goes to the last tile and continues.
+    int32 tile_displacement = RoundReal32ToInt32(*offset / tile_side);
 
-    Assert(*relative >= 0);
-    Assert(*relative <= tilemap->TileSide);
+    *tile += tile_displacement;
+    *offset -= tile_displacement * tile_side;
 }
 
-// inline void Position2Tile(Tilemap* tilemap, Position* position)
-inline V2i Position2Tile(V2r position, real32 tile_side)
+inline void NormalizePosition(Position* position, real32 tile_side)
 {
-    // TODO: Validate position;
-    V2i result = { 0, 0 };
+    NormalizePositionsAxis(&position->Tile.X, &position->Offset.X, tile_side);
+    NormalizePositionsAxis(&position->Tile.Y, &position->Offset.Y, tile_side);
+}
 
-    result = V2i
-    {
-        TruncateReal32ToInt32(position.X / tile_side),
-        TruncateReal32ToInt32(position.Y / tile_side)
-    };
+inline V2r DiffPositions(Position a, Position b, real32 tile_side)
+{
+    V2r result = {};
+
+    V2r absolute_a = a.Tile * tile_side + a.Offset;
+    V2r absolute_b = b.Tile * tile_side + b.Offset;
+    result = absolute_a - absolute_b;
 
     return result;
 }
@@ -348,7 +350,7 @@ Internal void InitializeMainCamera(GameState* game_state, uint32 index)
     game_state->EntityIndexMainCamera = index;
     main_camera->Enabled = true;
     main_camera->Position.Tile = V2i { TILEMAP_WIDTH / 2, TILEMAP_HEIGHT / 2 };
-    main_camera->Position.Absolute = V2r { 0, 0 };
+    main_camera->Position.Offset = V2r { 0, 0 };
     main_camera->Size = V2r { TILEMAP_WIDTH, TILEMAP_HEIGHT };
 }
 
@@ -356,11 +358,8 @@ Internal void InitializePlayer(GameState* game_state, uint32 index, V2r size)
 {
     Entity* player = GetEntity(game_state, index);
     player->Enabled = true;
-    player->Position.Absolute = { 600.0f, 600.0f };
-    Tilemap tilemap = game_state->World->Tilemaps[game_state->World->TilemapIndex];
-    player->Position.Tile = Position2Tile(player->Position.Absolute,
-        tilemap.TileSide);
-
+    player->Position.Tile = V2i { 10, 10 };
+    player->Position.Offset = V2rZero();
     player->Size = size;
 
     if (!game_state->EntityIndexCameraTarget)
@@ -392,7 +391,7 @@ Internal bool32 CheckCollision(real32 intersection_limit,
 }
 
 Internal Position CalculateNextPosition(Position current, V2r velocity_current,
-    V2r velocity_new, real32 tile_side, real32 delta_time)
+    V2r velocity_new, real32 delta_time)
 {
     Position position = current;
     /*
@@ -403,17 +402,14 @@ Internal Position CalculateNextPosition(Position current, V2r velocity_current,
     In summary: the velocities are already pre-multiplied with the time once.
     */
     V2r step = velocity_current + (0.5f * velocity_new * delta_time);
-    position.Absolute += step;
-    position.Tile = Position2Tile(position.Absolute, tile_side);
+    position.Offset += step;
 
     return position;
 }
 
-Internal void CalculateFraction(V2r diff, V2r tile_max, V2r step,
+Internal void CalculateFraction(V2r diff, V2r tile_min, V2r tile_max, V2r step,
     real32* t_min_y_precheck, V2r* move_fraction, V2i* wall_normal)
 {
-    V2r tile_min = V2rZero();
-
     // NOTE: Pre-check the Y axis.
     CheckCollision(tile_min.Y, diff.Y, diff.X, V2r { tile_min.X, tile_max.X },
         step.Y, step.X, t_min_y_precheck);
@@ -452,12 +448,14 @@ Internal V2r CalculatePossibleStep(Position position_current,
     // TODO: Move as constant
     real32 rebound_force = 3;
 
-    V2r step = position_next.Absolute - position_current.Absolute;
+    real32 tile_side = tilemap->TileSide;
+    V2r step = DiffPositions(position_next, position_current, tile_side);
     V2r move_fraction = V2rOne();
     V2i wall_normal = {};
 
     real32 t_min_y_precheck = 1.0f;
-    V2r tile_max = V2rOne() * tilemap->TileSide;
+    V2r tile_min = -0.5f * V2rOne() * tilemap->TileSide;
+    V2r tile_max =  0.5f * V2rOne() * tilemap->TileSide;
 
     V2i tiles_range[] =
     {
@@ -472,15 +470,12 @@ Internal V2r CalculatePossibleStep(Position position_current,
 
         Position position_test = {};
         position_test.Tile = tile_test;
-        position_test.Absolute = V2rComponentsMultiply(
-            V2iToV2r(position_test.Tile),
-            V2rOne() * tilemap->TileSide);
 
         if (IsTileEmpty(tilemap, position_test))
             continue;
 
-        V2r position_diff = position_current.Absolute - position_test.Absolute;
-        CalculateFraction(position_diff, tile_max, step, &t_min_y_precheck,
+        V2r diff = DiffPositions(position_current, position_test, tile_side);
+        CalculateFraction(diff, tile_min, tile_max, step, &t_min_y_precheck,
             &move_fraction, &wall_normal);
     }
 
@@ -509,51 +504,14 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     entity->Velocity += velocity;
 
     Position next_position = CalculateNextPosition(entity->Position,
-        entity->Velocity, velocity, tilemap->TileSide, delta_time);
+        entity->Velocity, velocity, delta_time);
+    NormalizePosition(&next_position, tilemap->TileSide);
 
-    V2r collider_current[] =
-    {
-        entity->Position.Absolute - (0.5f * entity->Size),
-        entity->Position.Absolute + (0.5f * entity->Size),
-        entity->Position.Absolute + (0.5f * V2r { -entity->Size.Width, entity->Size.Height }),
-        entity->Position.Absolute + (0.5f * V2r { entity->Size.Width, -entity->Size.Height }),
-    };
-
-    V2r collider_next[] =
-    {
-        next_position.Absolute - (0.5f * entity->Size),
-        next_position.Absolute + (0.5f * entity->Size),
-        next_position.Absolute + (0.5f * V2r { -entity->Size.Width, entity->Size.Height }),
-        next_position.Absolute + (0.5f * V2r { entity->Size.Width, -entity->Size.Height }),
-    };
-
-    V2r step = V2r{ 100, 100 };
-    for (int point_index = 0; point_index < ArrayCount(collider_next); ++point_index)
-    {
-        Position collider_position_current;
-        collider_position_current.Absolute = collider_current[point_index];
-        collider_position_current.Tile = Position2Tile(
-            collider_current[point_index],
-            tilemap->TileSide);
-
-        Position collider_position_next;
-        collider_position_next.Absolute = collider_next[point_index];
-        collider_position_next.Tile = Position2Tile(
-            collider_next[point_index],
-            tilemap->TileSide);
-
-        V2r collider_step = CalculatePossibleStep(collider_position_current,
-            collider_position_next, tilemap);
-        if (abs(step.X) >= abs(collider_step.X))
-            step.X = collider_step.X;
-
-        if (abs(step.Y) >= abs(collider_step.Y))
-            step.Y = collider_step.Y;
-    }
+    V2r step = CalculatePossibleStep(entity->Position, next_position, tilemap);
 
     next_position = entity->Position;
-    next_position.Absolute += step;
-    next_position.Tile = Position2Tile(next_position.Absolute, tilemap->TileSide);
+    next_position.Offset += step;
+    NormalizePosition(&next_position, tilemap->TileSide);
 
     if (IsTileEmpty(tilemap, next_position))
         entity->Position = next_position;
@@ -626,6 +584,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
         game_state->World->TilemapIndex];
     real32 tile_side = (real32)(display_buffer->Width / tilemap->Size.Width);
     tilemap->TileSide = tile_side;
+    game_state->World->Origin = V2rOne() * tile_side * 0.5f;
 
     for (int relative_row = -(int)main_camera->Size.Height;
          relative_row < (int)main_camera->Size.Height;
@@ -645,7 +604,7 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
                 tile_color = { 1.0f, 1.0f, 1.0f };
 
             V2r tile_size = V2rOne() * tile_side;
-            V2r tile_center = game_state->World->Origin + tile * tile_side + 0.5f * tile_size;
+            V2r tile_center = game_state->World->Origin + tile * tile_side;
             DrawRectangle(display_buffer, tile_center, tile_size, tile_color);
 
             V3r color = { 0.34f, 0.71f, 0.12f };
@@ -665,8 +624,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
         {
             if (controller->Start.EndedDown)
             {
-                player->Position.Absolute = V2r { 600.0f, 600.0f };
-                player->Position.Tile = Position2Tile(player->Position.Absolute, tilemap->TileSide);
+                player->Position.Tile = V2i { 10, 10 };
+                player->Position.Offset = V2rZero();
             }
 
             V2r direction = V2rZero();
@@ -704,17 +663,12 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
     Entity* player1 = GetEntity(game_state, game_state->EntityIndexCameraTarget);
     if (player1)
     {
-        V2r player_half_size = player1->Size * 0.5f;
-        V2r player_position = game_state->World->Origin
-            + player1->Position.Absolute;
+        V2r player_tile_absolute = game_state->World->Origin
+            + player1->Position.Tile * tile_side;
+        V2r player_position = player_tile_absolute + player1->Position.Offset;
 
-        V2r player_tile_absolute = V2iToV2r(player1->Position.Tile * tile_side);
-        V2r player_tile_absolute_center = player_tile_absolute
-            + 0.5f * V2rOne() * tile_side;
-
-        DrawRectangle(display_buffer, player_tile_absolute_center,
-            V2rOne() * tilemap->TileSide,
-            V3r{ 0.25f, 0.25f, 0.25f});
+        DrawRectangle(display_buffer, player_tile_absolute,
+            V2rOne() * tile_side, V3rOne() * 0.25f);
 
         DrawPngImage(display_buffer, &game_state->TankImage, player_position,
             player1->Size);

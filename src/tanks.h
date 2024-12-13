@@ -61,7 +61,7 @@ inline ControllerState* GetController(GameInput* input, int unsigned controller_
 struct Position
 {
     V2i Tile;
-    V2r Absolute;
+    V2r Offset;
 };
 
 struct Tilemap
