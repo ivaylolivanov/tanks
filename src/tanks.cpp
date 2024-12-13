@@ -132,33 +132,33 @@ Internal uint32 BlendColors(uint32 pixel_background, uint32 pixel_foreground)
     return result;
 }
 
-Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, V2r origin,
+Internal void DrawPngImage(GameBackBuffer* buffer, Image* image, V2r center,
     V2r size)
 {
-    V2r opposite = origin + size;
-    V2i origin_int = RoundReal32ToInt32(origin);
-    V2i opposite_int = RoundReal32ToInt32(opposite);
+    V2r half_size = 0.5f * size;
+    V2i corner_up_left    = RoundReal32ToInt32(center - half_size);
+    V2i corner_down_right = RoundReal32ToInt32(center + half_size);
     V2r scale =
     {
         size.Width / image->Width,
         size.Height / image->Height,
     };
 
-    ClampInt32(origin_int.X, 0, buffer->Width);
-    ClampInt32(opposite_int.X, 0, buffer->Width);
-    ClampInt32(origin_int.Y, 0, buffer->Height);
-    ClampInt32(opposite_int.Y, 0, buffer->Height);
+    ClampInt32(corner_up_left.X,    0, buffer->Width);
+    ClampInt32(corner_down_right.X, 0, buffer->Width);
+    ClampInt32(corner_up_left.Y,    0, buffer->Height);
+    ClampInt32(corner_down_right.Y, 0, buffer->Height);
 
     uint8* row = (uint8*)buffer->Memory
-        + origin_int.X * buffer->BytesPerPixel
-        + origin_int.Y * buffer->Pitch;
-    for (int y = origin_int.Y; y < opposite_int.Y; ++y)
+        + corner_up_left.X * buffer->BytesPerPixel
+        + corner_up_left.Y * buffer->Pitch;
+    for (int y = corner_up_left.Y; y < corner_down_right.Y; ++y)
     {
-        uint32 y_scaled = (uint32)((y - origin_int.Y) / scale.Y);
+        uint32 y_scaled = (uint32)((y - corner_up_left.Y) / scale.Y);
         uint32* pixel_buffer = (uint32*)row;
-        for (int x = origin_int.X; x < opposite_int.X; ++x)
+        for (int x = corner_up_left.X; x < corner_down_right.X; ++x)
         {
-            uint32 x_scaled = (uint32)((x - origin_int.X) / scale.X);
+            uint32 x_scaled = (uint32)((x - corner_up_left.X) / scale.X);
             uint32* pixel_image = (uint32*)(image->Pixels)
                 + (y_scaled * image->Width + x_scaled);
 
@@ -239,49 +239,52 @@ inline bool32 IsTileEmpty(Tilemap* tilemap, Position position)
     return result;
 }
 
-Internal void DrawRectangle(GameBackBuffer *buffer, V2r min, V2r max, V3r color)
+Internal void DrawRectangle(GameBackBuffer *buffer, V2r center, V2r size,
+    V3r color)
 {
-    V2i int_min = RoundReal32ToInt32(min);
-    V2i int_max = RoundReal32ToInt32(max);
+    V2r half_size = 0.5f * size;
+    V2i corner_up_left    = RoundReal32ToInt32(center - half_size);
+    V2i corner_down_right = RoundReal32ToInt32(center + half_size);
 
-    ClampInt32(int_min.X, 0, buffer->Width);
-    ClampInt32(int_max.X, 0, buffer->Width);
-    ClampInt32(int_min.Y, 0, buffer->Height);
-    ClampInt32(int_max.Y, 0, buffer->Height);
+    ClampInt32(corner_up_left.X,    0, buffer->Width);
+    ClampInt32(corner_down_right.X, 0, buffer->Width);
+    ClampInt32(corner_up_left.Y,    0, buffer->Height);
+    ClampInt32(corner_down_right.Y, 0, buffer->Height);
 
     uint32 rgb = ((RoundReal32ToInt32(color.R * 255.0f) << 16)
         | (RoundReal32ToInt32(color.G * 255.0f) << 8)
         | (RoundReal32ToInt32(color.B * 255.0f) << 0));
 
     uint8* row = ((uint8 *) buffer->Memory
-        + int_min.X * buffer->BytesPerPixel
-        + int_min.Y * buffer->Pitch);
-    for (int y = int_min.Y; y < int_max.Y; ++y)
+        + corner_up_left.X * buffer->BytesPerPixel
+        + corner_up_left.Y * buffer->Pitch);
+    for (int y = corner_up_left.Y; y < corner_down_right.Y; ++y)
     {
         uint32 *pixel = (uint32 *)row;
-        for (int x = int_min.X; x < int_max.X; ++x)
+        for (int x = corner_up_left.X; x < corner_down_right.X; ++x)
             *pixel++ = rgb;
 
         row += buffer->Pitch;
     }
 }
 
-Internal void DrawWireRectangle(GameBackBuffer *buffer, V2r min, V2r max,
+Internal void DrawWireRectangle(GameBackBuffer *buffer, V2r center, V2r size,
     int32 thickness, V3r color)
 {
-    V2i int_min = RoundReal32ToInt32(min);
-    V2i int_max = RoundReal32ToInt32(max);
+    V2r half_size = 0.5f * size;
+    V2i corner_up_left    = RoundReal32ToInt32(center - half_size);
+    V2i corner_down_right = RoundReal32ToInt32(center + half_size);
 
     // TODO: Use ClampV2i;
-    ClampInt32(int_min.X, 0, buffer->Width);
-    ClampInt32(int_max.X, 0, buffer->Width);
-    ClampInt32(int_min.Y, 0, buffer->Height);
-    ClampInt32(int_max.Y, 0, buffer->Height);
+    ClampInt32(corner_up_left.X,    0, buffer->Width);
+    ClampInt32(corner_down_right.X, 0, buffer->Width);
+    ClampInt32(corner_up_left.Y,    0, buffer->Height);
+    ClampInt32(corner_down_right.Y, 0, buffer->Height);
 
-    int32 inner_left   = int_min.X + thickness;
-    int32 inner_right  = int_max.X - thickness - 1;
-    int32 inner_top    = int_min.Y + thickness;
-    int32 inner_bottom = int_max.Y - 1 - thickness;
+    int32 inner_left   = corner_up_left.X    + thickness;
+    int32 inner_right  = corner_down_right.X - thickness - 1;
+    int32 inner_top    = corner_up_left.Y    + thickness;
+    int32 inner_bottom = corner_down_right.Y - thickness - 1;
     int32 hollow_size  = inner_right - inner_left - 1;
 
     uint32 rgb = ((RoundReal32ToInt32(color.R * 255.0f) << 16)
@@ -289,28 +292,28 @@ Internal void DrawWireRectangle(GameBackBuffer *buffer, V2r min, V2r max,
         | (RoundReal32ToInt32(color.B * 255.0f) << 0));
 
     uint8* row = ((uint8 *) buffer->Memory
-        + int_min.X * buffer->BytesPerPixel
-        + int_min.Y * buffer->Pitch);
-    for (int y = int_min.Y; y < int_max.Y; ++y)
+        + corner_up_left.X * buffer->BytesPerPixel
+        + corner_up_left.Y * buffer->Pitch);
+    for (int y = corner_up_left.Y; y < corner_down_right.Y; ++y)
     {
         uint32 *pixel = (uint32 *)row;
 
-        bool32 is_horizontal = ((y >= int_min.Y) && (y < inner_top))
-            || ((y > inner_bottom) && (y < int_max.Y));
+        bool32 is_horizontal = ((y >= corner_up_left.Y) && (y < inner_top))
+            || ((y > inner_bottom) && (y < corner_down_right.Y));
 
         if (is_horizontal)
         {
-            for (int x = int_min.X; x < int_max.X; ++x)
+            for (int x = corner_up_left.X; x < corner_down_right.X; ++x)
                 *pixel++ = rgb;
         }
         else
         {
-            for (int x = int_min.X; x <= inner_left; ++x)
+            for (int x = corner_up_left.X; x <= inner_left; ++x)
                 *pixel++ = rgb;
 
             pixel += hollow_size;
 
-            for (int x = inner_right; x < int_max.X; ++x)
+            for (int x = inner_right; x < corner_down_right.X; ++x)
                 *pixel++ = rgb;
         }
 
@@ -621,7 +624,8 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
 
     Tilemap* tilemap = &game_state->World->Tilemaps[
         game_state->World->TilemapIndex];
-    tilemap->TileSide = (real32)(display_buffer->Width / tilemap->Size.Width);
+    real32 tile_side = (real32)(display_buffer->Width / tilemap->Size.Width);
+    tilemap->TileSide = tile_side;
 
     for (int relative_row = -(int)main_camera->Size.Height;
          relative_row < (int)main_camera->Size.Height;
@@ -640,12 +644,12 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
             if (tile_id == 1)
                 tile_color = { 1.0f, 1.0f, 1.0f };
 
-            V2r min = game_state->World->Origin + tile * tilemap->TileSide;
-            V2r max = min + V2rOne() * tilemap->TileSide;
-            DrawRectangle(display_buffer, min, max, tile_color);
+            V2r tile_size = V2rOne() * tile_side;
+            V2r tile_center = game_state->World->Origin + tile * tile_side + 0.5f * tile_size;
+            DrawRectangle(display_buffer, tile_center, tile_size, tile_color);
 
             V3r color = { 0.34f, 0.71f, 0.12f };
-            DrawWireRectangle(display_buffer, min, max, 1, color);
+            DrawWireRectangle(display_buffer, tile_center, tile_size, 1, color);
         }
     }
 
@@ -703,20 +707,16 @@ extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
         V2r player_half_size = player1->Size * 0.5f;
         V2r player_position = game_state->World->Origin
             + player1->Position.Absolute;
-        V2r player_left_top = player_position - player_half_size;
-        V2r player_right_bottom = player_position + player_half_size;
 
-        V2r player_tile_absolute = V2r
-        {
-            player1->Position.Tile.X * tilemap->TileSide,
-            player1->Position.Tile.Y * tilemap->TileSide
-        };
+        V2r player_tile_absolute = V2iToV2r(player1->Position.Tile * tile_side);
+        V2r player_tile_absolute_center = player_tile_absolute
+            + 0.5f * V2rOne() * tile_side;
 
-        DrawRectangle(display_buffer, player_tile_absolute,
-            player_tile_absolute + V2rOne() * tilemap->TileSide,
+        DrawRectangle(display_buffer, player_tile_absolute_center,
+            V2rOne() * tilemap->TileSide,
             V3r{ 0.25f, 0.25f, 0.25f});
 
-        DrawPngImage(display_buffer, &game_state->TankImage, player_left_top,
+        DrawPngImage(display_buffer, &game_state->TankImage, player_position,
             player1->Size);
 
         // V3r collider_color = { 0, 1, 1 };
