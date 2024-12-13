@@ -40,6 +40,7 @@ inline V4r V4rZero()
     return zero;
 }
 
+// TODO: Implement as type cast operator: operator V2r()
 inline V2r V2iToV2r(V2i a)
 {
     V2r result = V2rZero();
