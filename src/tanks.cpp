@@ -9,7 +9,7 @@ uint32 TILES[4][TILEMAP_HEIGHT * TILEMAP_WIDTH] =
 {
     1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+    1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
     1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -189,7 +189,7 @@ Internal void OutputSound(GameState* game_state, GameSoundBuffer *sound_buffer)
     }
 }
 
-inline void NormalizePositionsAxis(int32* tile, real32* offset, real32 tile_side)
+inline void PositionNormalizeAxis(int32* tile, real32* offset, real32 tile_side)
 {
     // TODO: Verify if adjusting for overflow is needed, what happens if player
     // goes to the last tile and continues.
@@ -197,23 +197,33 @@ inline void NormalizePositionsAxis(int32* tile, real32* offset, real32 tile_side
 
     *tile += tile_displacement;
     *offset -= tile_displacement * tile_side;
+
+    Assert(*offset > -0.5001f * tile_side);
+    Assert(*offset <  0.5001f * tile_side);
 }
 
-inline void NormalizePosition(Position* position, real32 tile_side)
+inline void PositionNormalize(Position* position, real32 tile_side)
 {
-    NormalizePositionsAxis(&position->Tile.X, &position->Offset.X, tile_side);
-    NormalizePositionsAxis(&position->Tile.Y, &position->Offset.Y, tile_side);
+    PositionNormalizeAxis(&position->Tile.X, &position->Offset.X, tile_side);
+    PositionNormalizeAxis(&position->Tile.Y, &position->Offset.Y, tile_side);
 }
 
-inline V2r DiffPositions(Position a, Position b, real32 tile_side)
+inline V2r PositionDiff(Position a, Position b, real32 tile_side)
 {
     V2r result = {};
 
-    V2r absolute_a = a.Tile * tile_side + a.Offset;
-    V2r absolute_b = b.Tile * tile_side + b.Offset;
-    result = absolute_a - absolute_b;
+    V2i tiles = a.Tile - b.Tile;
+    V2r offset = a.Offset - b.Offset;
+
+    result = tiles * tile_side + offset;
 
     return result;
+}
+
+inline void PositionOffset(Position* p, V2r offset, real32 tile_side)
+{
+    p->Offset += offset;
+    PositionNormalize(p, tile_side);
 }
 
 // TODO: Use V2u instead V2i
@@ -371,12 +381,12 @@ Internal bool32 CheckCollision(real32 intersection_limit,
     V2r projection_limit, real32 intersection_step, real32 projection_step,
     real32 *fraction)
 {
-    real32 epsilon = 0.001f;
+    real32 epsilon = 0.00001f;
     bool32 has_collided = false;
     if (intersection_step == 0)
         return has_collided;
 
-    real32 intersection = (intersection_limit - intersection_relative)
+    real32 intersection = (intersection_limit + intersection_relative)
         / intersection_step;
     real32 projection = projection_relative + intersection * projection_step;
     if ((intersection >= 0.0f) && (*fraction > intersection))
@@ -407,31 +417,42 @@ Internal Position CalculateNextPosition(Position current, V2r velocity_current,
     return position;
 }
 
-Internal V2r CalculatePossibleStep(Entity* entity, Position position_next,
-    Tilemap* tilemap)
+Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
+    real32 delta_time, V2r direction)
 {
-    // TODO: Move as constant
-    real32 rebound_force = 3;
+    // TODO: Move as constants
+    real32 rebound_force = 1;
+    real32 friction_coeficient = 8;
+    real32 default_speed = 50;
+
+    real32 direction_square_length = DotProduct(direction, direction);
+    if (direction_square_length != 0)
+        Normalize(direction);
 
     real32 tile_side = tilemap->TileSide;
-    Position position_current = entity->Position;
     V2r entity_size = entity->Size;
+
+    V2r friction = friction_coeficient * entity->Velocity;
+    V2r velocity = (direction * default_speed - friction) * delta_time;
+    V2r offset = entity->Velocity + (0.5f * velocity * delta_time);
+
+    entity->Velocity += velocity;
+
+    Position position_current = entity->Position;
+    Position position_next = position_current;
+    PositionOffset(&position_next, offset, tile_side);
+
     V2i entity_size_tiles = V2i
     {
         CeilReal32ToInt32(entity_size.X / tile_side),
         CeilReal32ToInt32(entity_size.Y / tile_side),
     };
 
-    V2r step = DiffPositions(position_next, position_current, tile_side);
+    V2r collider_min = -0.5f * (V2rOne() * tilemap->TileSide + entity_size);
+    V2r collider_max =  0.5f * (V2rOne() * tilemap->TileSide + entity_size);
 
-    real32 move_fraction = 1.0f;
-    V2r wall_normal = {};
-
-    V2r tile_min = -0.5f * V2rOne() * tilemap->TileSide - 0.5f * entity_size;
-    V2r tile_max =  0.5f * V2rOne() * tilemap->TileSide + 0.5f * entity_size;
-
-    V2r limit_x = V2r { tile_min.X, tile_max.X };
-    V2r limit_y = V2r { tile_min.Y, tile_max.Y };
+    V2r limit_x = V2r { collider_min.X, collider_max.X };
+    V2r limit_y = V2r { collider_min.Y, collider_max.Y };
 
     V2i tile_range_x = V2i
     {
@@ -449,77 +470,50 @@ Internal V2r CalculatePossibleStep(Entity* entity, Position position_next,
             position_next.Tile.Y    + entity_size_tiles.Y),
     };
 
-    for (int32 tile_y = tile_range_y.Min; tile_y <= tile_range_y.Max; ++tile_y)
+    V2r move_fraction_unsed = V2rOne();
+    for (int i = 0; (i < 4) && ((move_fraction_unsed.X > 0.0f) && (move_fraction_unsed.Y > 0.0f)) ; ++i)
     {
-        for (int32 tile_x = tile_range_x.Min; tile_x <= tile_range_x.Max; ++tile_x)
+    V2r wall_normal = {};
+    V2r move_fraction = V2rOne();
+    for (int32 y = tile_range_y.Min; y <= tile_range_y.Max; ++y)
+    {
+        for (int32 x = tile_range_x.Min; x <= tile_range_x.Max; ++x)
         {
-            V2i tile_test = V2i { tile_x, tile_y };
-
             Position position_test = {};
-            position_test.Tile = tile_test;
-
+            position_test.Tile = { x, y };
             if (IsTileEmpty(tilemap, position_test))
                 continue;
 
-            V2r diff = DiffPositions(position_current, position_test, tile_side);
-            bool32 has_collided_left = CheckCollision(tile_min.X, diff.X, diff.Y,
-                limit_y, step.X, step.Y, &move_fraction);
-            bool32 has_collided_right = CheckCollision(tile_max.X, diff.X, diff.Y,
-                limit_y, step.X, step.Y, &move_fraction);
-            bool32 has_collided_top = CheckCollision(tile_min.Y, diff.Y, diff.X,
-                limit_x, step.Y, step.X, &move_fraction);
-            bool32 has_collided_bottom = CheckCollision(tile_max.Y, diff.Y, diff.X,
-                limit_x, step.Y, step.X, &move_fraction);
-
-            if (has_collided_left)
+            V2r diff = PositionDiff(position_next, position_test, tile_side);
+            if (CheckCollision(limit_x.Min, diff.X, diff.Y, limit_y, offset.X, offset.Y, &move_fraction.X))
                 wall_normal.X = -1;
 
-            if (has_collided_right)
-                wall_normal.X =  1;
+            if (CheckCollision(limit_x.Max, diff.X, diff.Y, limit_y, offset.X, offset.Y, &move_fraction.X))
+                wall_normal.X = 1;
 
-            if (has_collided_top)
+            if (CheckCollision(limit_y.Min, diff.Y, diff.X, limit_x, offset.Y, offset.X, &move_fraction.Y))
                 wall_normal.Y = -1;
 
-            if (has_collided_bottom)
-                wall_normal.Y =  1;
+            if (CheckCollision(limit_y.Max, diff.Y, diff.X, limit_x, offset.Y, offset.X, &move_fraction.Y))
+                wall_normal.Y = 1;
         }
     }
 
-    step = step * move_fraction;
-    entity->Velocity -= rebound_force * DotProduct(entity->Velocity, wall_normal)
-        * wall_normal;
-    step -= rebound_force * DotProduct(step, wall_normal) * wall_normal;
+    // position_next = entity->Position;
+    // position_next.Offset += step;
+    // NormalizePosition(&position_next, tilemap->TileSide);
+    offset = V2rComponentsMultiply(offset, move_fraction);
+    PositionOffset(&entity->Position, offset, tile_side);
 
-    return step;
-}
+    real32 opposite_velocity = DotProduct(entity->Velocity, wall_normal);
+    real32 opposite_offset = DotProduct(offset, wall_normal);
+    entity->Velocity -= rebound_force * opposite_velocity * wall_normal;
+    offset -= rebound_force * opposite_offset * wall_normal;
+    move_fraction_unsed -= V2rComponentsMultiply(move_fraction, move_fraction_unsed);
+    }
 
-Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
-    real32 delta_time, V2r direction)
-{
-    // TODO: Move as constants
-    real32 friction_coeficient = 3;
-    real32 default_speed = 12;
-
-    real32 direction_length_sqr = DotProduct(direction, direction);
-    if (direction_length_sqr > 1)
-        Normalize(direction);
-
-    V2r friction = friction_coeficient * entity->Velocity;
-    V2r velocity = (direction * default_speed - friction) * delta_time;
-    entity->Velocity += velocity;
-
-    Position next_position = CalculateNextPosition(entity->Position,
-        entity->Velocity, velocity, delta_time);
-    NormalizePosition(&next_position, tilemap->TileSide);
-
-    V2r step = CalculatePossibleStep(entity, next_position, tilemap);
-
-    next_position = entity->Position;
-    next_position.Offset += step;
-    NormalizePosition(&next_position, tilemap->TileSide);
-
-    if (IsTileEmpty(tilemap, next_position))
-        entity->Position = next_position;
+    if (!IsTileEmpty(tilemap, entity->Position))
+        int dbg = 1;
 }
 
 extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
