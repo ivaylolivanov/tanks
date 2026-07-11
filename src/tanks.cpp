@@ -237,17 +237,23 @@ Internal uint32 GetTileValue(Tilemap* tilemap, V2i tile)
     return value;
 }
 
-inline bool32 IsTileEmpty(Tilemap* tilemap, Position position)
+inline bool32 IsTileEmpty(Tilemap* tilemap, V2i tile)
 {
     bool32 result = false;
 
-    if ((position.Tile.X >= 0) && (position.Tile.X < tilemap->Size.Width)
-        && (position.Tile.Y >= 0) && (position.Tile.Y < tilemap->Size.Height))
+    if ((tile.X >= 0) && (tile.X < tilemap->Size.Width)
+        && (tile.Y >= 0) && (tile.Y < tilemap->Size.Height))
     {
-        uint32 tile_value = GetTileValue(tilemap, position.Tile);
+        uint32 tile_value = GetTileValue(tilemap, tile);
         result = (tile_value == 0);
     }
 
+    return result;
+}
+
+inline bool32 IsTileEmpty(Tilemap* tilemap, Position position)
+{
+    bool32 result = IsTileEmpty(tilemap, position.Tile);
     return result;
 }
 
@@ -381,12 +387,16 @@ Internal bool32 CheckCollision(real32 intersection_limit,
     V2r projection_limit, real32 intersection_step, real32 projection_step,
     real32 *fraction)
 {
-    real32 epsilon = 0.00001f;
+    // NOTE: The entity is kept an absolute distance short of the wall. A
+    // step-relative back-off erodes to nothing when pressing into the wall
+    // (the gap falls below real32 precision, the position lands exactly on
+    // the face) and exposed corner faces then catch entities sliding past.
+    real32 wall_margin = 0.001f;
     bool32 has_collided = false;
     if (intersection_step == 0)
         return has_collided;
 
-    real32 intersection = (intersection_limit + intersection_relative)
+    real32 intersection = (intersection_limit - intersection_relative)
         / intersection_step;
     real32 projection = projection_relative + intersection * projection_step;
     if ((intersection >= 0.0f) && (*fraction > intersection))
@@ -394,34 +404,20 @@ Internal bool32 CheckCollision(real32 intersection_limit,
         has_collided = (projection >= projection_limit.Min)
             && (projection <= projection_limit.Max);
         if (has_collided)
-            *fraction = MAX(0.0f, intersection - epsilon);
+        {
+            real32 step_absolute = (intersection_step < 0)
+                ? -intersection_step : intersection_step;
+            *fraction = MAX(0.0f, intersection - wall_margin / step_absolute);
+        }
     }
 
     return has_collided;
-}
-
-Internal Position CalculateNextPosition(Position current, V2r velocity_current,
-    V2r velocity_new, real32 delta_time)
-{
-    Position position = current;
-    /*
-    NOTE: The original equation of displacement S = u * t + 1/2 * a * t ^ 2
-    In this case:
-    - velocity_current = u * t, where t is 'delta_time'
-    - velocity_new     = a * t, where t is 'delta_time'
-    In summary: the velocities are already pre-multiplied with the time once.
-    */
-    V2r step = velocity_current + (0.5f * velocity_new * delta_time);
-    position.Offset += step;
-
-    return position;
 }
 
 Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     real32 delta_time, V2r direction)
 {
     // TODO: Move as constants
-    real32 rebound_force = 1;
     real32 friction_coeficient = 8;
     real32 default_speed = 50;
 
@@ -432,15 +428,17 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     real32 tile_side = tilemap->TileSide;
     V2r entity_size = entity->Size;
 
+    /*
+    NOTE: The original equation of displacement S = u * t + 1/2 * a * t ^ 2
+    In this case the velocities are already pre-multiplied with the time once:
+    - entity->Velocity = u * t, where t is 'delta_time'
+    - velocity         = a * t, where t is 'delta_time'
+    */
     V2r friction = friction_coeficient * entity->Velocity;
     V2r velocity = (direction * default_speed - friction) * delta_time;
     V2r offset = entity->Velocity + (0.5f * velocity * delta_time);
 
     entity->Velocity += velocity;
-
-    Position position_current = entity->Position;
-    Position position_next = position_current;
-    PositionOffset(&position_next, offset, tile_side);
 
     V2i entity_size_tiles = V2i
     {
@@ -454,66 +452,78 @@ Internal void MoveEntity(Tilemap* tilemap, Entity* entity,
     V2r limit_x = V2r { collider_min.X, collider_max.X };
     V2r limit_y = V2r { collider_min.Y, collider_max.Y };
 
-    V2i tile_range_x = V2i
+    V2r remaining = offset;
+    for (int i = 0; i < 4; ++i)
     {
-        MIN(position_current.Tile.X - entity_size_tiles.X,
-            position_next.Tile.X    + entity_size_tiles.X),
-        MAX(position_current.Tile.X - entity_size_tiles.X,
-            position_next.Tile.X    + entity_size_tiles.X),
-    };
+        Position position_current = entity->Position;
+        Position position_next = position_current;
+        PositionOffset(&position_next, remaining, tile_side);
 
-    V2i tile_range_y = V2i
-    {
-        MIN(position_current.Tile.Y - entity_size_tiles.Y,
-            position_next.Tile.Y    + entity_size_tiles.Y),
-        MAX(position_current.Tile.Y - entity_size_tiles.Y,
-            position_next.Tile.Y    + entity_size_tiles.Y),
-    };
-
-    V2r move_fraction_unsed = V2rOne();
-    for (int i = 0; (i < 4) && ((move_fraction_unsed.X > 0.0f) && (move_fraction_unsed.Y > 0.0f)) ; ++i)
-    {
-    V2r wall_normal = {};
-    V2r move_fraction = V2rOne();
-    for (int32 y = tile_range_y.Min; y <= tile_range_y.Max; ++y)
-    {
-        for (int32 x = tile_range_x.Min; x <= tile_range_x.Max; ++x)
+        V2i tile_range_x = V2i
         {
-            Position position_test = {};
-            position_test.Tile = { x, y };
-            if (IsTileEmpty(tilemap, position_test))
-                continue;
+            MIN(position_current.Tile.X, position_next.Tile.X)
+                - entity_size_tiles.X,
+            MAX(position_current.Tile.X, position_next.Tile.X)
+                + entity_size_tiles.X,
+        };
 
-            V2r diff = PositionDiff(position_next, position_test, tile_side);
-            if (CheckCollision(limit_x.Min, diff.X, diff.Y, limit_y, offset.X, offset.Y, &move_fraction.X))
-                wall_normal.X = -1;
+        V2i tile_range_y = V2i
+        {
+            MIN(position_current.Tile.Y, position_next.Tile.Y)
+                - entity_size_tiles.Y,
+            MAX(position_current.Tile.Y, position_next.Tile.Y)
+                + entity_size_tiles.Y,
+        };
 
-            if (CheckCollision(limit_x.Max, diff.X, diff.Y, limit_y, offset.X, offset.Y, &move_fraction.X))
-                wall_normal.X = 1;
+        real32 move_fraction = 1.0f;
+        V2r wall_normal = {};
+        for (int32 y = tile_range_y.Min; y <= tile_range_y.Max; ++y)
+        {
+            for (int32 x = tile_range_x.Min; x <= tile_range_x.Max; ++x)
+            {
+                Position position_test = {};
+                position_test.Tile = { x, y };
+                if (IsTileEmpty(tilemap, position_test))
+                    continue;
 
-            if (CheckCollision(limit_y.Min, diff.Y, diff.X, limit_x, offset.Y, offset.X, &move_fraction.Y))
-                wall_normal.Y = -1;
+                // NOTE: CheckCollision only reports a hit that beats the
+                // current move_fraction, so every hit is the closest so far
+                // and overwrites the whole wall normal.
+                // A face shared with another solid tile is an interior edge
+                // no entity can reach - testing it would catch entities
+                // sliding flush along a row/column of walls.
+                V2r diff = PositionDiff(position_current, position_test, tile_side);
+                if (IsTileEmpty(tilemap, V2i { x - 1, y })
+                    && CheckCollision(limit_x.Min, diff.X, diff.Y, limit_y, remaining.X, remaining.Y, &move_fraction))
+                    wall_normal = V2r { -1, 0 };
 
-            if (CheckCollision(limit_y.Max, diff.Y, diff.X, limit_x, offset.Y, offset.X, &move_fraction.Y))
-                wall_normal.Y = 1;
+                if (IsTileEmpty(tilemap, V2i { x + 1, y })
+                    && CheckCollision(limit_x.Max, diff.X, diff.Y, limit_y, remaining.X, remaining.Y, &move_fraction))
+                    wall_normal = V2r { 1, 0 };
+
+                if (IsTileEmpty(tilemap, V2i { x, y - 1 })
+                    && CheckCollision(limit_y.Min, diff.Y, diff.X, limit_x, remaining.Y, remaining.X, &move_fraction))
+                    wall_normal = V2r { 0, -1 };
+
+                if (IsTileEmpty(tilemap, V2i { x, y + 1 })
+                    && CheckCollision(limit_y.Max, diff.Y, diff.X, limit_x, remaining.Y, remaining.X, &move_fraction))
+                    wall_normal = V2r { 0, 1 };
+            }
         }
+
+        PositionOffset(&entity->Position, move_fraction * remaining, tile_side);
+
+        if ((wall_normal.X == 0) && (wall_normal.Y == 0))
+            break;
+
+        real32 opposite_velocity = DotProduct(entity->Velocity, wall_normal);
+        entity->Velocity -= opposite_velocity * wall_normal;
+
+        remaining = (1.0f - move_fraction) * remaining;
+        remaining -= DotProduct(remaining, wall_normal) * wall_normal;
     }
 
-    // position_next = entity->Position;
-    // position_next.Offset += step;
-    // NormalizePosition(&position_next, tilemap->TileSide);
-    offset = V2rComponentsMultiply(offset, move_fraction);
-    PositionOffset(&entity->Position, offset, tile_side);
-
-    real32 opposite_velocity = DotProduct(entity->Velocity, wall_normal);
-    real32 opposite_offset = DotProduct(offset, wall_normal);
-    entity->Velocity -= rebound_force * opposite_velocity * wall_normal;
-    offset -= rebound_force * opposite_offset * wall_normal;
-    move_fraction_unsed -= V2rComponentsMultiply(move_fraction, move_fraction_unsed);
-    }
-
-    if (!IsTileEmpty(tilemap, entity->Position))
-        int dbg = 1;
+    Assert(IsTileEmpty(tilemap, entity->Position.Tile));
 }
 
 extern "C" void UpdateAndRender(ThreadContext* thread, GameMemory *memory,
